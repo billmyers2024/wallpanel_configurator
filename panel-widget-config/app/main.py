@@ -22,18 +22,27 @@ HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else 
 ADDON_VERSION = "0.0.0"
 APP_DIR = Path(__file__).parent  # /app directory where main.py lives
 
+# Debug prints (these go to stderr and show in Docker logs)
+print(f"[VERSION DEBUG] APP_DIR: {APP_DIR}", flush=True)
+print(f"[VERSION DEBUG] __file__: {__file__}", flush=True)
+
 try:
     import yaml
     # config.yaml is copied to /app/config.yaml in Docker
     config_yaml_path = APP_DIR / 'config.yaml'
+    print(f"[VERSION DEBUG] Looking for config.yaml at: {config_yaml_path}", flush=True)
+    print(f"[VERSION DEBUG] File exists: {config_yaml_path.exists()}", flush=True)
     if config_yaml_path.exists():
         with open(config_yaml_path, 'r') as f:
             config_data = yaml.safe_load(f)
             ADDON_VERSION = config_data.get('version', '0.0.0')
-    # If file doesn't exist, ADDON_VERSION stays as "0.0.0"
-except Exception:
-    # Any error, ADDON_VERSION stays as "0.0.0"
-    pass
+            print(f"[VERSION DEBUG] Loaded version: {ADDON_VERSION}", flush=True)
+    else:
+        print(f"[VERSION DEBUG] config.yaml NOT FOUND", flush=True)
+except Exception as e:
+    print(f"[VERSION DEBUG] ERROR loading config.yaml: {e}", flush=True)
+
+print(f"[VERSION DEBUG] Final ADDON_VERSION: {ADDON_VERSION}", flush=True)
 
 # Determine if running in HA add-on mode or local development
 RUNNING_IN_HA = os.path.exists('/config') and os.environ.get('SUPERVISOR_TOKEN')
