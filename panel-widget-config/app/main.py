@@ -67,6 +67,15 @@ else:
     logger.info("="*50)
     logger.info("Panel Widget Configurator - LOCAL DEV Mode")
     logger.info("="*50)
+
+# Debug: Show environment detection
+logger.info(f"RUNNING_IN_HA: {RUNNING_IN_HA}")
+logger.info(f"HA_TOKEN available: {bool(HA_TOKEN)}")
+logger.info(f"HA_TOKEN length: {len(HA_TOKEN) if HA_TOKEN else 0}")
+logger.info(f"HA_API: {HA_API}")
+logger.info(f"SUPERVISOR_TOKEN env: {bool(os.environ.get('SUPERVISOR_TOKEN'))}")
+logger.info(f"/config exists: {os.path.exists('/config')}")
+
 logger.info(f"Config directory: {ADDON_CONFIG}")
 logger.info(f"Live config: {LIVE_CONFIG}")
 logger.info(f"Templates: {TEMPLATE_DIR}")
@@ -445,19 +454,29 @@ def validate_entity():
 @app.route('/api/entities/<domain>')
 def get_entities(domain):
     """Get all entities of a specific domain from HA"""
+    # Debug logging
+    logger.info(f"API: get_entities({domain})")
+    logger.info(f"RUNNING_IN_HA: {RUNNING_IN_HA}")
+    logger.info(f"HA_TOKEN available: {bool(HA_TOKEN)}")
+    logger.info(f"HA_API: {HA_API}")
+    
     # If not running in HA, return empty list for local testing
     if not RUNNING_IN_HA and not HA_TOKEN:
+        logger.warning("Not in HA mode and no token - returning empty list")
         return jsonify({"entities": []})
     
     try:
-        response = requests.get(
-            f'{HA_API}/states',
-            headers=get_headers(),
-            timeout=5
-        )
+        url = f'{HA_API}/states'
+        headers = get_headers()
+        logger.info(f"Fetching from: {url}")
+        logger.info(f"Headers: {headers}")
+        
+        response = requests.get(url, headers=headers, timeout=5)
+        logger.info(f"Response status: {response.status_code}")
         
         if response.status_code == 200:
             states = response.json()
+            logger.info(f"Got {len(states)} states from HA")
             entities = [
                 {
                     "entity_id": s['entity_id'],
@@ -467,8 +486,10 @@ def get_entities(domain):
                 for s in states
                 if s['entity_id'].startswith(f'{domain}.')
             ]
+            logger.info(f"Returning {len(entities)} entities for domain '{domain}'")
             return jsonify({"entities": entities})
         else:
+            logger.error(f"HA API error: {response.status_code} - {response.text}")
             return jsonify({"error": f"HA API returned {response.status_code}"}), 500
             
     except requests.exceptions.RequestException as e:
