@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Widget Configurator</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-th-large"></i>
+                    <h1>Panel Widget Configurator</h1>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="app.loadConfig()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.showLoadModal()">
+                        <i class="fas fa-folder-open"></i> Load
+                    </button>
+                    <button class="btn btn-success" onclick="app.saveConfig()">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button class="btn btn-primary" onclick="app.showExportModal()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-container">
+            <!-- Sidebar - Device List -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Rooms / Devices</h2>
+                    <button class="btn btn-sm btn-primary" onclick="app.addDevice()">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+                <div id="device-list" class="device-list">
+                    <!-- Devices populated by JS -->
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Available Widgets</h3>
+                    <div id="widget-types" class="widget-types">
+                        <!-- Widget types populated by JS -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Editor -->
+            <main class="editor">
+                <div id="no-selection" class="no-selection">
+                    <i class="fas fa-arrow-left"></i>
+                    <p>Select a device or add a new one to start configuring</p>
+                </div>
+
+                <div id="device-editor" class="device-editor" style="display: none;">
+                    <!-- Site Settings (Global) -->
+                    <div class="site-settings-panel">
+                        <div class="section-header" onclick="app.toggleSection('site-settings')">
+                            <div class="section-title">
+                                <i class="fas fa-cog"></i>
+                                <h3>Site Settings</h3>
+                                <i class="fas fa-chevron-down toggle-icon" id="site-settings-icon"></i>
+                            </div>
+                        </div>
+                        <div id="site-settings-content" class="section-content" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Site Name</label>
+                                    <input type="text" id="site-name" class="input" placeholder="My Home">
+                                </div>
+                                <div class="form-group">
+                                    <label>Version (auto-generated)</label>
+                                    <input type="text" id="site-version" class="input" placeholder="1.0" readonly title="Version auto-increments on save">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Guest WiFi SSID</label>
+                                    <input type="text" id="guest-ssid" class="input" placeholder="guest_network">
+                                </div>
+                                <div class="form-group">
+                                    <label>Guest WiFi Password</label>
+                                    <div class="input-with-action">
+                                        <input type="password" id="guest-password" class="input" placeholder="password">
+                                        <button class="btn btn-sm btn-secondary" onclick="app.togglePassword('guest-password')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">Site Default Cover Timing</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Default Up Time (ms)</label>
+                                    <input type="number" id="site-cover-up-time" class="input" value="14300" min="1000" max="60000" step="100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Default Down Time (ms)</label>
+                                    <input type="number" id="site-cover-down-time" class="input" value="11500" min="1000" max="60000" step="100">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Default Cover Opening Time</label>
+                                    <input type="time" id="cover-opening-time" class="input" value="08:00">
+                                </div>
+                                <div class="form-group">
+                                    <label>Default Cover Closing Time</label>
+                                    <input type="time" id="cover-closing-time" class="input" value="19:00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Room Header - Simple: Name + Delete -->
+                    <div class="room-header-simple">
+                        <div class="room-name-section">
+                            <input type="text" id="device-name" class="input-lg room-name-input" placeholder="Room Name (e.g., Master Bedroom)">
+                        </div>
+                        <div class="room-actions">
+                            <button class="btn btn-secondary" onclick="app.toggleRoomSettings()">
+                                <i class="fas fa-cog"></i> Room Settings
+                            </button>
+                            <button class="btn btn-danger" onclick="app.deleteCurrentDevice()">
+                                <i class="fas fa-trash"></i> Delete Room
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Room Settings Panel (Collapsible) -->
+                    <div id="room-settings-panel" class="room-settings-panel" style="display: none;">
+                        <div class="room-settings-content">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Device ID</label>
+                                    <input type="text" id="device-id" class="input" placeholder="device_id">
+                                </div>
+                                <div class="form-group">
+                                    <label>IP Address</label>
+                                    <input type="text" id="device-ip" class="input" placeholder="10.0.0.1">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Presence Sensor Entity</label>
+                                <div class="input-with-action">
+                                    <input type="text" id="presence-entity" class="input" placeholder="binary_sensor.room_presence">
+                                    <button class="btn btn-sm btn-secondary" onclick="app.showEntityPicker('presence-entity', 'binary_sensor')">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="voice-assistant-enabled">
+                                        <span>Voice Assistant Enabled</span>
+                                    </label>
+                                </div>
+                                <div class="form-group checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="use-presence-for-screen">
+                                        <span>Use Presence for Screen</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row three-col">
+                                <div class="form-group">
+                                    <label>Screen Timeout (sec)</label>
+                                    <input type="number" id="screen-timeout" class="input" value="30" min="5" max="300">
+                                </div>
+                                <div class="form-group">
+                                    <label>Screen Brightness (%)</label>
+                                    <input type="number" id="screen-brightness" class="input" value="80" min="10" max="100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Volume (%)</label>
+                                    <input type="number" id="volume" class="input" value="50" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Widget Sections (Scrollable) -->
+                    <div class="widgets-container">
+                        <!-- Lights Section -->
+                        <section class="widget-section" data-widget="lights">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <h3>Lights</h3>
+                                    <span class="badge" id="lights-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('lights')">
+                                    <i class="fas fa-plus"></i> Add Light
+                                </button>
+                            </div>
+                            <div id="lights-list" class="widget-list">
+                                <!-- Light widgets -->
+                            </div>
+                        </section>
+
+                        <!-- Covers Section -->
+                        <section class="widget-section" data-widget="covers">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-window-shutter"></i>
+                                    <h3>Covers</h3>
+                                    <span class="badge" id="covers-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('covers')">
+                                    <i class="fas fa-plus"></i> Add Cover
+                                </button>
+                            </div>
+                            <div id="covers-list" class="widget-list">
+                                <!-- Cover widgets -->
+                            </div>
+                        </section>
+
+                        <!-- Climate Section -->
+                        <section class="widget-section" data-widget="climate">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-temperature-half"></i>
+                                    <h3>Climate</h3>
+                                    <span class="badge" id="climate-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('climate')">
+                                    <i class="fas fa-plus"></i> Add Climate
+                                </button>
+                            </div>
+                            <div id="climate-list" class="widget-list">
+                                <!-- Climate widgets -->
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+
+        <!-- Entity Picker Modal -->
+        <div id="entity-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Select Entity</h3>
+                    <button class="btn-close" onclick="app.closeEntityModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="entity-search" class="input" placeholder="Search entities...">
+                    <div id="entity-list" class="entity-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load File Modal -->
+        <div id="load-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Load Configuration</h3>
+                    <button class="btn-close" onclick="app.closeLoadModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Staging Files Section -->
+                    <div class="load-section">
+                        <h4>Staging Files</h4>
+                        <div id="staging-files-list" class="staging-files-list">
+                            <p class="text-muted">No staging files found</p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="app.refreshStagingFiles()">
+                            <i class="fas fa-sync"></i> Refresh List
+                        </button>
+                    </div>
+                    
+                    <div class="load-divider">
+                        <span>OR</span>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div class="load-section">
+                        <h4>Upload from Computer</h4>
+                        <input type="file" id="config-file-input" class="input" accept=".json">
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.closeLoadModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.loadFile()">
+                            <i class="fas fa-upload"></i> Load from File
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="export-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Export Configuration</h3>
+                    <button class="btn-close" onclick="app.closeExportModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Filename (without .json)</label>
+                        <input type="text" id="export-filename" class="input" value="site_settings">
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.closeExportModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.doExport()">Export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Prompt Modal -->
+        <div id="save-prompt-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Make Configuration Live?</h3>
+                    <button class="btn-close" onclick="app.closeSavePromptModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Do you want to make this configuration live?</p>
+                    <p style="margin-top: 12px; font-size: 13px; color: var(--text-muted);">
+                        <strong>Make Live:</strong> Save and copy to <code>/config/www/panel_widgets/</code> (panels will use this config)<br>
+                        <strong>Save Staging:</strong> Save only to <code>/config/panel_widgets/staging/</code> (draft mode)
+                    </p>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.closeSavePromptModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.doSaveStaging()">Save Staging</button>
+                        <button class="btn btn-warning" onclick="app.doSaveLive()">
+                            <i class="fas fa-broadcast-tower"></i> Make Live
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staging Filename Modal -->
+        <div id="staging-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Save Staging Configuration</h3>
+                    <button class="btn-close" onclick="app.closeStagingModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Filename (without .json)</label>
+                        <input type="text" id="staging-filename" class="input" value="site_settings_staging">
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.closeStagingModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.doSaveStagingFile()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates for JavaScript rendering -->
+    <template id="light-widget-template">
+        <div class="widget-card" data-type="light" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group">
+                    <label>Entity ID</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input entity-input" placeholder="light.entity_name">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'light')">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <span class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" class="input name-input" placeholder="Light Name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select class="input type-input">
+                            <option value="ph">Power + Temperature (ph)</option>
+                            <option value="phb">Power + Temperature + Brightness (phb)</option>
+                            <option value="phc">Power + Temperature + Color (phc)</option>
+                            <option value="phbc" selected>Full Control - Power/Temp/Brightness/Color (phbc)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Icon Style</label>
+                        <select class="input icon-input">
+                            <option value="0">Downlight</option>
+                            <option value="1">Pendant</option>
+                            <option value="2">Wardrobe</option>
+                            <option value="3">Lamp</option>
+                            <option value="4">Spot</option>
+                            <option value="5">Strip</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="cover-widget-template">
+        <div class="widget-card" data-type="cover" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group">
+                    <label>Entity ID</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input entity-input" placeholder="cover.entity_name">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'cover')">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <span class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" class="input name-input" placeholder="Cover Name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select class="input type-input">
+                            <option value="blind" selected>Vertical Blind</option>
+                            <option value="single_curtain">Single Curtain</option>
+                            <option value="double_curtain">Double Curtain</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Up Time (ms)</label>
+                        <input type="number" class="input uptime-input" value="14300" min="1000" max="60000" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Down Time (ms)</label>
+                        <input type="number" class="input downtime-input" value="11500" min="1000" max="60000" step="100">
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="climate-widget-template">
+        <div class="widget-card" data-type="climate" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group">
+                    <label>Climate Entity</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input entity-input" placeholder="climate.entity_name">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'climate')">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <span class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" class="input name-input" placeholder="Climate Name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="presence-deactivate-input">
+                            <span>Use Presence for Deactivation</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="presence-activate-input">
+                            <span>Use Presence for Activation</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Presence Deactivation Time (sec)</label>
+                        <input type="number" class="input presence-timeout-input" value="300" min="0" max="3600" step="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Default Fan Speed</label>
+                        <select class="input fan-speed-input">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Low Setpoint (°C)</label>
+                        <input type="number" class="input low-setpoint-input" value="20" min="10" max="30" step="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>High Setpoint (°C)</label>
+                        <input type="number" class="input high-setpoint-input" value="24" min="15" max="35" step="0.5">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Auto Dehumidify (%)</label>
+                        <input type="number" class="input dehumidify-input" value="60" min="30" max="90" step="5">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="simple-ui-input">
+                            <span>Use Simple UI</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <script src="/static/js/app.js?v=2"></script>
+</body>
+</html>
