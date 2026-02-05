@@ -12,14 +12,15 @@ RUN pip install --no-cache-dir \
     gunicorn==21.2.0 \
     requests==2.31.0
 
-# Copy application (static files first for layer caching)
+# Copy application
 COPY app/ /app/
-COPY templates/ /app/templates/
 COPY static/ /app/static/
 
-# Force cache bust for static files
-RUN find /app/static -type f -exec chmod 644 {} \; && \
-    find /app/templates -type f -exec chmod 644 {} \;
+# Copy templates last (they contain version numbers that change frequently)
+COPY templates/ /app/templates/
+
+# Force no-cache for templates
+RUN chmod -R 644 /app/templates/*
 COPY run.sh /
 
 # Make run script executable
