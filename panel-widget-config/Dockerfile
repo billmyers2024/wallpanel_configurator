@@ -10,7 +10,8 @@ RUN apk add --no-cache \
 RUN pip install --no-cache-dir \
     flask==2.3.3 \
     gunicorn==21.2.0 \
-    requests==2.31.0
+    requests==2.31.0 \
+    pyyaml==6.0.1
 
 # Copy application
 COPY app/ /app/
