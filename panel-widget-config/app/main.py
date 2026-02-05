@@ -541,7 +541,8 @@ def get_schema(widget_type):
     """Get JSON schema for a widget type"""
     schemas = {
         'light': LIGHT_SCHEMA,
-        'cover': COVER_SCHEMA
+        'cover': COVER_SCHEMA,
+        'tester': TESTER_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -567,7 +568,8 @@ def widget_types():
                 "id": "covers",
                 "name": "Covers",
                 "description": "Control blinds, curtains with position and animation",
-                "icon": "mdi:window-shutter",
+                "icon": "mdi:curtains",
+                "icon_code": "F1846",
                 "capabilities": ["position", "open", "close", "stop"],
                 "status": "stable"
             },
@@ -578,6 +580,16 @@ def widget_types():
                 "icon": "mdi:thermostat",
                 "capabilities": ["temperature", "mode", "fan"],
                 "status": "planned"
+            },
+            {
+                "id": "tester",
+                "name": "Tester",
+                "description": "Diagnostic widget for testing subscriptions without external hardware",
+                "icon": "mdi:test-tube",
+                "icon_code": "F0668",
+                "capabilities": ["on_off", "state_display"],
+                "status": "stable",
+                "note": "Zero external dependencies - use for validation testing"
             },
             {
                 "id": "weather",

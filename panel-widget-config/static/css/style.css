@@ -243,6 +243,12 @@ body {
     text-align: center;
 }
 
+.widget-type-item .mdi-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
 .widget-type-item .status {
     margin-left: auto;
     font-size: 11px;

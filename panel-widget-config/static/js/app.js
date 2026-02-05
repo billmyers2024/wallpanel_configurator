@@ -428,7 +428,9 @@ const app = {
             ip: "",
             widgets: {
                 lights: [],
-                covers: []
+                covers: [],
+                climate: [],
+                tests: []
             }
         };
         
@@ -507,6 +509,7 @@ const app = {
         this.updateWidgetsFromCards('lights');
         this.updateWidgetsFromCards('covers');
         this.updateWidgetsFromCards('climate');
+        this.updateWidgetsFromCards('tests');
     },
     
     // Update widget array from card forms
@@ -551,6 +554,11 @@ const app = {
                     auto_dehumidify_setpoint: parseInt(card.querySelector('.dehumidify-input').value) || 60,
                     use_simple_ui: card.querySelector('.simple-ui-input').checked
                 });
+            } else if (type === 'tests') {
+                widgets.push({
+                    entity,
+                    name: name || entity
+                });
             }
         });
         
@@ -578,6 +586,7 @@ const app = {
         if (type === 'lights') templateId = 'light-widget-template';
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
+        else if (type === 'tests') templateId = 'tests-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
         
         const template = document.getElementById(templateId);
@@ -910,11 +919,30 @@ const app = {
         const container = document.getElementById('widget-types');
         container.innerHTML = '';
         
+        // MDI Icon SVG paths
+        const mdiIcons = {
+            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C12 2 8 4 8 9C8 11 9 13 10 14V16C10 17 9 18 8 19C7 20 6 21 6 22H18C18 21 17 20 16 19C15 18 14 17 14 16V14C15 13 16 11 16 9C16 4 12 2 12 2M12 4.5C12.5 5 13 6 13 9C13 10.5 12.5 11.5 12 12.5C11.5 11.5 11 10.5 11 9C11 6 11.5 5 12 4.5Z"/></svg>',
+            'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M7 2V4H9V12.5C9 13.88 7.88 15 6.5 15C5.12 15 4 13.88 4 12.5V4H6V2H2V4H3V12.5C3 14.43 4.57 16 6.5 16C8.43 16 10 14.43 10 12.5V4H11V2H7M16.5 2C14.57 2 13 3.57 13 5.5C13 7.43 14.57 9 16.5 9C18.43 9 20 7.43 20 5.5C20 3.57 18.43 2 16.5 2M16.5 7C15.67 7 15 6.33 15 5.5C15 4.67 15.67 4 16.5 4C17.33 4 18 4.67 18 5.5C18 6.33 17.33 7 16.5 7M16.5 10C14.57 10 13 11.57 13 13.5C13 15.43 14.57 17 16.5 17C18.43 17 20 15.43 20 13.5C20 11.57 18.43 10 16.5 10M16.5 15C15.67 15 15 14.33 15 13.5C15 12.67 15.67 12 16.5 12C17.33 12 18 12.67 18 13.5C18 14.33 17.33 15 16.5 15Z"/></svg>',
+            'mdi:lightbulb': '<i class="fas fa-lightbulb"></i>',
+            'mdi:thermostat': '<i class="fas fa-temperature-half"></i>',
+            'mdi:weather-partly-cloudy': '<i class="fas fa-cloud-sun"></i>',
+            'mdi:shield-home': '<i class="fas fa-shield-alt"></i>',
+            'mdi:music': '<i class="fas fa-music"></i>',
+            'mdi:image': '<i class="fas fa-image"></i>',
+            'mdi:phone': '<i class="fas fa-phone"></i>',
+            'mdi:bullhorn': '<i class="fas fa-bullhorn"></i>',
+            'mdi:microphone': '<i class="fas fa-microphone"></i>'
+        };
+        
         this.widgetTypes.forEach(type => {
             const item = document.createElement('div');
             item.className = 'widget-type-item';
+            
+            // Get icon (MDI SVG or Font Awesome)
+            const iconHtml = mdiIcons[type.icon] || `<i class="fas ${type.icon.replace('mdi:', '')}"></i>`;
+            
             item.innerHTML = `
-                <i class="fas ${type.icon.replace('mdi:', '')}"></i>
+                ${iconHtml}
                 <span>${type.name}</span>
                 <span class="status ${type.status}">${type.status}</span>
             `;
@@ -985,6 +1013,9 @@ const app = {
         
         // Render climate
         this.renderWidgetList('climate', this.currentDevice.widgets?.climate || []);
+        
+        // Render tester widgets
+        this.renderWidgetList('tests', this.currentDevice.widgets?.tests || []);
     },
     
     // Render widget list for a type
@@ -997,6 +1028,7 @@ const app = {
         if (type === 'lights') templateId = 'light-widget-template';
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
+        else if (type === 'tests') templateId = 'tests-widget-template';
         else return;
         
         const template = document.getElementById(templateId);
@@ -1030,6 +1062,7 @@ const app = {
                 card.querySelector('.dehumidify-input').value = widget.auto_dehumidify_setpoint || 60;
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
             }
+            // Note: tests widgets only have entity and name fields, already set above
             
             // Add validation listener
             const entityInput = card.querySelector('.entity-input');
