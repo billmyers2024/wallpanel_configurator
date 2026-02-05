@@ -28,28 +28,56 @@ const app = {
         }
     },
     
-    // Load configuration from API
+    // Load configuration from API with timeout
     async loadConfig() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         try {
-            const response = await fetch('api/config');
-            if (response.ok) {
-                this.config = await response.json();
-                
-                // Ensure devices array exists
-                if (!this.config.devices) {
-                    this.config.devices = [];
-                }
-                
-                this.renderDeviceList();
-                if (this.currentDeviceIndex >= 0) {
-                    this.selectDevice(this.currentDeviceIndex);
-                }
-                this.showToast('Live configuration loaded', 'success');
+            this.showToast('Loading configuration...', 'info');
+            const response = await fetch('api/config', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            
+            this.config = await response.json();
+            
+            // Ensure devices array exists
+            if (!this.config.devices) {
+                this.config.devices = [];
+            }
+            
+            this.renderDeviceList();
+            if (this.currentDeviceIndex >= 0) {
+                this.selectDevice(this.currentDeviceIndex);
+            }
+            this.showToast('Live configuration loaded', 'success');
         } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                this.showToast('Request timed out - HA API may be unavailable', 'error');
+            } else {
+                this.showToast(`Failed to load: ${error.message}`, 'error');
+            }
             console.error('Failed to load config:', error);
-            this.showToast('Failed to load configuration', 'error');
+            // Set default empty config so UI doesn't break
+            if (!this.config) {
+                this.config = this.getDefaultConfig();
+                this.renderDeviceList();
+            }
         }
+    },
+    
+    // Get default empty configuration
+    getDefaultConfig() {
+        return {
+            site_meta: { version: '1.0', last_updated: new Date().toISOString().split('T')[0] },
+            site_info: { site_name: 'My Home', guest_ssid: '', guest_wifi_password: '' },
+            defaults: { cover_opening_time: '08:00', cover_closing_time: '19:00', site_cover_up_time: 14300, site_cover_down_time: 11500 },
+            devices: []
+        };
     },
     
     // Save configuration - shows prompt for Make Live vs Staging
