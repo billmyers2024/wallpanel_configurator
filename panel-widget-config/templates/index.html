@@ -528,7 +528,23 @@
             </div>
             <div class="widget-body">
                 <div class="form-group">
-                    <label>Entity ID <span style="font-size:11px;color:var(--text-muted)">(switch or light)</span></label>
+                    <label>Test Slot</label>
+                    <select class="input test-id-input">
+                        <option value="test_1">Test 1</option>
+                        <option value="test_2">Test 2</option>
+                        <option value="test_3">Test 3</option>
+                        <option value="test_4">Test 4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mode</label>
+                    <select class="input mode-input" onchange="app.toggleTesterMode(this)">
+                        <option value="existing_switch">Use Existing Switch</option>
+                        <option value="create_binary_sensor">Create Binary Sensor</option>
+                    </select>
+                </div>
+                <div class="form-group existing-switch-group">
+                    <label>Entity ID <span style="font-size:11px;color:var(--text-muted)">(switch, binary_sensor, input_boolean)</span></label>
                     <div class="input-with-action">
                         <input type="text" class="input entity-input" placeholder="switch.test_entity">
                         <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'switch')">
@@ -536,6 +552,13 @@
                         </button>
                     </div>
                     <span class="validation-message"></span>
+                </div>
+                <div class="form-group create-sensor-group" style="display:none;">
+                    <label>Device Name <span style="font-size:11px;color:var(--text-muted)">(for HA device)</span></label>
+                    <input type="text" class="input device-name-input" placeholder="Panel Test">
+                    <span class="help-text" style="font-size:11px;color:var(--text-muted);margin-top:4px;display:block;">
+                        Creates: binary_sensor.{device_name}_{test_slot}
+                    </span>
                 </div>
                 <div class="form-group">
                     <label>Display Name</label>

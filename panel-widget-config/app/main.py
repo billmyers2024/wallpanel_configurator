@@ -172,6 +172,28 @@ COVER_SCHEMA = {
     "required": ["entity", "name", "type"]
 }
 
+TESTER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "mode": {"type": "string", "enum": ["existing_switch", "create_binary_sensor"]},
+        "entity": {"type": "string", "pattern": "^(switch|binary_sensor|input_boolean)\\."},
+        "device_name": {"type": "string", "minLength": 1},
+        "test_id": {"type": "string", "enum": ["test_1", "test_2", "test_3", "test_4"]}
+    },
+    "required": ["name", "mode", "test_id"],
+    "allOf": [
+        {
+            "if": {"properties": {"mode": {"const": "existing_switch"}}},
+            "then": {"required": ["entity"]}
+        },
+        {
+            "if": {"properties": {"mode": {"const": "create_binary_sensor"}}},
+            "then": {"required": ["device_name"]}
+        }
+    ]
+}
+
 
 @app.route('/')
 def index():

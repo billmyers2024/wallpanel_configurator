@@ -555,10 +555,18 @@ const app = {
                     use_simple_ui: card.querySelector('.simple-ui-input').checked
                 });
             } else if (type === 'tests') {
-                widgets.push({
-                    entity,
-                    name: name || entity
-                });
+                const mode = card.querySelector('.mode-input').value;
+                const widget = {
+                    name: name || entity,
+                    mode: mode,
+                    test_id: card.querySelector('.test-id-input').value
+                };
+                if (mode === 'existing_switch') {
+                    widget.entity = entity;
+                } else {
+                    widget.device_name = card.querySelector('.device-name-input').value || 'Panel';
+                }
+                widgets.push(widget);
             }
         });
         
@@ -603,11 +611,20 @@ const app = {
                 number.textContent = `#${currentCount + 1}`;
             }
             
-            // Add entity validation
+            // Add entity validation (skip for tests in create_binary_sensor mode)
             const entityInput = card.querySelector('.entity-input');
-            entityInput.addEventListener('blur', () => {
-                this.validateEntity(entityInput.value, card);
-            });
+            if (entityInput) {
+                entityInput.addEventListener('blur', () => {
+                    // Skip validation if tests widget in create_binary_sensor mode
+                    if (type === 'tests') {
+                        const modeSelect = card.querySelector('.mode-input');
+                        if (modeSelect && modeSelect.value === 'create_binary_sensor') {
+                            return; // No validation needed
+                        }
+                    }
+                    this.validateEntity(entityInput.value, card);
+                });
+            }
             
             // Add change listener to update count
             const inputs = card.querySelectorAll('input, select');
@@ -621,6 +638,14 @@ const app = {
             
             // Update count immediately
             this.updateWidgetCount(type);
+            
+            // For tests widgets, trigger initial mode display
+            if (type === 'tests') {
+                const modeSelect = card.querySelector('.mode-input');
+                if (modeSelect) {
+                    this.toggleTesterMode(modeSelect);
+                }
+            }
             
             // Scroll to new widget
             card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -921,8 +946,8 @@ const app = {
         
         // MDI Icon SVG paths
         const mdiIcons = {
-            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C12 2 8 4 8 9C8 11 9 13 10 14V16C10 17 9 18 8 19C7 20 6 21 6 22H18C18 21 17 20 16 19C15 18 14 17 14 16V14C15 13 16 11 16 9C16 4 12 2 12 2M12 4.5C12.5 5 13 6 13 9C13 10.5 12.5 11.5 12 12.5C11.5 11.5 11 10.5 11 9C11 6 11.5 5 12 4.5Z"/></svg>',
-            'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M7 2V4H9V12.5C9 13.88 7.88 15 6.5 15C5.12 15 4 13.88 4 12.5V4H6V2H2V4H3V12.5C3 14.43 4.57 16 6.5 16C8.43 16 10 14.43 10 12.5V4H11V2H7M16.5 2C14.57 2 13 3.57 13 5.5C13 7.43 14.57 9 16.5 9C18.43 9 20 7.43 20 5.5C20 3.57 18.43 2 16.5 2M16.5 7C15.67 7 15 6.33 15 5.5C15 4.67 15.67 4 16.5 4C17.33 4 18 4.67 18 5.5C18 6.33 17.33 7 16.5 7M16.5 10C14.57 10 13 11.57 13 13.5C13 15.43 14.57 17 16.5 17C18.43 17 20 15.43 20 13.5C20 11.57 18.43 10 16.5 10M16.5 15C15.67 15 15 14.33 15 13.5C15 12.67 15.67 12 16.5 12C17.33 12 18 12.67 18 13.5C18 14.33 17.33 15 16.5 15Z"/></svg>',
+            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M2 2H22V4H20V14C20 16.5 17.5 18 15 18H9C6.5 18 4 16.5 4 14V4H2V2M18 4H6V14C6 15.3 7.2 16 9 16H15C16.8 16 18 15.3 18 14V4Z"/></svg>',
+            'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M7 2V4H9V12.5C9 13.88 7.88 15 6.5 15C5.12 15 4 13.88 4 12.5V4H6V2H2V4H3V12.5C3 14.43 4.57 16 6.5 16C8.43 16 10 14.43 10 12.5V4H11V2H7M16.5 2C15.1 2 14 3.1 14 4.5C14 5.9 15.1 7 16.5 7C17.9 7 19 5.9 19 4.5C19 3.1 17.9 2 16.5 2M16.5 9C15.1 9 14 10.1 14 11.5C14 12.9 15.1 14 16.5 14C17.9 14 19 12.9 19 11.5C19 10.1 17.9 9 16.5 9M16.5 16C15.1 16 14 17.1 14 18.5C14 19.9 15.1 21 16.5 21C17.9 21 19 19.9 19 18.5C19 17.1 17.9 16 16.5 16Z"/></svg>',
             'mdi:lightbulb': '<i class="fas fa-lightbulb"></i>',
             'mdi:thermostat': '<i class="fas fa-temperature-half"></i>',
             'mdi:weather-partly-cloudy': '<i class="fas fa-cloud-sun"></i>',
@@ -1061,14 +1086,27 @@ const app = {
                 card.querySelector('.high-setpoint-input').value = widget.default_high_setpoint || 24;
                 card.querySelector('.dehumidify-input').value = widget.auto_dehumidify_setpoint || 60;
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
+            } else if (type === 'tests') {
+                card.querySelector('.test-id-input').value = widget.test_id || 'test_1';
+                card.querySelector('.mode-input').value = widget.mode || 'existing_switch';
+                if (widget.mode === 'create_binary_sensor') {
+                    card.querySelector('.existing-switch-group').style.display = 'none';
+                    card.querySelector('.create-sensor-group').style.display = 'block';
+                    card.querySelector('.device-name-input').value = widget.device_name || '';
+                }
             }
-            // Note: tests widgets only have entity and name fields, already set above
             
             // Add validation listener
             const entityInput = card.querySelector('.entity-input');
-            entityInput.addEventListener('blur', () => {
-                this.validateEntity(entityInput.value, card);
-            });
+            if (entityInput) {
+                entityInput.addEventListener('blur', () => {
+                    // Skip validation for tests in create_binary_sensor mode
+                    if (type === 'tests' && widget.mode === 'create_binary_sensor') {
+                        return;
+                    }
+                    this.validateEntity(entityInput.value, card);
+                });
+            }
             
             // Add change listener to update count
             const inputs = card.querySelectorAll('input, select');
@@ -1078,13 +1116,33 @@ const app = {
                 });
             });
             
-            // Trigger initial validation
-            this.validateEntity(widget.entity, card);
+            // Trigger initial validation (skip for tests in create_binary_sensor mode)
+            if (type !== 'tests' || widget.mode !== 'create_binary_sensor') {
+                if (entityInput && widget.entity) {
+                    this.validateEntity(widget.entity, card);
+                }
+            }
             
             list.appendChild(card);
         });
         
         this.updateWidgetCount(type);
+    },
+    
+    // Toggle tester widget mode (existing_switch vs create_binary_sensor)
+    toggleTesterMode(select) {
+        const card = select.closest('.widget-card');
+        const mode = select.value;
+        const existingGroup = card.querySelector('.existing-switch-group');
+        const createGroup = card.querySelector('.create-sensor-group');
+        
+        if (mode === 'existing_switch') {
+            existingGroup.style.display = 'block';
+            createGroup.style.display = 'none';
+        } else {
+            existingGroup.style.display = 'none';
+            createGroup.style.display = 'block';
+        }
     },
     
     // Show toast notification
