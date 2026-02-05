@@ -18,7 +18,7 @@ HA_TOKEN = os.environ.get('SUPERVISOR_TOKEN', '')
 HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else '')
 
 # Load version from config.yaml
-ADDON_VERSION = "1.2.3"  # Default fallback - update this when version changes
+ADDON_VERSION = "1.2.4"  # Fallback - should match config.yaml
 SCRIPT_DIR = Path(__file__).parent.parent
 try:
     import yaml
