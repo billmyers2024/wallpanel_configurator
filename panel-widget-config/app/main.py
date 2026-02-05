@@ -115,8 +115,8 @@ LIGHT_SCHEMA = {
     "properties": {
         "entity": {"type": "string", "pattern": "^light\\."},
         "name": {"type": "string", "minLength": 1},
-        "type": {"type": "string", "enum": ["ph", "phb", "phc", "phbc"]},
-        "icon_id": {"type": "integer", "minimum": 0, "maximum": 10}
+        "type": {"type": "string", "enum": ["p", "ph", "phb", "phc", "phbc"]},
+        "icon_id": {"type": "string", "enum": ["downlight", "pendant", "wardrobe", "lamp", "spot", "strip"]}
     },
     "required": ["entity", "name", "type"]
 }

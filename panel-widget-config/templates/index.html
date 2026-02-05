@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Widget Configurator v1.1.8</title>
+    <title>Panel Widget Configurator v1.1.7</title>
     <link rel="stylesheet" href="./static/css/style.css?v=4">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,7 +15,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-th-large"></i>
-                    <h1>Panel Widget Configurator <span style="font-size:14px;color:var(--text-muted)">v1.1.8</span></h1>
+                    <h1>Panel Widget Configurator <span style="font-size:14px;color:var(--text-muted)">v1.1.7</span></h1>
                 </div>
                 <div class="actions">
                     <button class="btn btn-secondary" onclick="app.loadConfig()">
@@ -404,6 +404,7 @@
                     <div class="form-group">
                         <label>Type</label>
                         <select class="input type-input">
+                            <option value="p">Power Only (p)</option>
                             <option value="ph">Power + Temperature (ph)</option>
                             <option value="phb">Power + Temperature + Brightness (phb)</option>
                             <option value="phc">Power + Temperature + Color (phc)</option>
@@ -413,12 +414,12 @@
                     <div class="form-group">
                         <label>Icon Style</label>
                         <select class="input icon-input">
-                            <option value="0">Downlight</option>
-                            <option value="1">Pendant</option>
-                            <option value="2">Wardrobe</option>
-                            <option value="3">Lamp</option>
-                            <option value="4">Spot</option>
-                            <option value="5">Strip</option>
+                            <option value="downlight">Downlight</option>
+                            <option value="pendant">Pendant</option>
+                            <option value="wardrobe">Wardrobe</option>
+                            <option value="lamp">Lamp</option>
+                            <option value="spot">Spot</option>
+                            <option value="strip">Strip</option>
                         </select>
                     </div>
                 </div>

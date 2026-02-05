@@ -528,7 +528,7 @@ const app = {
                     entity,
                     name: name || entity,
                     type: card.querySelector('.type-input').value,
-                    icon_id: parseInt(card.querySelector('.icon-input').value)
+                    icon_id: card.querySelector('.icon-input').value
                 });
             } else if (type === 'covers') {
                 widgets.push({
@@ -1015,7 +1015,7 @@ const app = {
             
             if (type === 'lights') {
                 card.querySelector('.type-input').value = widget.type;
-                card.querySelector('.icon-input').value = widget.icon_id || 0;
+                card.querySelector('.icon-input').value = widget.icon_id || 'downlight';
             } else if (type === 'covers') {
                 card.querySelector('.type-input').value = widget.type;
                 card.querySelector('.uptime-input').value = widget.up_time_msecs || 14300;
