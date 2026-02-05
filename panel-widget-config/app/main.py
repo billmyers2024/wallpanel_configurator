@@ -14,7 +14,8 @@ import requests
 
 # Configuration
 HA_TOKEN = os.environ.get('SUPERVISOR_TOKEN', '')
-HA_API = os.environ.get('HA_API', 'http://supervisor/core/api')
+# Use supervisor API when running as add-on, otherwise use env or default
+HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else '')
 
 # Determine if running in HA add-on mode or local development
 RUNNING_IN_HA = os.path.exists('/config') and os.environ.get('SUPERVISOR_TOKEN')
