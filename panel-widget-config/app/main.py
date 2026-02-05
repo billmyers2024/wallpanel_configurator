@@ -18,7 +18,9 @@ HA_TOKEN = os.environ.get('SUPERVISOR_TOKEN', '')
 HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else '')
 
 # Load version from config.yaml
-ADDON_VERSION = "1.2.4"  # Fallback - should match config.yaml
+# Load version from config.yaml - SINGLE SOURCE OF TRUTH
+# If this fails, version shows as "0.0.0" to indicate error
+ADDON_VERSION = "0.0.0"
 SCRIPT_DIR = Path(__file__).parent.parent
 try:
     import yaml
@@ -26,9 +28,11 @@ try:
     if config_yaml_path.exists():
         with open(config_yaml_path, 'r') as f:
             config_data = yaml.safe_load(f)
-            ADDON_VERSION = config_data.get('version', ADDON_VERSION)
-except Exception:
-    pass  # Use default version if config.yaml can't be read
+            ADDON_VERSION = config_data.get('version', '0.0.0')
+except Exception as e:
+    # Log error but continue with fallback
+    import logging
+    logging.warning(f"Could not read version from config.yaml: {e}")
 
 # Determine if running in HA add-on mode or local development
 RUNNING_IN_HA = os.path.exists('/config') and os.environ.get('SUPERVISOR_TOKEN')
