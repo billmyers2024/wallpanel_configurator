@@ -954,7 +954,7 @@ const app = {
         
         // MDI Icon SVG paths
         const mdiIcons = {
-            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M2 2H22V4H20V14C20 16.5 17.5 18 15 18H9C6.5 18 4 16.5 4 14V4H2V2M18 4H6V14C6 15.3 7.2 16 9 16H15C16.8 16 18 15.3 18 14V4Z"/></svg>',
+            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C12 2 6 4 6 10V22H18V10C18 4 12 2 12 2M8 20V10C8 7 10 6 12 5C14 6 16 7 16 10V20H8Z"/></svg>',
             'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M7 2V4H9V12.5C9 13.88 7.88 15 6.5 15C5.12 15 4 13.88 4 12.5V4H6V2H2V4H3V12.5C3 14.43 4.57 16 6.5 16C8.43 16 10 14.43 10 12.5V4H11V2H7M16.5 2C15.1 2 14 3.1 14 4.5C14 5.9 15.1 7 16.5 7C17.9 7 19 5.9 19 4.5C19 3.1 17.9 2 16.5 2M16.5 9C15.1 9 14 10.1 14 11.5C14 12.9 15.1 14 16.5 14C17.9 14 19 12.9 19 11.5C19 10.1 17.9 9 16.5 9M16.5 16C15.1 16 14 17.1 14 18.5C14 19.9 15.1 21 16.5 21C17.9 21 19 19.9 19 18.5C19 17.1 17.9 16 16.5 16Z"/></svg>',
             'mdi:lightbulb': '<i class="fas fa-lightbulb"></i>',
             'mdi:thermostat': '<i class="fas fa-temperature-half"></i>',

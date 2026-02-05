@@ -400,7 +400,12 @@ body {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     margin: 20px 24px 0 24px;
-    overflow: hidden;
+    overflow: visible;
+}
+
+.site-settings-panel .section-content {
+    max-height: 2000px;
+    overflow: visible;
 }
 
 .site-settings-panel .section-header {
@@ -449,7 +454,12 @@ body {
     border-radius: var(--radius);
     border: 1px solid var(--border);
     margin: 20px 24px;
-    overflow: hidden;
+    overflow: visible;
+}
+
+.room-settings-card .room-settings-panel {
+    max-height: 2000px;
+    overflow: visible;
 }
 
 .room-settings-card .section-header {
@@ -538,6 +548,27 @@ body {
     flex-direction: column;
     gap: 24px;
     min-height: 0;
+    max-height: calc(100vh - 300px);
+}
+
+/* Ensure scrollbar is always visible on WebKit browsers */
+.widgets-container::-webkit-scrollbar {
+    width: 10px;
+    display: block;
+}
+
+.widgets-container::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-radius: 5px;
+}
+
+.widgets-container::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 5px;
+}
+
+.widgets-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
 }
 
 /* Widget List - Horizontal wrapping grid */

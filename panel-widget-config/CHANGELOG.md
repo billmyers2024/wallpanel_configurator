@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.15
+
+### Fixed
+- Site settings panel no longer truncated when expanded/collapsed
+- Room settings panel overflow issues resolved
+- Widget container scrollbar now properly visible
+- Covers icon corrected to show proper draped curtains
+
 ## 1.2.13
 
 ### Fixed
