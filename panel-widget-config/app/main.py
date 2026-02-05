@@ -22,7 +22,19 @@ HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else 
 ADDON_VERSION = "0.0.0"
 APP_DIR = Path(__file__).parent  # /app directory where main.py lives
 
-# Debug prints (these go to stderr and show in Docker logs)
+# Debug: List all files recursively from /app to see container structure
+print("[VERSION DEBUG] === FILE LISTING START ===", flush=True)
+for root, dirs, files in os.walk('/app'):
+    level = root.replace('/app', '').count(os.sep)
+    indent = ' ' * 2 * level
+    print(f"[VERSION DEBUG] {indent}{os.path.basename(root)}/", flush=True)
+    subindent = ' ' * 2 * (level + 1)
+    for file in files[:20]:  # Limit to first 20 files per dir to avoid spam
+        print(f"[VERSION DEBUG] {subindent}{file}", flush=True)
+    if len(files) > 20:
+        print(f"[VERSION DEBUG] {subindent}... and {len(files) - 20} more files", flush=True)
+print("[VERSION DEBUG] === FILE LISTING END ===", flush=True)
+
 print(f"[VERSION DEBUG] APP_DIR: {APP_DIR}", flush=True)
 print(f"[VERSION DEBUG] __file__: {__file__}", flush=True)
 
