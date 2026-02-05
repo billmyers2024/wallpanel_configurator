@@ -17,10 +17,11 @@ COPY app/ /app/
 COPY static/ /app/static/
 
 # Copy templates last (they contain version numbers that change frequently)
+# Cache-bust: 20250205-2100
 COPY templates/ /app/templates/
 
-# Force no-cache for templates
-RUN chmod -R 644 /app/templates/*
+# Force no-cache for templates - touch all files to ensure fresh
+RUN chmod -R 644 /app/templates/* && touch /app/templates/*
 COPY run.sh /
 
 # Make run script executable
