@@ -15,9 +15,10 @@ RUN pip install --no-cache-dir \
 # Copy application
 COPY app/ /app/
 COPY static/ /app/static/
+COPY config.yaml /app/config.yaml
 
 # Copy templates last (they contain version numbers that change frequently)
-# Cache-bust: 20250205-2100
+# Cache-bust: 20250205-2105
 COPY templates/ /app/templates/
 
 # Force no-cache for templates - touch all files to ensure fresh
