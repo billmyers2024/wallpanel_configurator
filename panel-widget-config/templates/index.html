@@ -136,24 +136,28 @@
                         </div>
                     </div>
 
-                    <!-- Room Header - Simple: Name + Delete -->
-                    <div class="room-header-simple">
-                        <div class="room-name-section">
-                            <input type="text" id="device-name" class="input-lg room-name-input" placeholder="Room Name (e.g., Master Bedroom)">
-                        </div>
-                        <div class="room-actions">
-                            <button class="btn btn-secondary" onclick="app.toggleRoomSettings()">
-                                <i class="fas fa-cog"></i> Room Settings
-                            </button>
-                            <button class="btn btn-danger" onclick="app.deleteCurrentDevice()">
-                                <i class="fas fa-trash"></i> Delete Room
-                            </button>
-                        </div>
+                    <!-- Spacer between Site Settings and Room -->
+                    <div class="site-settings-spacer"></div>
+
+                    <!-- Room Name Header -->
+                    <div class="room-name-header">
+                        <input type="text" id="device-name" class="input-lg room-name-input" placeholder="Room Name (e.g., Master Bedroom)">
+                        <button class="btn btn-danger btn-sm" onclick="app.deleteCurrentDevice()">
+                            <i class="fas fa-trash"></i> Delete Room
+                        </button>
                     </div>
 
-                    <!-- Room Settings Panel (Collapsible) -->
-                    <div id="room-settings-panel" class="room-settings-panel" style="display: none;">
-                        <div class="room-settings-content">
+                    <!-- Room Settings Card - Styled like Site Settings -->
+                    <div class="room-settings-card">
+                        <div class="section-header" onclick="app.toggleRoomSettings()">
+                            <div class="section-title">
+                                <i class="fas fa-cog"></i>
+                                <h3>Room Options</h3>
+                            </div>
+                            <i id="room-settings-toggle" class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                        <div id="room-settings-panel" class="room-settings-panel">
+                            <div class="room-settings-content">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Device ID</label>

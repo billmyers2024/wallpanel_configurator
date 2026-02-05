@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.13
+
+### Fixed
+- Room settings styling now matches site settings (collapsible card layout)
+- Added spacing between site settings and room panel
+- Tester widget "Create Binary Sensor" mode now saves correctly
+- Tester widget validation now shows green tick for create binary sensor mode
+
+## 1.2.12
+
+### Fixed
+- MDI icon rendering for curtains and test-tube widgets
+- Icon colors now use primary blue instead of gray
+
 ## 1.2.11
 
 ### Fixed

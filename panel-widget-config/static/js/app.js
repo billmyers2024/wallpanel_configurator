@@ -521,10 +521,15 @@ const app = {
         const widgets = [];
         
         cards.forEach(card => {
-            const entity = card.querySelector('.entity-input').value;
+            const entityInput = card.querySelector('.entity-input');
+            const entity = entityInput ? entityInput.value : '';
             const name = card.querySelector('.name-input').value;
             
-            if (!entity) return; // Skip empty
+            // For tester widgets in create_binary_sensor mode, we don't need an entity
+            const isTesterCreateMode = (type === 'tests') && 
+                (card.querySelector('.mode-input')?.value === 'create_binary_sensor');
+            
+            if (!entity && !isTesterCreateMode) return; // Skip empty (except tester create mode)
             
             if (type === 'lights') {
                 widgets.push({
@@ -881,12 +886,15 @@ const app = {
     // Toggle room settings panel
     toggleRoomSettings() {
         const panel = document.getElementById('room-settings-panel');
+        const icon = document.getElementById('room-settings-toggle');
         if (!panel) return;
         
         if (panel.style.display === 'none') {
             panel.style.display = 'block';
+            if (icon) icon.classList.add('expanded');
         } else {
             panel.style.display = 'none';
+            if (icon) icon.classList.remove('expanded');
         }
     },
     
