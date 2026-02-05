@@ -17,6 +17,19 @@ HA_TOKEN = os.environ.get('SUPERVISOR_TOKEN', '')
 # Use supervisor API when running as add-on, otherwise use env or default
 HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else '')
 
+# Load version from config.yaml
+ADDON_VERSION = "1.2.0"  # Default fallback
+SCRIPT_DIR = Path(__file__).parent.parent
+try:
+    import yaml
+    config_yaml_path = SCRIPT_DIR / 'config.yaml'
+    if config_yaml_path.exists():
+        with open(config_yaml_path, 'r') as f:
+            config_data = yaml.safe_load(f)
+            ADDON_VERSION = config_data.get('version', ADDON_VERSION)
+except Exception:
+    pass  # Use default version if config.yaml can't be read
+
 # Determine if running in HA add-on mode or local development
 RUNNING_IN_HA = os.path.exists('/config') and os.environ.get('SUPERVISOR_TOKEN')
 
@@ -137,7 +150,7 @@ COVER_SCHEMA = {
 @app.route('/')
 def index():
     """Main configuration page"""
-    return render_template('index.html')
+    return render_template('index.html', version=ADDON_VERSION)
 
 
 @app.route('/api/config', methods=['GET'])
