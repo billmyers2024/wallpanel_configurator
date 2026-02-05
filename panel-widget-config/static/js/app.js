@@ -19,7 +19,7 @@ const app = {
     // Load widget types from API
     async loadWidgetTypes() {
         try {
-            const response = await fetch('/api/widget-types');
+            const response = await fetch('api/widget-types');
             const data = await response.json();
             this.widgetTypes = data.widgets;
             this.renderWidgetTypes();
@@ -31,7 +31,7 @@ const app = {
     // Load configuration from API
     async loadConfig() {
         try {
-            const response = await fetch('/api/config');
+            const response = await fetch('api/config');
             if (response.ok) {
                 this.config = await response.json();
                 
@@ -115,7 +115,7 @@ const app = {
         this.closeSavePromptModal();
         
         try {
-            const response = await fetch('/api/config/save-live', {
+            const response = await fetch('api/config/save-live', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(this.config)
@@ -159,7 +159,7 @@ const app = {
         this.closeStagingModal();
         
         try {
-            const response = await fetch('/api/config/save', {
+            const response = await fetch('api/config/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({...this.config, _filename: filename})
@@ -224,7 +224,7 @@ const app = {
     // Refresh staging files list
     async refreshStagingFiles() {
         try {
-            const response = await fetch('/api/config/staging');
+            const response = await fetch('api/config/staging');
             const data = await response.json();
             
             const listEl = document.getElementById('staging-files-list');
@@ -253,7 +253,7 @@ const app = {
     // Load a specific staging file
     async loadStagingFile(filename) {
         try {
-            const response = await fetch(`/api/config/staging/${encodeURIComponent(filename)}`);
+            const response = await fetch(`api/config/staging/${encodeURIComponent(filename)}`);
             const data = await response.json();
             
             if (response.ok) {
@@ -280,7 +280,7 @@ const app = {
         }
         
         try {
-            const response = await fetch(`/api/config/staging/${encodeURIComponent(filename)}`, {
+            const response = await fetch(`api/config/staging/${encodeURIComponent(filename)}`, {
                 method: 'DELETE'
             });
             
@@ -318,7 +318,7 @@ const app = {
         formData.append('file', file);
         
         try {
-            const response = await fetch('/api/config/import', {
+            const response = await fetch('api/config/import', {
                 method: 'POST',
                 body: formData
             });
@@ -362,7 +362,7 @@ const app = {
     // Make configuration live
     async makeLive() {
         try {
-            const response = await fetch('/api/config/make-live', {
+            const response = await fetch('api/config/make-live', {
                 method: 'POST'
             });
             
@@ -637,7 +637,7 @@ const app = {
         message.textContent = 'Validating...';
         
         try {
-            const response = await fetch('/api/validate/entity', {
+            const response = await fetch('api/validate/entity', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ entity: entityId })
@@ -673,7 +673,7 @@ const app = {
         modal.classList.add('active');
         
         try {
-            const response = await fetch(`/api/entities/${domain}`);
+            const response = await fetch(`api/entities/${domain}`);
             const data = await response.json();
             
             this.renderEntityList(data.entities || []);
@@ -756,7 +756,7 @@ const app = {
         modal.classList.add('active');
         
         try {
-            const response = await fetch(`/api/entities/${domain}`);
+            const response = await fetch(`api/entities/${domain}`);
             const data = await response.json();
             
             this.renderEntityListForInput(data.entities || []);
