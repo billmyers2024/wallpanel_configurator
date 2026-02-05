@@ -17,18 +17,22 @@ HA_TOKEN = os.environ.get('SUPERVISOR_TOKEN', '')
 # Use supervisor API when running as add-on, otherwise use env or default
 HA_API = os.environ.get('HA_API', 'http://supervisor/core/api' if HA_TOKEN else '')
 
-# Load version from config.yaml
 # Load version from config.yaml - SINGLE SOURCE OF TRUTH
 # If this fails, version shows as "0.0.0" to indicate error
 ADDON_VERSION = "0.0.0"
-SCRIPT_DIR = Path(__file__).parent.parent
+APP_DIR = Path(__file__).parent  # /app directory where main.py lives
 try:
     import yaml
-    config_yaml_path = SCRIPT_DIR / 'config.yaml'
+    # config.yaml is copied to /app/config.yaml in Docker
+    config_yaml_path = APP_DIR / 'config.yaml'
     if config_yaml_path.exists():
         with open(config_yaml_path, 'r') as f:
             config_data = yaml.safe_load(f)
             ADDON_VERSION = config_data.get('version', '0.0.0')
+    else:
+        # Log the path we tried for debugging
+        import logging
+        logging.warning(f"config.yaml not found at: {config_yaml_path}")
 except Exception as e:
     # Log error but continue with fallback
     import logging
