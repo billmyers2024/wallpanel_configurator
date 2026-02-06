@@ -152,11 +152,11 @@
                         <div class="section-header" onclick="app.toggleRoomSettings()">
                             <div class="section-title">
                                 <i class="fas fa-cog"></i>
-                                <h3>Room Options</h3>
+                                <h3>Room Settings</h3>
+                                <i id="room-settings-toggle" class="fas fa-chevron-down toggle-icon"></i>
                             </div>
-                            <i id="room-settings-toggle" class="fas fa-chevron-down toggle-icon"></i>
                         </div>
-                        <div id="room-settings-panel" class="room-settings-panel">
+                        <div id="room-settings-panel" class="room-settings-panel" style="display: none;">
                             <div class="room-settings-content">
                             <div class="form-row">
                                 <div class="form-group">
@@ -169,13 +169,24 @@
                                 </div>
                             </div>
                             
-                            <div class="form-group">
-                                <label>Presence Sensor Entity</label>
-                                <div class="input-with-action">
-                                    <input type="text" id="presence-entity" class="input" placeholder="binary_sensor.room_presence">
-                                    <button class="btn btn-sm btn-secondary" onclick="app.showEntityPicker('presence-entity', 'binary_sensor')">
-                                        <i class="fas fa-search"></i>
-                                    </button>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Presence Sensor Entity</label>
+                                    <div class="input-with-action">
+                                        <input type="text" id="presence-entity" class="input" placeholder="binary_sensor.room_presence">
+                                        <button class="btn btn-sm btn-secondary" onclick="app.showEntityPicker('presence-entity', 'binary_sensor')">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Door Sensor Entity</label>
+                                    <div class="input-with-action">
+                                        <input type="text" id="door-entity" class="input" placeholder="binary_sensor.room_door">
+                                        <button class="btn btn-sm btn-secondary" onclick="app.showEntityPicker('door-entity', 'binary_sensor')">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -204,7 +215,7 @@
                                     <input type="number" id="screen-brightness" class="input" value="80" min="10" max="100">
                                 </div>
                                 <div class="form-group">
-                                    <label>Volume (%)</label>
+                                    <label>Audio Volume (%)</label>
                                     <input type="number" id="volume" class="input" value="50" min="0" max="100">
                                 </div>
                             </div>

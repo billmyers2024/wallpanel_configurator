@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.17
+
+### Fixed
+- Renamed "Room Options" to "Room Settings" for consistency
+- Moved expand arrow next to heading (matches Site Settings layout)
+- Fixed curtains and test-tube icons to match Material Design
+- Added proper spacing between site settings and room sections
+- Fixed tester widget save for "Create Binary Sensor" mode
+- Room Settings now collapsed by default when selecting a room
+
+### Added
+- Door Sensor Entity field in room settings (for climate control)
+
+### Changed
+- Renamed "Volume (%)" to "Audio Volume (%)" in room settings
+
 ## 1.2.15
 
 ### Fixed

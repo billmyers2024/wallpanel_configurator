@@ -428,8 +428,11 @@ body {
 
 /* Site Settings to Room spacing */
 .site-settings-spacer {
-    height: 20px;
+    height: 24px;
     background: var(--bg);
+    min-height: 24px;
+    display: block;
+    flex-shrink: 0;
 }
 
 /* Room Name Header */

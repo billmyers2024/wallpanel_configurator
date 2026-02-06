@@ -492,6 +492,7 @@ const app = {
         
         // Update new room config fields
         const presenceEntity = document.getElementById('presence-entity');
+        const doorEntity = document.getElementById('door-entity');
         const voiceEnabled = document.getElementById('voice-assistant-enabled');
         const usePresence = document.getElementById('use-presence-for-screen');
         const screenTimeout = document.getElementById('screen-timeout');
@@ -499,6 +500,7 @@ const app = {
         const volume = document.getElementById('volume');
         
         if (presenceEntity) this.currentDevice.presence_entity = presenceEntity.value;
+        if (doorEntity) this.currentDevice.door_entity = doorEntity.value;
         if (voiceEnabled) this.currentDevice.voice_assistant_enabled = voiceEnabled.checked;
         if (usePresence) this.currentDevice.use_presence_for_screen = usePresence.checked;
         if (screenTimeout) this.currentDevice.screen_timeout = parseInt(screenTimeout.value) || 30;
@@ -561,15 +563,21 @@ const app = {
                 });
             } else if (type === 'tests') {
                 const mode = card.querySelector('.mode-input').value;
+                const deviceName = card.querySelector('.device-name-input')?.value || 'Panel';
+                const testId = card.querySelector('.test-id-input').value;
+                
+                // For create_binary_sensor mode, use display name or generate from device_name + test_id
+                const displayName = name || (mode === 'create_binary_sensor' ? `${deviceName} ${testId}` : entity);
+                
                 const widget = {
-                    name: name || entity,
+                    name: displayName,
                     mode: mode,
-                    test_id: card.querySelector('.test-id-input').value
+                    test_id: testId
                 };
                 if (mode === 'existing_switch') {
                     widget.entity = entity;
                 } else {
-                    widget.device_name = card.querySelector('.device-name-input').value || 'Panel';
+                    widget.device_name = deviceName;
                 }
                 widgets.push(widget);
             }
@@ -954,8 +962,8 @@ const app = {
         
         // MDI Icon SVG paths
         const mdiIcons = {
-            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C12 2 6 4 6 10V22H18V10C18 4 12 2 12 2M8 20V10C8 7 10 6 12 5C14 6 16 7 16 10V20H8Z"/></svg>',
-            'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M7 2V4H9V12.5C9 13.88 7.88 15 6.5 15C5.12 15 4 13.88 4 12.5V4H6V2H2V4H3V12.5C3 14.43 4.57 16 6.5 16C8.43 16 10 14.43 10 12.5V4H11V2H7M16.5 2C15.1 2 14 3.1 14 4.5C14 5.9 15.1 7 16.5 7C17.9 7 19 5.9 19 4.5C19 3.1 17.9 2 16.5 2M16.5 9C15.1 9 14 10.1 14 11.5C14 12.9 15.1 14 16.5 14C17.9 14 19 12.9 19 11.5C19 10.1 17.9 9 16.5 9M16.5 16C15.1 16 14 17.1 14 18.5C14 19.9 15.1 21 16.5 21C17.9 21 19 19.9 19 18.5C19 17.1 17.9 16 16.5 16Z"/></svg>',
+            'mdi:curtains': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M2 3H22V5H20V11C20 14 17.5 16 15 16H13C13 16 13 18 13 20C13 21 12.5 22 12 22C11.5 22 11 21 11 20C11 18 11 16 11 16H9C6.5 16 4 14 4 11V5H2V3M6 5V11C6 12.5 7.5 14 9 14H11V5H6M13 5V14H15C16.5 14 18 12.5 18 11V5H13Z"/></svg>',
+            'mdi:test-tube': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M17 2V4H15V12.5C15 14.43 13.43 16 11.5 16C9.57 16 8 14.43 8 12.5V4H6V2H17M9.5 4V12.5C9.5 13.6 10.4 14.5 11.5 14.5C12.6 14.5 13.5 13.6 13.5 12.5V4H9.5M11.5 18C12.6 18 13.5 18.9 13.5 20H9.5C9.5 18.9 10.4 18 11.5 18M11.5 8C12.6 8 13.5 8.9 13.5 10H9.5C9.5 8.9 10.4 8 11.5 8Z"/></svg>',
             'mdi:lightbulb': '<i class="fas fa-lightbulb"></i>',
             'mdi:thermostat': '<i class="fas fa-temperature-half"></i>',
             'mdi:weather-partly-cloudy': '<i class="fas fa-cloud-sun"></i>',
@@ -1025,6 +1033,7 @@ const app = {
         
         // Set new room config fields
         const presenceEntity = document.getElementById('presence-entity');
+        const doorEntity = document.getElementById('door-entity');
         const voiceEnabled = document.getElementById('voice-assistant-enabled');
         const usePresence = document.getElementById('use-presence-for-screen');
         const screenTimeout = document.getElementById('screen-timeout');
@@ -1032,11 +1041,22 @@ const app = {
         const volume = document.getElementById('volume');
         
         if (presenceEntity) presenceEntity.value = this.currentDevice.presence_entity || '';
+        if (doorEntity) doorEntity.value = this.currentDevice.door_entity || '';
         if (voiceEnabled) voiceEnabled.checked = this.currentDevice.voice_assistant_enabled || false;
         if (usePresence) usePresence.checked = this.currentDevice.use_presence_for_screen || false;
         if (screenTimeout) screenTimeout.value = this.currentDevice.screen_timeout || 30;
         if (screenBrightness) screenBrightness.value = this.currentDevice.screen_brightness || 80;
         if (volume) volume.value = this.currentDevice.volume || 50;
+        
+        // Collapse room settings by default when selecting a room
+        const roomSettingsPanel = document.getElementById('room-settings-panel');
+        const roomSettingsToggle = document.getElementById('room-settings-toggle');
+        if (roomSettingsPanel) {
+            roomSettingsPanel.style.display = 'none';
+        }
+        if (roomSettingsToggle) {
+            roomSettingsToggle.classList.remove('expanded');
+        }
         
         // Render lights
         this.renderWidgetList('lights', this.currentDevice.widgets?.lights || []);
