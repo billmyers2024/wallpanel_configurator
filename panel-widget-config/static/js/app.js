@@ -528,10 +528,12 @@ const app = {
             const name = card.querySelector('.name-input').value;
             
             // For tester widgets in create_binary_sensor mode, we don't need an entity
+            const modeInput = card.querySelector('.mode-input');
             const isTesterCreateMode = (type === 'tests') && 
-                (card.querySelector('.mode-input')?.value === 'create_binary_sensor');
+                (modeInput?.value === 'create_binary_sensor');
             
-            if (!entity && !isTesterCreateMode) return; // Skip empty (except tester create mode)
+            // Skip empty widgets, but allow tester create mode without entity
+            if (!entity && !isTesterCreateMode) return;
             
             if (type === 'lights') {
                 widgets.push({
@@ -563,11 +565,19 @@ const app = {
                 });
             } else if (type === 'tests') {
                 const mode = card.querySelector('.mode-input').value;
-                const deviceName = card.querySelector('.device-name-input')?.value || 'Panel';
+                const deviceNameInput = card.querySelector('.device-name-input');
+                const deviceName = deviceNameInput ? deviceNameInput.value : 'Panel';
                 const testId = card.querySelector('.test-id-input').value;
                 
-                // For create_binary_sensor mode, use display name or generate from device_name + test_id
-                const displayName = name || (mode === 'create_binary_sensor' ? `${deviceName} ${testId}` : entity);
+                // Always save tester widgets - generate name if needed
+                let displayName = name;
+                if (!displayName) {
+                    if (mode === 'create_binary_sensor') {
+                        displayName = `${deviceName} ${testId}`;
+                    } else {
+                        displayName = entity || 'Unnamed Test';
+                    }
+                }
                 
                 const widget = {
                     name: displayName,
@@ -577,7 +587,7 @@ const app = {
                 if (mode === 'existing_switch') {
                     widget.entity = entity;
                 } else {
-                    widget.device_name = deviceName;
+                    widget.device_name = deviceName || 'Panel';
                 }
                 widgets.push(widget);
             }
@@ -1116,10 +1126,11 @@ const app = {
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
             } else if (type === 'tests') {
                 card.querySelector('.test-id-input').value = widget.test_id || 'test_1';
-                card.querySelector('.mode-input').value = widget.mode || 'existing_switch';
+                const modeInput = card.querySelector('.mode-input');
+                modeInput.value = widget.mode || 'existing_switch';
+                // Trigger mode toggle to set correct visibility
+                this.toggleTesterMode(modeInput);
                 if (widget.mode === 'create_binary_sensor') {
-                    card.querySelector('.existing-switch-group').style.display = 'none';
-                    card.querySelector('.create-sensor-group').style.display = 'block';
                     card.querySelector('.device-name-input').value = widget.device_name || '';
                 }
             }
