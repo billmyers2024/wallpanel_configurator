@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.21
+
+### Fixed
+- Tester widget create_binary_sensor mode now properly registers (constructs entity_id from device_name + test_id)
+- Configurator now shows green ticks for create_binary_sensor mode tester widgets
+
 ## 1.2.20
 
 ### Fixed

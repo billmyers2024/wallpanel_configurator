@@ -592,7 +592,6 @@ const app = {
                     widget.device_name = deviceName || 'Panel';
                 }
                 
-                console.log('Pushing tester widget:', widget);
                 widgets.push(widget);
             }
         });
@@ -666,11 +665,16 @@ const app = {
             // Update count immediately
             this.updateWidgetCount(type);
             
-            // For tests widgets, trigger initial mode display
+            // For tests widgets, trigger initial mode display and set validation
             if (type === 'tests') {
                 const modeSelect = card.querySelector('.mode-input');
                 if (modeSelect) {
                     this.toggleTesterMode(modeSelect);
+                    // Show green tick for create_binary_sensor mode by default
+                    if (modeSelect.value === 'create_binary_sensor') {
+                        const validIcon = card.querySelector('.valid');
+                        if (validIcon) validIcon.style.display = 'inline';
+                    }
                 }
             }
             
@@ -1137,6 +1141,9 @@ const app = {
                 this.toggleTesterMode(modeInput);
                 if (widget.mode === 'create_binary_sensor') {
                     card.querySelector('.device-name-input').value = widget.device_name || '';
+                    // Show green tick for create_binary_sensor mode
+                    const validIcon = card.querySelector('.valid');
+                    if (validIcon) validIcon.style.display = 'inline';
                 }
             }
             
