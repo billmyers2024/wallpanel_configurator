@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.22
+
+### Fixed
+- Tester widget now maps tests to correct slots based on test_id (test_1, test_2, etc.)
+- All 4 test entries now display correctly regardless of order in JSON
+
 ## 1.2.21
 
 ### Fixed
