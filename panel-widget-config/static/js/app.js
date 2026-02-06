@@ -569,6 +569,8 @@ const app = {
                 const deviceName = deviceNameInput ? deviceNameInput.value : 'Panel';
                 const testId = card.querySelector('.test-id-input').value;
                 
+                console.log('Saving tester widget:', { mode, deviceName, testId, entity, name });
+                
                 // Always save tester widgets - generate name if needed
                 let displayName = name;
                 if (!displayName) {
@@ -589,6 +591,8 @@ const app = {
                 } else {
                     widget.device_name = deviceName || 'Panel';
                 }
+                
+                console.log('Pushing tester widget:', widget);
                 widgets.push(widget);
             }
         });
@@ -1125,6 +1129,7 @@ const app = {
                 card.querySelector('.dehumidify-input').value = widget.auto_dehumidify_setpoint || 60;
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
             } else if (type === 'tests') {
+                console.log('Rendering tester widget:', widget);
                 card.querySelector('.test-id-input').value = widget.test_id || 'test_1';
                 const modeInput = card.querySelector('.mode-input');
                 modeInput.value = widget.mode || 'existing_switch';

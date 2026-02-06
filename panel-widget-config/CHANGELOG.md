@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.20
+
+### Fixed
+- Tester widget UI debounce reduced to 200ms with delayed fallback update
+- Config loader now populates tester globals (fixes config loading)
+- Added debug logging to diagnose tester widget save issues
+
 ## 1.2.17
 
 ### Fixed
