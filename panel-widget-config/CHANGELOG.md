@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.3
+
+### Fixed
+- JavaScript syntax error: missing closing brace in addWidget function
+
 ## 1.3.2
 
 ### Fixed
