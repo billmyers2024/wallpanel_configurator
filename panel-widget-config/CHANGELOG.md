@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.2
+
+### Fixed
+- JavaScript syntax error preventing configurator from loading
+- Added missing closing brace in app.js widget handling
+
+## 1.3.1
+
+### Fixed
+- JavaScript syntax error in app.js (missing closing brace)
+
 ## 1.3.0
 
 ### Added
