@@ -430,7 +430,8 @@ const app = {
                 lights: [],
                 covers: [],
                 climate: [],
-                tests: []
+                tests: [],
+                art: null
             }
         };
         
@@ -512,6 +513,7 @@ const app = {
         this.updateWidgetsFromCards('covers');
         this.updateWidgetsFromCards('climate');
         this.updateWidgetsFromCards('tests');
+        this.updateArtFromForm();
     },
     
     // Update widget array from card forms
@@ -602,6 +604,43 @@ const app = {
         this.updateWidgetCount(type);
     },
     
+    // Update art widget from form (special case - single instance, different structure)
+    updateArtFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('art-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            // No art widget configured
+            this.currentDevice.widgets.art = null;
+            return;
+        }
+        
+        const directory = card.querySelector('.art-directory')?.value || '/local/art';
+        const transitionTime = parseInt(card.querySelector('.art-transition')?.value || '5');
+        const presenceAware = card.querySelector('.art-presence')?.value || 'N';
+        const presenceSensor = card.querySelector('.art-presence-sensor')?.value || '';
+        const imagesText = card.querySelector('.art-images')?.value || '';
+        
+        // Parse images (one per line)
+        const images = imagesText.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        
+        this.currentDevice.widgets.art = {
+            directory,
+            transition_time: transitionTime,
+            presence_aware: presenceAware,
+            presence_sensor: presenceAware === 'Y' ? presenceSensor : '',
+            images
+        };
+        
+        // Update badge
+        this.updateWidgetCount('art');
+    },
+    
     // Add new widget
     addWidget(type) {
         if (!this.currentDevice) {
@@ -609,9 +648,26 @@ const app = {
             return;
         }
         
+        // Special handling for art widget - only one allowed per device
+        if (type === 'art') {
+            if (this.currentDevice.widgets.art) {
+                this.showToast('Only one Art widget allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.art = {
+                directory: '/local/art',
+                transition_time: 5,
+                presence_aware: 'N',
+                presence_sensor: '',
+                images: []
+            };
+            this.renderArtWidget();
+            this.showToast('Art widget added', 'success');
+            return;
+        }
+        
         if (!this.currentDevice.widgets[type]) {
             this.currentDevice.widgets[type] = [];
-        }
         
         const list = document.getElementById(`${type}-list`);
         
@@ -621,6 +677,7 @@ const app = {
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
         else if (type === 'tests') templateId = 'tests-widget-template';
+        else if (type === 'art') templateId = 'art-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
         
         const template = document.getElementById(templateId);
@@ -1087,6 +1144,45 @@ const app = {
         
         // Render tester widgets
         this.renderWidgetList('tests', this.currentDevice.widgets?.tests || []);
+        
+        // Render art widget (single instance)
+        this.renderArtWidget();
+    },
+    
+    // Render art widget (special case - single instance with different structure)
+    renderArtWidget() {
+        const list = document.getElementById('art-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const art = this.currentDevice.widgets?.art;
+        if (!art) return;
+        
+        const template = document.getElementById('art-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        // Set values
+        card.querySelector('.art-directory').value = art.directory || '/local/art';
+        card.querySelector('.art-transition').value = art.transition_time || 5;
+        card.querySelector('.art-presence').value = art.presence_aware || 'N';
+        card.querySelector('.art-presence-sensor').value = art.presence_sensor || '';
+        card.querySelector('.art-images').value = (art.images || []).join('\n');
+        
+        // Enable/disable presence sensor based on selection
+        const presenceSelect = card.querySelector('.art-presence');
+        const presenceSensorInput = card.querySelector('.art-presence-sensor');
+        const presenceSensorBtn = card.querySelector('.input-with-action button');
+        
+        presenceSelect.addEventListener('change', () => {
+            const isEnabled = presenceSelect.value === 'Y';
+            presenceSensorInput.disabled = !isEnabled;
+            if (presenceSensorBtn) presenceSensorBtn.disabled = !isEnabled;
+        });
+        
+        list.appendChild(clone);
     },
     
     // Render widget list for a type
@@ -1100,6 +1196,7 @@ const app = {
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
         else if (type === 'tests') templateId = 'tests-widget-template';
+        else if (type === 'art') templateId = 'art-widget-template';
         else return;
         
         const template = document.getElementById(templateId);

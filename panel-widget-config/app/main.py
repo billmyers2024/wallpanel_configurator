@@ -194,6 +194,28 @@ TESTER_SCHEMA = {
     ]
 }
 
+ART_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "directory": {"type": "string", "minLength": 1, "default": "/local/art"},
+        "transition_time": {"type": "integer", "minimum": 1, "maximum": 3600, "default": 5},
+        "presence_aware": {"type": "string", "enum": ["Y", "N"], "default": "N"},
+        "presence_sensor": {"type": "string", "pattern": "^binary_sensor\\."},
+        "images": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 1
+        }
+    },
+    "required": ["images"],
+    "allOf": [
+        {
+            "if": {"properties": {"presence_aware": {"const": "Y"}}},
+            "then": {"required": ["presence_sensor"]}
+        }
+    ]
+}
+
 
 @app.route('/')
 def index():
@@ -564,7 +586,8 @@ def get_schema(widget_type):
     schemas = {
         'light': LIGHT_SCHEMA,
         'cover': COVER_SCHEMA,
-        'tester': TESTER_SCHEMA
+        'tester': TESTER_SCHEMA,
+        'art': ART_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -640,10 +663,12 @@ def widget_types():
             {
                 "id": "art",
                 "name": "Art Display",
-                "description": "Background art slideshow",
+                "description": "Full-screen image slideshow from HA web directory with double buffering and presence awareness",
                 "icon": "mdi:image",
-                "capabilities": ["display", "slideshow"],
-                "status": "future"
+                "icon_code": "F2E9",
+                "capabilities": ["display", "slideshow", "presence_aware", "touch_exit"],
+                "status": "stable",
+                "note": "Images must be 720x720 PNG/JPG in /config/www/art/ directory"
             },
             {
                 "id": "intercom",

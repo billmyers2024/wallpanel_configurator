@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0
+
+### Added
+- Art Display widget support
+  - Full-screen image slideshow from HA web directory
+  - Configurable transition time (1-3600 seconds)
+  - Presence-aware mode (only shows when room occupied)
+  - Double buffering for smooth transitions
+  - Touch-to-exit functionality
+  - Support for PNG/JPG images (720x720 recommended)
+  - Images served from /config/www/art/ directory
+  - JSON schema validation for art widget configuration
+  - UI configurator support for art widget settings
+
+### Changed
+- Art widget status changed from "future" to "stable"
+- Updated widget type definitions to include art capabilities
+
 ## 1.2.22
 
 ### Fixed
