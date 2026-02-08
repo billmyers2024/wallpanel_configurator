@@ -668,7 +668,6 @@ const app = {
         
         if (!this.currentDevice.widgets[type]) {
             this.currentDevice.widgets[type] = [];
-        }
         
         const list = document.getElementById(`${type}-list`);
         
