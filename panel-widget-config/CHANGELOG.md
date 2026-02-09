@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.3.5
+
+### Fixed
+- Export configuration now works correctly
+  - Falls back to staging directory if main staging file not found
+  - Falls back to live config if no staging files exist
+  - Prevents 404 error when exporting saved configurations
+
+## 1.3.4
+
+### Fixed
+- Fixed config loader buffer size for large site_settings.json files
+
 ## 1.3.3
 
 ### Fixed

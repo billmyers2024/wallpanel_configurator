@@ -458,10 +458,25 @@ def import_config():
 @app.route('/api/config/export/<filename>')
 def export_config(filename):
     """Export current configuration as downloadable JSON"""
-    # Use the current config in memory (saved to staging first if needed)
+    # Try to find config in multiple locations
+    # Priority: 1) Main staging file, 2) Any .json in staging dir, 3) Live config
     staging_file = ADDON_CONFIG / 'site_settings_staging.json'
     
-    # If no staging file exists, we can't export
+    # If main staging file doesn't exist, try to find any staging file
+    if not staging_file.exists():
+        # Look for any .json files in staging directory
+        if STAGING_DIR.exists():
+            json_files = list(STAGING_DIR.glob('*.json'))
+            if json_files:
+                staging_file = json_files[0]  # Use first found
+                logger.info(f"Using staging file: {staging_file}")
+        
+        # If still no staging file, try live config
+        if not staging_file.exists() and LIVE_CONFIG.exists():
+            staging_file = LIVE_CONFIG
+            logger.info(f"Using live config for export: {staging_file}")
+    
+    # If no config file found anywhere, we can't export
     if not staging_file.exists():
         return jsonify({"error": "No configuration found. Save first."}), 404
     
