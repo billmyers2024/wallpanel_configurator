@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.6
+
+### Fixed
+- Export configuration 404 error
+  - Properly fallback to live config when staging not found
+  - Add Docker cache-bust to ensure code updates deploy
+
 ## 1.3.5
 
 ### Fixed
