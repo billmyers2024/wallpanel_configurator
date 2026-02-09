@@ -462,11 +462,19 @@ def export_config(filename):
     # Priority: 1) Main staging file, 2) Any .json in staging dir, 3) Live config
     staging_file = ADDON_CONFIG / 'site_settings_staging.json'
     
+    logger.info(f"Export requested for: {filename}")
+    logger.info(f"Checking main staging file: {staging_file} (exists: {staging_file.exists()})")
+    logger.info(f"ADDON_CONFIG path: {ADDON_CONFIG}")
+    logger.info(f"STAGING_DIR path: {STAGING_DIR}")
+    logger.info(f"LIVE_CONFIG path: {LIVE_CONFIG}")
+    
     # If main staging file doesn't exist, try to find any staging file
     if not staging_file.exists():
+        logger.info("Main staging file not found, checking alternatives...")
         # Look for any .json files in staging directory
         if STAGING_DIR.exists():
             json_files = list(STAGING_DIR.glob('*.json'))
+            logger.info(f"Found {len(json_files)} JSON files in staging dir")
             if json_files:
                 staging_file = json_files[0]  # Use first found
                 logger.info(f"Using staging file: {staging_file}")
@@ -475,9 +483,12 @@ def export_config(filename):
         if not staging_file.exists() and LIVE_CONFIG.exists():
             staging_file = LIVE_CONFIG
             logger.info(f"Using live config for export: {staging_file}")
+    else:
+        logger.info(f"Using main staging file: {staging_file}")
     
     # If no config file found anywhere, we can't export
     if not staging_file.exists():
+        logger.error("No configuration file found for export!")
         return jsonify({"error": "No configuration found. Save first."}), 404
     
     # Ensure filename is safe

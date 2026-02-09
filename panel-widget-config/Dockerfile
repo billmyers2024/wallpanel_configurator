@@ -14,12 +14,13 @@ RUN pip install --no-cache-dir \
     pyyaml==6.0.1
 
 # Copy application
+# Cache-bust: 20250209-1530
 COPY app/ /app/
 COPY static/ /app/static/
 COPY config.yaml /app/config.yaml
 
 # Copy templates last (they contain version numbers that change frequently)
-# Cache-bust: 20250205-2105
+# Cache-bust: 20250209-1530
 COPY templates/ /app/templates/
 
 # Force no-cache for templates - touch all files to ensure fresh
