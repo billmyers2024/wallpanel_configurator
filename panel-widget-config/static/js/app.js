@@ -383,7 +383,8 @@ const app = {
     // Export configuration
     doExport() {
         const filename = document.getElementById('export-filename').value || 'site_settings';
-        window.open(`/api/config/export/${filename}`, '_blank');
+        // Use relative URL for ingress compatibility
+        window.open(`api/config/export/${filename}`, '_blank');
         this.closeExportModal();
     },
     
