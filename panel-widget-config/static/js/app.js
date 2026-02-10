@@ -678,7 +678,7 @@ const app = {
         listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
         
         try {
-            const response = await fetch(`/api/art/images?directory=${encodeURIComponent(directory)}`);
+            const response = await fetch(`api/art/images?directory=${encodeURIComponent(directory)}`);
             const data = await response.json();
             
             if (!data.success) {
@@ -788,7 +788,7 @@ const app = {
             formData.append('directory', directory);
             
             try {
-                const response = await fetch('/api/art/upload', {
+                const response = await fetch('api/art/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -833,7 +833,7 @@ const app = {
         const directory = document.getElementById('art-manager-directory').value;
         
         try {
-            const response = await fetch('/api/art/delete', {
+            const response = await fetch('api/art/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ directory, filename })
