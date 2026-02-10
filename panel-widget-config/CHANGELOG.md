@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1
+
+### Fixed
+- Fixed CSS file corruption that removed all styling
+  - Restored original theme and component styles
+  - Art widget styles properly appended
+
 ## 1.4.0
 
 ### Added
