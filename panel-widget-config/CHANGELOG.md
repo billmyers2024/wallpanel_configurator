@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.9
+
+### Fixed
+- Art Image Manager API URLs now use relative paths
+  - Fixes "Error loading images" 404 error
+  - Compatible with Home Assistant ingress
+
 ## 1.3.8
 
 ### Added
