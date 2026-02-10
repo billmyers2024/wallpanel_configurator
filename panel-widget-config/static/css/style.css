@@ -1063,3 +1063,64 @@ select.input {
         grid-template-columns: 1fr;
     }
 }
+
+/* ============================================================================
+   ART WIDGET - Image Manager Styles
+   ============================================================================ */
+
+.art-image-list {
+    background: var(--darker);
+}
+
+.art-image-item {
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.art-image-item:hover {
+    background: var(--card-hover);
+}
+
+.art-image-item.dragging {
+    opacity: 0.5;
+    background: var(--primary-dark);
+}
+
+.art-image-item.drag-over {
+    border-top: 2px solid var(--primary);
+}
+
+.file-upload-area {
+    transition: all 0.2s;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary) !important;
+    background: rgba(3, 169, 244, 0.05);
+}
+
+.file-upload-area.drag-over {
+    border-color: var(--primary) !important;
+    background: rgba(3, 169, 244, 0.1);
+}
+
+/* Modal improvements */
+#art-image-manager-modal .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+#art-image-manager-modal .modal-body {
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Drag handle styling */
+.drag-handle {
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}

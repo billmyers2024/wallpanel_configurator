@@ -642,6 +642,240 @@ const app = {
         this.updateWidgetCount('art');
     },
     
+    // =========================================================================
+    // ART WIDGET - Image Manager
+    // =========================================================================
+    
+    // Open the art image manager modal
+    async openArtImageManager(button) {
+        // Get the art widget card
+        const card = button.closest('.widget-card');
+        if (!card) return;
+        
+        // Get current directory
+        const directory = card.querySelector('.art-directory')?.value || '/local/art';
+        document.getElementById('art-manager-directory').value = directory;
+        
+        // Store reference to current art widget for later
+        this.currentArtWidget = card;
+        
+        // Show modal
+        document.getElementById('art-image-manager-modal').style.display = 'flex';
+        
+        // Load images
+        await this.loadArtImages(directory);
+    },
+    
+    // Close the art image manager modal
+    closeArtImageManager() {
+        document.getElementById('art-image-manager-modal').style.display = 'none';
+        this.currentArtWidget = null;
+    },
+    
+    // Load images from the art directory
+    async loadArtImages(directory) {
+        const listContainer = document.getElementById('art-image-list');
+        listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+        
+        try {
+            const response = await fetch(`/api/art/images?directory=${encodeURIComponent(directory)}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                listContainer.innerHTML = `<div style="padding: 20px; color: var(--danger);">Error: ${data.error}</div>`;
+                return;
+            }
+            
+            // Get current images from widget
+            const currentImages = this.currentDevice?.widgets?.art?.images || [];
+            
+            // Render images in order, with any new images at the end
+            const imagesToShow = [...currentImages];
+            
+            // Add any images from directory that aren't in current list
+            data.images.forEach(img => {
+                if (!imagesToShow.includes(img)) {
+                    imagesToShow.push(img);
+                }
+            });
+            
+            if (imagesToShow.length === 0) {
+                listContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No images found. Upload some images to get started.</div>';
+                return;
+            }
+            
+            // Render image list
+            listContainer.innerHTML = imagesToShow.map((img, index) => `
+                <div class="art-image-item" draggable="true" data-filename="${img}" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); cursor: grab;">
+                    <span class="drag-handle" style="margin-right: 10px; color: var(--text-muted); cursor: grab;"><i class="fas fa-grip-vertical"></i></span>
+                    <span class="image-number" style="margin-right: 10px; color: var(--text-muted); min-width: 30px;">${index + 1}.</span>
+                    <span class="image-name" style="flex: 1; font-family: monospace;">${img}</span>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteArtImage('${img}')" style="margin-left: 10px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+            
+            // Setup drag and drop
+            this.setupArtImageDragAndDrop();
+            
+        } catch (error) {
+            console.error('Failed to load images:', error);
+            listContainer.innerHTML = `<div style="padding: 20px; color: var(--danger);">Error loading images: ${error.message}</div>`;
+        }
+    },
+    
+    // Setup drag and drop for image reordering
+    setupArtImageDragAndDrop() {
+        const list = document.getElementById('art-image-list');
+        let draggedItem = null;
+        
+        list.querySelectorAll('.art-image-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                item.style.opacity = '0.5';
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                draggedItem = null;
+                this.updateArtImageNumbers();
+            });
+            
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                if (draggedItem && draggedItem !== item) {
+                    const rect = item.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midY) {
+                        item.parentNode.insertBefore(draggedItem, item);
+                    } else {
+                        item.parentNode.insertBefore(draggedItem, item.nextSibling);
+                    }
+                }
+            });
+        });
+    },
+    
+    // Update image numbers after reordering
+    updateArtImageNumbers() {
+        document.querySelectorAll('.art-image-item').forEach((item, index) => {
+            item.querySelector('.image-number').textContent = `${index + 1}.`;
+        });
+    },
+    
+    // Upload new images
+    async uploadArtImages(input) {
+        const files = input.files;
+        if (!files || files.length === 0) return;
+        
+        const directory = document.getElementById('art-manager-directory').value;
+        const uploadArea = document.querySelector('.file-upload-area');
+        const originalContent = uploadArea.innerHTML;
+        
+        uploadArea.innerHTML = `<i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i><p>Uploading ${files.length} image(s)...</p>`;
+        
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('directory', directory);
+            
+            try {
+                const response = await fetch('/api/art/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error(`Failed to upload ${file.name}:`, data.error);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error(`Error uploading ${file.name}:`, error);
+            }
+        }
+        
+        // Restore upload area
+        uploadArea.innerHTML = originalContent;
+        
+        // Show result
+        if (successCount > 0) {
+            this.showToast(`Uploaded ${successCount} image(s)`, 'success');
+        }
+        if (errorCount > 0) {
+            this.showToast(`Failed to upload ${errorCount} image(s)`, 'error');
+        }
+        
+        // Reload image list
+        await this.loadArtImages(directory);
+        
+        // Clear input
+        input.value = '';
+    },
+    
+    // Delete an image
+    async deleteArtImage(filename) {
+        if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis cannot be undone.`)) {
+            return;
+        }
+        
+        const directory = document.getElementById('art-manager-directory').value;
+        
+        try {
+            const response = await fetch('/api/art/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ directory, filename })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                this.showToast(`Deleted ${filename}`, 'success');
+                await this.loadArtImages(directory);
+            } else {
+                this.showToast(`Failed to delete: ${data.error}`, 'error');
+            }
+        } catch (error) {
+            console.error('Failed to delete image:', error);
+            this.showToast(`Error deleting image: ${error.message}`, 'error');
+        }
+    },
+    
+    // Save the image order to the widget config
+    saveArtImageOrder() {
+        if (!this.currentArtWidget) return;
+        
+        // Get ordered list of images
+        const images = [];
+        document.querySelectorAll('.art-image-item').forEach(item => {
+            const filename = item.getAttribute('data-filename');
+            if (filename) images.push(filename);
+        });
+        
+        // Update the textarea in the widget
+        const textarea = this.currentArtWidget.querySelector('.art-images');
+        if (textarea) {
+            textarea.value = images.join('\n');
+        }
+        
+        // Update device config
+        this.updateArtFromForm();
+        
+        this.showToast('Image order saved', 'success');
+        this.closeArtImageManager();
+    },
+    
     // Add new widget
     addWidget(type) {
         if (!this.currentDevice) {

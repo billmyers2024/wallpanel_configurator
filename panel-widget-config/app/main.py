@@ -724,6 +724,151 @@ def widget_types():
     })
 
 
+# =============================================================================
+# ART WIDGET - Image Management Endpoints
+# =============================================================================
+
+@app.route('/api/art/images', methods=['GET'])
+def list_art_images():
+    """List images in the art directory"""
+    directory = request.args.get('directory', '/local/art')
+    
+    # Convert /local/art to /config/www/art path
+    if directory.startswith('/local/'):
+        dir_name = directory[7:]  # Remove '/local/'
+        art_path = Path('/config/www') / dir_name
+    else:
+        art_path = Path('/config/www') / directory.strip('/')
+    
+    # Security: Ensure path is within /config/www
+    try:
+        art_path = art_path.resolve()
+        www_path = Path('/config/www').resolve()
+        if not str(art_path).startswith(str(www_path)):
+            return jsonify({"error": "Invalid directory path"}), 403
+    except Exception as e:
+        return jsonify({"error": f"Invalid path: {str(e)}"}), 400
+    
+    # Create directory if it doesn't exist
+    art_path.mkdir(parents=True, exist_ok=True)
+    
+    # List image files
+    try:
+        images = []
+        for ext in ['*.jpg', '*.jpeg', '*.png', '*.gif', '*.webp']:
+            images.extend([f.name for f in art_path.glob(ext)])
+        images.sort()
+        
+        return jsonify({
+            "success": True,
+            "directory": directory,
+            "path": str(art_path),
+            "images": images
+        })
+    except Exception as e:
+        logger.error(f"Failed to list images: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/art/upload', methods=['POST'])
+def upload_art_image():
+    """Upload an image to the art directory"""
+    directory = request.form.get('directory', '/local/art')
+    
+    # Convert /local/art to /config/www/art path
+    if directory.startswith('/local/'):
+        dir_name = directory[7:]
+        art_path = Path('/config/www') / dir_name
+    else:
+        art_path = Path('/config/www') / directory.strip('/')
+    
+    # Security check
+    try:
+        art_path = art_path.resolve()
+        www_path = Path('/config/www').resolve()
+        if not str(art_path).startswith(str(www_path)):
+            return jsonify({"error": "Invalid directory path"}), 403
+    except Exception as e:
+        return jsonify({"error": f"Invalid path: {str(e)}"}), 400
+    
+    # Create directory if needed
+    art_path.mkdir(parents=True, exist_ok=True)
+    
+    # Check if file was uploaded
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    # Validate file extension
+    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    file_ext = Path(file.filename).suffix.lower()
+    if file_ext not in allowed_extensions:
+        return jsonify({"error": f"Invalid file type. Allowed: {allowed_extensions}"}), 400
+    
+    # Save file with safe filename
+    try:
+        safe_filename = Path(file.filename).name
+        file_path = art_path / safe_filename
+        file.save(str(file_path))
+        
+        logger.info(f"Uploaded art image: {file_path}")
+        return jsonify({
+            "success": True,
+            "filename": safe_filename,
+            "path": str(file_path)
+        })
+    except Exception as e:
+        logger.error(f"Failed to upload image: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/art/delete', methods=['POST'])
+def delete_art_image():
+    """Delete an image from the art directory"""
+    data = request.get_json()
+    directory = data.get('directory', '/local/art')
+    filename = data.get('filename', '')
+    
+    if not filename:
+        return jsonify({"error": "No filename provided"}), 400
+    
+    # Convert /local/art to /config/www/art path
+    if directory.startswith('/local/'):
+        dir_name = directory[7:]
+        art_path = Path('/config/www') / dir_name
+    else:
+        art_path = Path('/config/www') / directory.strip('/')
+    
+    # Security check
+    try:
+        art_path = art_path.resolve()
+        www_path = Path('/config/www').resolve()
+        if not str(art_path).startswith(str(www_path)):
+            return jsonify({"error": "Invalid directory path"}), 403
+    except Exception as e:
+        return jsonify({"error": f"Invalid path: {str(e)}"}), 400
+    
+    # Delete file
+    try:
+        file_path = art_path / Path(filename).name
+        if file_path.exists():
+            file_path.unlink()
+            logger.info(f"Deleted art image: {file_path}")
+            return jsonify({
+                "success": True,
+                "filename": filename,
+                "message": f"Deleted {filename}"
+            })
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        logger.error(f"Failed to delete image: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     # Development mode
     app.run(host='0.0.0.0', port=8099, debug=True)

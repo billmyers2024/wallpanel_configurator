@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.8
+
+### Added
+- Art Widget Image Manager
+  - New "Manage Images" button on Art widget panel
+  - Upload images directly through the configurator (drag & drop or click)
+  - Reorder images via drag and drop
+  - Delete images from the web directory
+  - Auto-generates JSON configuration entries for images
+  - Supports JPG, PNG, GIF, WEBP formats
+
 ## 1.3.6
 
 ### Fixed
