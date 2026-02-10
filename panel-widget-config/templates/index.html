@@ -761,9 +761,10 @@
                     <div class="file-upload-area" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('art-image-upload').click()">
                         <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--text-muted);"></i>
                         <p style="margin: 10px 0; color: var(--text-muted);">Click to upload or drag and drop</p>
-                        <small style="color: var(--text-muted);">JPG, PNG, GIF, WEBP (max 5MB)</small>
+                        <small style="color: var(--warning);"><strong>Requirements:</strong> 720x720px Baseline JPG only</small><br>
+                        <small style="color: var(--text-muted);">Progressive JPEGs and other formats not supported</small>
                     </div>
-                    <input type="file" id="art-image-upload" multiple accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" onchange="app.uploadArtImages(this)">
+                    <input type="file" id="art-image-upload" multiple accept=".jpg,.jpeg" style="display: none;" onchange="app.uploadArtImages(this)">
                 </div>
 
                 <div class="form-group">

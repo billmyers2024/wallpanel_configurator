@@ -770,6 +770,80 @@ def list_art_images():
         return jsonify({"error": str(e)}), 500
 
 
+def validate_jpeg(file_stream, filename):
+    """
+    Validate JPEG file:
+    1. Must be JPEG format (SOI marker)
+    2. Must be baseline (SOF0), not progressive (SOF2)
+    3. Must be 720x720 pixels
+    
+    Returns: (is_valid, error_message)
+    """
+    # Read file content
+    content = file_stream.read()
+    file_stream.seek(0)  # Reset for later use
+    
+    # Check JPEG SOI marker (FF D8)
+    if len(content) < 2 or content[0] != 0xFF or content[1] != 0xD8:
+        return False, "Not a valid JPEG file"
+    
+    # Parse JPEG markers
+    i = 2
+    width = None
+    height = None
+    is_progressive = False
+    
+    while i < len(content) - 1:
+        # Look for marker
+        if content[i] != 0xFF:
+            i += 1
+            continue
+        
+        marker = content[i + 1]
+        
+        # Skip padding
+        if marker == 0xFF:
+            i += 1
+            continue
+        
+        # SOF0 = Baseline DCT
+        if marker == 0xC0:
+            if i + 9 < len(content):
+                height = (content[i + 5] << 8) | content[i + 6]
+                width = (content[i + 7] << 8) | content[i + 8]
+        
+        # SOF2 = Progressive DCT
+        elif marker == 0xC2:
+            is_progressive = True
+            if i + 9 < len(content):
+                height = (content[i + 5] << 8) | content[i + 6]
+                width = (content[i + 7] << 8) | content[i + 8]
+        
+        # Skip to next marker
+        if marker == 0xD9:  # EOI
+            break
+        elif marker in [0xD8, 0x01]:  # SOI, TEM
+            i += 2
+        elif marker in [0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7]:  # Restart markers
+            i += 2
+        else:
+            # Skip segment length
+            if i + 3 < len(content):
+                length = (content[i + 2] << 8) | content[i + 3]
+                i += 2 + length
+            else:
+                break
+    
+    # Validate results
+    if is_progressive:
+        return False, "Progressive JPEG not supported - use baseline JPEG"
+    
+    if width != 720 or height != 720:
+        return False, f"Image must be 720x720 pixels, got {width}x{height}"
+    
+    return True, None
+
+
 @app.route('/api/art/upload', methods=['POST'])
 def upload_art_image():
     """Upload an image to the art directory"""
@@ -802,11 +876,17 @@ def upload_art_image():
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
     
-    # Validate file extension
-    allowed_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+    # Validate file extension - ONLY JPG/JPEG allowed
     file_ext = Path(file.filename).suffix.lower()
-    if file_ext not in allowed_extensions:
-        return jsonify({"error": f"Invalid file type. Allowed: {allowed_extensions}"}), 400
+    if file_ext not in ['.jpg', '.jpeg']:
+        return jsonify({"error": "Only JPG/JPEG files allowed"}), 400
+    
+    # Validate JPEG content
+    is_valid, error_msg = validate_jpeg(file.stream, file.filename)
+    file.stream.seek(0)  # Reset stream after validation
+    
+    if not is_valid:
+        return jsonify({"error": error_msg}), 400
     
     # Save file with safe filename
     try:

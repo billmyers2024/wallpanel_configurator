@@ -785,8 +785,16 @@ const app = {
         
         let successCount = 0;
         let errorCount = 0;
+        let errorMessages = [];
         
         for (const file of files) {
+            // Pre-validate file extension
+            if (!file.name.toLowerCase().endsWith('.jpg') && !file.name.toLowerCase().endsWith('.jpeg')) {
+                errorCount++;
+                errorMessages.push(`${file.name}: Only JPG/JPEG files allowed`);
+                continue;
+            }
+            
             const formData = new FormData();
             formData.append('file', file);
             formData.append('directory', directory);
@@ -802,10 +810,12 @@ const app = {
                     successCount++;
                 } else {
                     errorCount++;
+                    errorMessages.push(`${file.name}: ${data.error}`);
                     console.error(`Failed to upload ${file.name}:`, data.error);
                 }
             } catch (error) {
                 errorCount++;
+                errorMessages.push(`${file.name}: Network error`);
                 console.error(`Error uploading ${file.name}:`, error);
             }
         }
@@ -818,7 +828,12 @@ const app = {
             this.showToast(`Uploaded ${successCount} image(s)`, 'success');
         }
         if (errorCount > 0) {
-            this.showToast(`Failed to upload ${errorCount} image(s)`, 'error');
+            // Show detailed error for first error
+            const firstError = errorMessages[0];
+            this.showToast(firstError, 'error', 5000);
+            if (errorMessages.length > 1) {
+                this.showToast(`${errorMessages.length - 1} more file(s) failed`, 'warning');
+            }
         }
         
         // Reload image list

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.2
+
+### Changed
+- Art Image Manager now validates uploaded images
+  - Only 720x720 baseline JPG/JPEG files accepted
+  - Progressive JPEGs rejected (not supported by ESP32 decoder)
+  - Other formats (PNG, GIF, WEBP) rejected
+  - Clear error messages for validation failures
+
+### Fixed
+- Fixed delete image functionality
+
 ## 1.4.1
 
 ### Fixed
