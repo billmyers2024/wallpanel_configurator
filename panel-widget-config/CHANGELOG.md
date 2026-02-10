@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+### Added
+- Art Image Manager now shows thumbnail previews
+  - 60x60px preview images for easier visual sorting
+  - Hover to zoom effect on thumbnails
+  - Number badges for each image position
+
 ## 1.3.9
 
 ### Fixed

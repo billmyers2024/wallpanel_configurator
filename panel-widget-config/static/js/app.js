@@ -704,17 +704,21 @@ const app = {
                 return;
             }
             
-            // Render image list
-            listContainer.innerHTML = imagesToShow.map((img, index) => `
-                <div class="art-image-item" draggable="true" data-filename="${img}" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); cursor: grab;">
-                    <span class="drag-handle" style="margin-right: 10px; color: var(--text-muted); cursor: grab;"><i class="fas fa-grip-vertical"></i></span>
-                    <span class="image-number" style="margin-right: 10px; color: var(--text-muted); min-width: 30px;">${index + 1}.</span>
-                    <span class="image-name" style="flex: 1; font-family: monospace;">${img}</span>
-                    <button class="btn btn-sm btn-danger" onclick="app.deleteArtImage('${img}')" style="margin-left: 10px;">
+            // Render image list with thumbnails
+            const haBaseUrl = window.location.origin;  // Get HA base URL
+            listContainer.innerHTML = imagesToShow.map((img, index) => {
+                const imageUrl = `${haBaseUrl}/local/art/${encodeURIComponent(img)}`;
+                return `
+                <div class="art-image-item" draggable="true" data-filename="${img}" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); cursor: grab; gap: 10px;">
+                    <span class="drag-handle" style="color: var(--text-muted); cursor: grab;"><i class="fas fa-grip-vertical"></i></span>
+                    <span class="image-number" style="color: var(--text-muted); min-width: 25px; text-align: center;">${index + 1}</span>
+                    <img src="${imageUrl}" alt="${img}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.style.display='none'">
+                    <span class="image-name" style="flex: 1; font-family: monospace; font-size: 12px; word-break: break-all;">${img}</span>
+                    <button class="btn btn-sm btn-danger" onclick="app.deleteArtImage('${img}')">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-            `).join('');
+            `}).join('');
             
             // Setup drag and drop
             this.setupArtImageDragAndDrop();
