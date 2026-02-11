@@ -191,6 +191,18 @@
                             </div>
                             
                             <div class="form-row">
+                                <div class="form-group">
+                                    <label>Room Temperature Entity</label>
+                                    <div class="input-with-action">
+                                        <input type="text" id="room-temp-entity" class="input" placeholder="sensor.room_temperature">
+                                        <button class="btn btn-sm btn-secondary" onclick="app.showEntityPicker('room-temp-entity', 'sensor')">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
                                 <div class="form-group checkbox-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="voice-assistant-enabled">

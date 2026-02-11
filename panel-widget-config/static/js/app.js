@@ -496,6 +496,7 @@ const app = {
         // Update new room config fields
         const presenceEntity = document.getElementById('presence-entity');
         const doorEntity = document.getElementById('door-entity');
+        const roomTempEntity = document.getElementById('room-temp-entity');
         const voiceEnabled = document.getElementById('voice-assistant-enabled');
         const usePresence = document.getElementById('use-presence-for-screen');
         const screenTimeout = document.getElementById('screen-timeout');
@@ -504,6 +505,7 @@ const app = {
         
         if (presenceEntity) this.currentDevice.presence_entity = presenceEntity.value;
         if (doorEntity) this.currentDevice.door_entity = doorEntity.value;
+        if (roomTempEntity) this.currentDevice.room_temp_entity = roomTempEntity.value;
         if (voiceEnabled) this.currentDevice.voice_assistant_enabled = voiceEnabled.checked;
         if (usePresence) this.currentDevice.use_presence_for_screen = usePresence.checked;
         if (screenTimeout) this.currentDevice.screen_timeout = parseInt(screenTimeout.value) || 30;
@@ -1380,6 +1382,7 @@ const app = {
         // Set new room config fields
         const presenceEntity = document.getElementById('presence-entity');
         const doorEntity = document.getElementById('door-entity');
+        const roomTempEntity = document.getElementById('room-temp-entity');
         const voiceEnabled = document.getElementById('voice-assistant-enabled');
         const usePresence = document.getElementById('use-presence-for-screen');
         const screenTimeout = document.getElementById('screen-timeout');
@@ -1388,6 +1391,7 @@ const app = {
         
         if (presenceEntity) presenceEntity.value = this.currentDevice.presence_entity || '';
         if (doorEntity) doorEntity.value = this.currentDevice.door_entity || '';
+        if (roomTempEntity) roomTempEntity.value = this.currentDevice.room_temp_entity || '';
         if (voiceEnabled) voiceEnabled.checked = this.currentDevice.voice_assistant_enabled || false;
         if (usePresence) usePresence.checked = this.currentDevice.use_presence_for_screen || false;
         if (screenTimeout) screenTimeout.value = this.currentDevice.screen_timeout || 30;
