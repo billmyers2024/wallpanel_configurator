@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.3
+
+### Added
+- New Climate2 widget support
+  - Simple mode: Temperature, On/Off, Fan speed (auto/low/med/high)
+  - Advanced mode: Adds mode selection (Cool/Heat/Auto/Dry/Heat-Cool) and presets (Eco/Away/Summer/Winter)
+  - Arc slider for temperature control (16-32°C with blue→red gradient)
+  - Current and target temperature display
+  - Configurable via `ui_mode` setting (simple/advanced)
+
 ## 1.4.2
 
 ### Changed
