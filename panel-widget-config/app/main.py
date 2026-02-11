@@ -216,6 +216,16 @@ ART_SCHEMA = {
     ]
 }
 
+CLIMATE2_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "entity": {"type": "string", "pattern": "^climate\\."},
+        "name": {"type": "string", "minLength": 1},
+        "ui_mode": {"type": "string", "enum": ["simple", "advanced"], "default": "simple"}
+    },
+    "required": ["entity", "name"]
+}
+
 
 @app.route('/')
 def index():
@@ -613,7 +623,8 @@ def get_schema(widget_type):
         'light': LIGHT_SCHEMA,
         'cover': COVER_SCHEMA,
         'tester': TESTER_SCHEMA,
-        'art': ART_SCHEMA
+        'art': ART_SCHEMA,
+        'climate2': CLIMATE2_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -651,6 +662,16 @@ def widget_types():
                 "icon": "mdi:thermostat",
                 "capabilities": ["temperature", "mode", "fan"],
                 "status": "planned"
+            },
+            {
+                "id": "climate2",
+                "name": "Climate2",
+                "description": "Modern climate control with simple and advanced modes. Simple: temperature, on/off, fan speed. Advanced: adds mode selection and presets.",
+                "icon": "mdi:thermostat-auto",
+                "icon_code": "F23FF",
+                "capabilities": ["temperature", "mode", "fan", "preset"],
+                "status": "beta",
+                "note": "Simple mode: temp/on/off/fan. Advanced mode: adds mode/presets"
             },
             {
                 "id": "tester",
