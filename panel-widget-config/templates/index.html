@@ -276,6 +276,27 @@
                             </div>
                         </section>
 
+                        <!-- Climate2 Section -->
+                        <section class="widget-section" data-widget="climate2">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Thermostat-auto Icon (same as climate) -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C10.9 2 10 2.9 10 4V10.5C10 11.2 9.3 11.8 8.5 11.6C7.7 11.4 7 10.7 7 9.8V4C7 2.9 6.1 2 5 2S3 2.9 3 4V9.8C3 13.6 6.1 16.8 10 17V19.9C7.6 19.4 6.2 16.9 7.3 14.7C7.7 13.9 8.5 13.4 9.4 13.4H11V4C11 2.9 11.9 2 13 2S15 2.9 15 4V13.4H16.6C17.5 13.4 18.3 13.9 18.7 14.7C19.8 16.9 18.4 19.4 16 19.9V22C20.9 21.2 24 16.8 24 12C24 6.8 20 2.5 15 2V4C15.5 4 16 4.1 16.5 4.2C19.5 5.2 21.8 7.6 22.7 10.6C22.9 11.2 22.9 11.8 22.9 12.4C22.9 15.4 21.4 18.1 19 19.7V17C19.9 16 20.5 14.8 20.7 13.5C20.8 12.9 20.8 12.3 20.7 11.7C20.2 9.5 18.6 7.7 16.6 6.9C16.1 6.7 15.6 6.6 15.1 6.5C14.3 6.4 13.6 6.4 12.8 6.5C12.3 6.6 11.8 6.7 11.3 6.9C9.3 7.7 7.7 9.5 7.2 11.7C7.1 12.3 7.1 12.9 7.2 13.5C7.4 14.8 8 16 8.9 17V19.7C6.5 18.1 5 15.4 5 12.4C5 11.8 5.1 11.2 5.3 10.6C6.2 7.6 8.5 5.2 11.5 4.2C12 4.1 12.5 4 13 4V2C12.7 2 12.3 2 12 2Z"/></svg>
+                                    <h3>Climate2 <span style="font-size:11px;font-weight:normal;color:var(--success)">(New)</span></h3>
+                                    <span class="badge" id="climate2-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('climate2')">
+                                    <i class="fas fa-plus"></i> Add Climate2
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(76,175,80,0.1);border-left:3px solid var(--success);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Simple & Advanced modes with modern UI
+                            </div>
+                            <div id="climate2-list" class="widget-list">
+                                <!-- Climate2 widgets -->
+                            </div>
+                        </section>
+
                         <!-- Tester Section (Diagnostic) -->
                         <section class="widget-section" data-widget="tests">
                             <div class="section-header">
@@ -681,6 +702,46 @@
                             <span>Use Simple UI</span>
                         </label>
                     </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="climate2-widget-template">
+        <div class="widget-card" data-type="climate2" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group">
+                    <label>Climate Entity</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input entity-input" placeholder="climate.entity_name">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'climate')">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <span class="validation-message"></span>
+                </div>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" class="input name-input" placeholder="Climate Name">
+                </div>
+                <div class="form-group">
+                    <label>UI Mode</label>
+                    <select class="input ui-mode-input">
+                        <option value="simple" selected>Simple (Temp, On/Off, Fan)</option>
+                        <option value="advanced">Advanced (+ Mode, Presets)</option>
+                    </select>
                 </div>
             </div>
             <div class="widget-footer">

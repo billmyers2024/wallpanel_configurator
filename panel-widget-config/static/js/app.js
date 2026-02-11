@@ -431,6 +431,7 @@ const app = {
                 lights: [],
                 covers: [],
                 climate: [],
+                climate2: [],
                 tests: [],
                 art: null
             }
@@ -513,6 +514,7 @@ const app = {
         this.updateWidgetsFromCards('lights');
         this.updateWidgetsFromCards('covers');
         this.updateWidgetsFromCards('climate');
+        this.updateWidgetsFromCards('climate2');
         this.updateWidgetsFromCards('tests');
         this.updateArtFromForm();
     },
@@ -565,6 +567,12 @@ const app = {
                     default_high_setpoint: parseFloat(card.querySelector('.high-setpoint-input').value) || 24,
                     auto_dehumidify_setpoint: parseInt(card.querySelector('.dehumidify-input').value) || 60,
                     use_simple_ui: card.querySelector('.simple-ui-input').checked
+                });
+            } else if (type === 'climate2') {
+                widgets.push({
+                    entity,
+                    name: name || entity,
+                    ui_mode: card.querySelector('.ui-mode-input').value
                 });
             } else if (type === 'tests') {
                 const mode = card.querySelector('.mode-input').value;
@@ -931,6 +939,7 @@ const app = {
         if (type === 'lights') templateId = 'light-widget-template';
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
+        else if (type === 'climate2') templateId = 'climate2-widget-template';
         else if (type === 'tests') templateId = 'tests-widget-template';
         else if (type === 'art') templateId = 'art-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
@@ -1397,6 +1406,9 @@ const app = {
         // Render climate
         this.renderWidgetList('climate', this.currentDevice.widgets?.climate || []);
         
+        // Render climate2
+        this.renderWidgetList('climate2', this.currentDevice.widgets?.climate2 || []);
+        
         // Render tester widgets
         this.renderWidgetList('tests', this.currentDevice.widgets?.tests || []);
         
@@ -1450,6 +1462,7 @@ const app = {
         if (type === 'lights') templateId = 'light-widget-template';
         else if (type === 'covers') templateId = 'cover-widget-template';
         else if (type === 'climate') templateId = 'climate-widget-template';
+        else if (type === 'climate2') templateId = 'climate2-widget-template';
         else if (type === 'tests') templateId = 'tests-widget-template';
         else if (type === 'art') templateId = 'art-widget-template';
         else return;
@@ -1484,6 +1497,8 @@ const app = {
                 card.querySelector('.high-setpoint-input').value = widget.default_high_setpoint || 24;
                 card.querySelector('.dehumidify-input').value = widget.auto_dehumidify_setpoint || 60;
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
+            } else if (type === 'climate2') {
+                card.querySelector('.ui-mode-input').value = widget.ui_mode || 'simple';
             } else if (type === 'tests') {
                 console.log('Rendering tester widget:', widget);
                 card.querySelector('.test-id-input').value = widget.test_id || 'test_1';

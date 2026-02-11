@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.4
+
+### Added
+- Climate2 widget fully integrated in configurator UI
+  - Added Climate2 section to room configuration panel
+  - Added MDI thermostat icon for Climate2
+  - Added widget template with entity picker, name, and UI mode selection
+  - Simple mode: Temperature, On/Off, Fan speed
+  - Advanced mode: Adds Mode (Cool/Heat/Auto/Dry/Heat-Cool) and Presets
+
 ## 1.4.3
 
 ### Added

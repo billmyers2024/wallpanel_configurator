@@ -1,5 +1,5 @@
 name: "Panel Widget Configurator"
-version: "1.4.3"
+version: "1.4.4"
 slug: "panel-widget-config"
 description: "Configure ESPHome panel widgets (lights, covers, climate, climate2, tester, art) with HA entity validation"
 url: "https://github.com/billmyers2024/wallpanel_configurator"
