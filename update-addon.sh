@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 # Panel Widget Configurator - Update Script
 # Usage: ./update-addon.sh ["commit message"]
+# This script commits any uncommitted changes AND pushes all unpushed commits
 
 set -e
 
@@ -11,8 +12,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-CONFIG_YAML="panel-widget-config/config.yaml"
-
 echo "${GREEN}=== Panel Widget Configurator Update Script ===${NC}"
 
 # Check if we're in a git repo
@@ -22,85 +21,75 @@ if [ ! -d .git ]; then
     exit 1
 fi
 
-# Check git status
+# Check for unpushed commits
 echo ""
-echo "${YELLOW}Checking for changes...${NC}"
+echo "${BLUE}Checking for unpushed commits...${NC}"
+UNPUSHED=$(git log origin/main..HEAD --oneline 2>/dev/null || echo "")
+
+if [ -n "$UNPUSHED" ]; then
+    echo "${YELLOW}Unpushed commits found:${NC}"
+    echo "$UNPUSHED"
+    echo ""
+fi
+
+# Check git status for uncommitted changes
+echo "${BLUE}Checking for uncommitted changes...${NC}"
 git status --short
 
-# Check if there are any changes to commit
-if [ -z "$(git status --short)" ]; then
-    echo "${YELLOW}No changes to commit${NC}"
+# Check if there are any uncommitted changes to commit
+if [ -n "$(git status --short)" ]; then
+    echo ""
+    echo "${YELLOW}Uncommitted changes found - will commit first${NC}"
+    
+    # Get commit message
+    COMMIT_MSG="$1"
+    if [ -z "$COMMIT_MSG" ]; then
+        echo ""
+        echo "${YELLOW}Enter commit message (or press Enter for timestamp):${NC}"
+        read -r COMMIT_MSG
+        if [ -z "$COMMIT_MSG" ]; then
+            COMMIT_MSG="Update $(date +%Y-%m-%d_%H:%M:%S)"
+        fi
+    fi
+    
+    # Stage all changes
+    echo ""
+    echo "${YELLOW}Staging changes...${NC}"
+    git add -A
+    
+    # Commit
+    echo "${YELLOW}Committing with message: $COMMIT_MSG${NC}"
+    git commit -m "$COMMIT_MSG"
+    
+    # Clear the first argument so we don't use it again
+    shift
+else
+    echo "${GREEN}No uncommitted changes${NC}"
+fi
+
+# Check if there are now commits to push (either new or pre-existing)
+UNPUSHED_AFTER=$(git log origin/main..HEAD --oneline 2>/dev/null || echo "")
+
+if [ -z "$UNPUSHED_AFTER" ]; then
+    echo ""
+    echo "${GREEN}Nothing to push - all commits are already on origin/main${NC}"
     exit 0
 fi
-
-# Get current version and bump patch version
-if [ -f "$CONFIG_YAML" ]; then
-    CURRENT_VERSION=$(grep "^version:" "$CONFIG_YAML" | sed 's/version: "\(.*\)"/\1/')
-    echo ""
-    echo "${YELLOW}Current version: $CURRENT_VERSION${NC}"
-    
-    # Parse semver (major.minor.patch)
-    MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
-    MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
-    PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
-    
-    # Increment patch version
-    NEW_PATCH=$((PATCH + 1))
-    NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
-    
-    echo "${GREEN}Bumping to version: $NEW_VERSION${NC}"
-    
-    # Update config.yaml
-    sed -i "s/^version: \"${CURRENT_VERSION}\"/version: \"${NEW_VERSION}\"/" "$CONFIG_YAML"
-    echo "${GREEN}✓ Updated $CONFIG_YAML${NC}"
-else
-    echo "${RED}Warning: $CONFIG_YAML not found${NC}"
-    NEW_VERSION="unknown"
-fi
-
-# Get commit message
-COMMIT_MSG="$1"
-if [ -z "$COMMIT_MSG" ]; then
-    echo ""
-    echo "${YELLOW}Enter commit message (or press Enter for default):${NC}"
-    read -r COMMIT_MSG
-    if [ -z "$COMMIT_MSG" ]; then
-        COMMIT_MSG="Update to version ${NEW_VERSION}"
-    fi
-fi
-
-# Stage all changes
-echo ""
-echo "${YELLOW}Staging changes...${NC}"
-git add -A
-
-# Commit
-echo "${YELLOW}Committing with message: $COMMIT_MSG${NC}"
-git commit -m "$COMMIT_MSG"
 
 # Push
 echo ""
 echo "${YELLOW}Pushing to GitHub...${NC}"
+echo "${BLUE}Commits to push:${NC}"
+echo "$UNPUSHED_AFTER"
+echo ""
 git push origin main
 
 echo ""
-echo "${GREEN}===============================================${NC}"
-echo "${GREEN}  Successfully pushed version ${NEW_VERSION} to GitHub!${NC}"
-echo "${GREEN}===============================================${NC}"
+echo "${GREEN}=== Successfully pushed to GitHub! ===${NC}"
 echo ""
-echo "${BLUE}⚠️  IMPORTANT: Reload Add-on Store in Home Assistant${NC}"
-echo ""
-echo "Home Assistant caches add-on metadata. To see updates:"
-echo ""
-echo "  ${YELLOW}Option 1 - UI:${NC}"
-echo "     Settings → Add-ons → Add-on Store"
-echo "     Click ⋮ (three dots) → Reload"
-echo ""
-echo "  ${YELLOW}Option 2 - Terminal:${NC}"
-echo "     ha addons reload"
-echo ""
-echo "  ${YELLOW}Option 3 - Hard Refresh:${NC}"
-echo "     Ctrl+Shift+R on Add-on Store page"
-echo ""
-echo "Then check WallPanel Configurator for an update badge."
+echo "Next steps in Home Assistant:"
+echo "1. Go to Settings → Add-ons → Panel Widget Configurator"
+echo "2. Click ⋮ (menu) → Check for updates"
+echo "3. Click Update or Rebuild"
+echo "4. Start the add-on"
 echo ""
