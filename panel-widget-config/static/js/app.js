@@ -572,7 +572,14 @@ const app = {
                 widgets.push({
                     entity,
                     name: name || entity,
-                    ui_mode: card.querySelector('.ui-mode-input').value
+                    ui_mode: card.querySelector('.ui-mode-input').value,
+                    use_presence_for_deactivation: card.querySelector('.presence-deactivate-input').checked,
+                    use_presence_for_activation: card.querySelector('.presence-activate-input').checked,
+                    presence_deactivation_time: parseInt(card.querySelector('.presence-timeout-input').value) || 300,
+                    default_fan_speed: card.querySelector('.fan-speed-input').value,
+                    default_low_setpoint: parseFloat(card.querySelector('.low-setpoint-input').value) || 20,
+                    default_high_setpoint: parseFloat(card.querySelector('.high-setpoint-input').value) || 24,
+                    auto_dehumidify_setpoint: parseInt(card.querySelector('.dehumidify-input').value) || 60
                 });
             } else if (type === 'tests') {
                 const mode = card.querySelector('.mode-input').value;
@@ -1499,6 +1506,13 @@ const app = {
                 card.querySelector('.simple-ui-input').checked = widget.use_simple_ui || false;
             } else if (type === 'climate2') {
                 card.querySelector('.ui-mode-input').value = widget.ui_mode || 'simple';
+                card.querySelector('.presence-deactivate-input').checked = widget.use_presence_for_deactivation || false;
+                card.querySelector('.presence-activate-input').checked = widget.use_presence_for_activation || false;
+                card.querySelector('.presence-timeout-input').value = widget.presence_deactivation_time || 300;
+                card.querySelector('.fan-speed-input').value = widget.default_fan_speed || 'medium';
+                card.querySelector('.low-setpoint-input').value = widget.default_low_setpoint || 20;
+                card.querySelector('.high-setpoint-input').value = widget.default_high_setpoint || 24;
+                card.querySelector('.dehumidify-input').value = widget.auto_dehumidify_setpoint || 60;
             } else if (type === 'tests') {
                 console.log('Rendering tester widget:', widget);
                 card.querySelector('.test-id-input').value = widget.test_id || 'test_1';

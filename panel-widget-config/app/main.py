@@ -667,7 +667,7 @@ def widget_types():
                 "id": "climate2",
                 "name": "Climate2",
                 "description": "Modern climate control with simple and advanced modes. Simple: temperature, on/off, fan speed. Advanced: adds mode selection and presets.",
-                "icon": "mdi:thermostat-auto",
+                "icon": "mdi:thermostat",
                 "icon_code": "F23FF",
                 "capabilities": ["temperature", "mode", "fan", "preset"],
                 "status": "beta",
