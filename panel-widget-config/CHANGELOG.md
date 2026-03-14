@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2
+
+### Fixed
+- All three global panels (Site Settings, Site Services, Slideshow) now have consistent styling
+- Added CSS for `.site-services-panel` and `.slideshow-panel` to match `.site-settings-panel`
+
 ## 1.6.1
 
 ### Fixed
