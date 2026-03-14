@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.4
+
+### Fixed
+- Global panels (Site Settings, Site Services, Slideshow) now have no left margin, matching original design
+
+### Notes
+- Investigating: Alarm Panel widget section visibility issue
+
 ## 1.6.3
 
 ### Changed
