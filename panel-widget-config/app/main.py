@@ -1040,34 +1040,34 @@ def widget_types():
                 "status": "future"
             },
             {
-                "id": "slideshow",
-                "name": "Slideshow",
-                "description": "Image slideshow with configurable intervals and transition effects",
-                "icon": "mdi:image-multiple",
-                "icon_code": "F2E9",
-                "capabilities": ["display", "slideshow", "transitions"],
-                "status": "beta",
-                "note": "Configure folders and interval settings"
-            },
-            {
                 "id": "video_test",
                 "name": "Video Test",
-                "description": "Display test patterns for display calibration",
+                "description": "Testing facility for playing streaming MJPEG and JPEG files to validate the environment",
                 "icon": "mdi:television-guide",
                 "icon_code": "F050",
-                "capabilities": ["test_pattern", "auto_hide"],
+                "capabilities": ["mjpeg_stream", "jpeg_display", "network_test"],
                 "status": "beta",
-                "note": "Bars, gradient, noise, or solid patterns"
+                "note": "Configure stream server and file playback settings"
             },
             {
                 "id": "plasma",
-                "name": "Plasma Protection",
-                "description": "Screen burn-in protection for OLED/plasma displays with pixel shifting",
-                "icon": "mdi:monitor-shimmer",
-                "icon_code": "F1B1",
-                "capabilities": ["pixel_shift", "burn_in_protection"],
+                "name": "Plasma Effect",
+                "description": "Graphic visualization demo with PPA-accelerated plasma effect",
+                "icon": "mdi:lightning-bolt",
+                "icon_code": "F1E6",
+                "capabilities": ["visualization", "demo"],
                 "status": "beta",
-                "note": "Configurable interval and shift amount"
+                "note": "Visual effect widget for display testing"
+            },
+            {
+                "id": "network_test",
+                "name": "Network Test",
+                "description": "Integrated network throughput validator to test infrastructure",
+                "icon": "mdi:ethernet",
+                "icon_code": "F020",
+                "capabilities": ["throughput_test", "bandwidth"],
+                "status": "beta",
+                "note": "Test network performance between panel and server"
             },
             {
                 "id": "art3",

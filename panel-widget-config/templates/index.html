@@ -166,25 +166,47 @@
                     <!-- Spacer -->
                     <div class="site-settings-spacer"></div>
 
-                    <!-- Slideshow (Global) - Placeholder for Phase 2 -->
+                    <!-- Slideshow Service (Site-Wide) -->
                     <div class="slideshow-panel">
                         <div class="section-header" onclick="app.toggleSection('slideshow')">
                             <div class="section-title">
                                 <i class="fas fa-images"></i>
-                                <h3>Slideshow</h3>
-                                <span class="badge" id="slideshow-count">0</span>
+                                <h3>Slideshow Service</h3>
                                 <i class="fas fa-chevron-down toggle-icon" id="slideshow-icon"></i>
                             </div>
                         </div>
                         <div id="slideshow-content" class="section-content" style="display: none;">
                             <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Global slideshow configuration (Phase 2 - Coming Soon)
+                                <i class="fas fa-info-circle"></i> Site-wide synchronized slideshow. Configure server and manage playlist.
                             </div>
-                            <div class="form-group checkbox-group" style="padding: 10px;">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="slideshow-enabled" disabled>
-                                    <span>Enable Slideshow (Coming in Phase 2)</span>
-                                </label>
+                            
+                            <!-- Server Configuration -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Slideshow Server IP</label>
+                                    <input type="text" id="slideshow-server" class="input" value="192.168.1.100" placeholder="192.168.1.100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Stream Port (Binary)</label>
+                                    <input type="number" id="slideshow-stream-port" class="input" value="8090" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label>HTTP Port (API)</label>
+                                    <input type="number" id="slideshow-http-port" class="input" value="8080" min="1" max="65535">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Default Slide Duration (seconds)</label>
+                                    <input type="number" id="slideshow-default-duration" class="input" value="10" min="1" max="300">
+                                </div>
+                            </div>
+                            
+                            <!-- Media Management Button -->
+                            <div class="form-group" style="margin-top: 16px;">
+                                <button class="btn btn-primary" onclick="app.openSlideshowManager()">
+                                    <i class="fas fa-film"></i> Manage Images/Video & Playlist
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -444,25 +466,6 @@
                             </div>
                         </section>
 
-                        <!-- Slideshow Section -->
-                        <section class="widget-section" data-widget="slideshow">
-                            <div class="section-header">
-                                <div class="section-title">
-                                    <!-- MDI Image Multiple Icon -->
-                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2m-11-4 2.03 2.71L16 11l4 5H8M2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
-                                    <h3>Slideshow</h3>
-                                    <span class="badge" id="slideshow-widget-count">0</span>
-                                </div>
-                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('slideshow')" id="add-slideshow-btn">
-                                    <i class="fas fa-plus"></i> Add Slideshow
-                                </button>
-                            </div>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Image slideshow with configurable intervals and transitions. One per device.
-                            </div>
-                            <div id="slideshow-list" class="widget-list"></div>
-                        </section>
-
                         <!-- Video Test Section -->
                         <section class="widget-section" data-widget="video_test">
                             <div class="section-header">
@@ -477,26 +480,26 @@
                                 </button>
                             </div>
                             <div class="widget-info" style="padding:8px 12px;background:rgba(234,179,8,0.1);border-left:3px solid #eab308;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Display test patterns for calibration: bars, gradient, noise, solid.
+                                <i class="fas fa-info-circle"></i> Testing facility for playing streaming MJPEG and JPEG files to validate the environment.
                             </div>
                             <div id="video-test-list" class="widget-list"></div>
                         </section>
 
-                        <!-- Plasma Protection Section -->
+                        <!-- Plasma Effect Section -->
                         <section class="widget-section" data-widget="plasma">
                             <div class="section-header">
                                 <div class="section-title">
-                                    <!-- MDI Monitor Shimmer Icon -->
-                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2H8v2h8v-2h-2v-2h5c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m-9 3.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2M7.5 9c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2m9 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/></svg>
-                                    <h3>Plasma Protection</h3>
+                                    <!-- MDI Lightning Bolt Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M11 15H6l7-14v8h5l-7 14v-8z"/></svg>
+                                    <h3>Plasma Effect</h3>
                                     <span class="badge" id="plasma-count">0</span>
                                 </div>
                                 <button class="btn btn-sm btn-primary" onclick="app.addWidget('plasma')" id="add-plasma-btn">
-                                    <i class="fas fa-plus"></i> Add Protection
+                                    <i class="fas fa-plus"></i> Add Effect
                                 </button>
                             </div>
                             <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> OLED/plasma burn-in protection with pixel shifting. One per device.
+                                <i class="fas fa-info-circle"></i> Graphic visualization demo with PPA-accelerated plasma effect. One per device.
                             </div>
                             <div id="plasma-list" class="widget-list"></div>
                         </section>
@@ -658,6 +661,135 @@
                     <div class="modal-actions">
                         <button class="btn btn-secondary" onclick="app.closeStagingModal()">Cancel</button>
                         <button class="btn btn-primary" onclick="app.doSaveStagingFile()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slideshow Media Manager Modal -->
+        <div id="slideshow-manager-modal" class="modal">
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-film"></i> Manage Slideshow Media & Playlist</h3>
+                    <button class="btn-close" onclick="app.closeSlideshowManager()">&times;</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto;">
+                    <!-- Server Connection Status -->
+                    <div id="slideshow-server-status" class="widget-info" style="padding:8px 12px;background:rgba(16,185,129,0.1);border-left:3px solid #10b981;margin-bottom:16px;font-size:12px;">
+                        <i class="fas fa-check-circle"></i> Connected to server at 192.168.1.100:8080
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div class="form-group">
+                        <label><i class="fas fa-upload"></i> Upload Media</label>
+                        <div id="slideshow-drop-zone" class="drop-zone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; background: var(--dark); cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+                            <p style="color: var(--text-muted); margin-bottom: 8px;">Drag & drop images or MJPEG files here</p>
+                            <p style="color: var(--text-muted); font-size: 12px;">or click to browse</p>
+                            <input type="file" id="slideshow-file-input" style="display: none;" accept=".jpg,.jpeg,.mjpeg" multiple>
+                        </div>
+                    </div>
+
+                    <!-- Available Files Grid -->
+                    <div class="form-group">
+                        <label><i class="fas fa-th"></i> Available Files</label>
+                        <div id="slideshow-available-files" class="files-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; max-height: 200px; overflow-y: auto; padding: 12px; background: var(--dark); border-radius: var(--radius);">
+                            <!-- Files loaded dynamically -->
+                            <div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted);">
+                                <i class="fas fa-spinner fa-spin"></i> Loading files...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Playlist Section -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label><i class="fas fa-list-ol"></i> Playlist Order</label>
+                            <small style="color: var(--text-muted);">Drag to reorder • Click settings to configure</small>
+                        </div>
+                        <div id="slideshow-playlist" class="playlist-container" style="min-height: 100px; max-height: 250px; overflow-y: auto; background: var(--dark); border-radius: var(--radius); padding: 12px;">
+                            <!-- Playlist items added here -->
+                            <div class="empty-playlist" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                <i class="fas fa-film" style="font-size: 24px; margin-bottom: 8px;"></i>
+                                <p>No slides in playlist</p>
+                                <p style="font-size: 12px;">Click files above to add them</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="modal-actions" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="app.closeSlideshowManager()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.saveSlideshowPlaylist()">
+                            <i class="fas fa-save"></i> Save Playlist
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slideshow Slide Settings Modal -->
+        <div id="slideshow-slide-settings-modal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>Slide Settings</h3>
+                    <button class="btn-close" onclick="app.closeSlideSettings()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="slide-settings-image" style="display: none;">
+                        <div class="form-group">
+                            <label>Scale Mode</label>
+                            <select id="slide-scale" class="input">
+                                <option value="crop_center">Crop Center (default)</option>
+                                <option value="stretch">Stretch</option>
+                                <option value="fit_letterbox">Fit Letterbox</option>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="slide-ken-burns">
+                                <span>Enable Ken Burns Effect</span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (seconds, 0=use default)</label>
+                            <input type="number" id="slide-duration" class="input" value="0" min="0" max="300">
+                        </div>
+                        <div class="form-group">
+                            <label>Transition</label>
+                            <select id="slide-transition" class="input">
+                                <option value="fade">Fade (default)</option>
+                                <option value="cut">Cut</option>
+                                <option value="slide_right">Slide Right</option>
+                                <option value="slide_left">Slide Left</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="slide-settings-video" style="display: none;">
+                        <div class="form-group">
+                            <label>Scale Mode</label>
+                            <select id="slide-video-scale" class="input">
+                                <option value="crop_center">Crop Center (default)</option>
+                                <option value="stretch">Stretch</option>
+                                <option value="fit_letterbox">Fit Letterbox</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>FPS (1-60, default: 25)</label>
+                            <input type="number" id="slide-fps" class="input" value="25" min="1" max="60">
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (seconds, 0=no limit)</label>
+                            <input type="number" id="slide-video-duration" class="input" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Loop Count (0=infinite)</label>
+                            <input type="number" id="slide-loopcnt" class="input" value="0" min="0">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn btn-secondary" onclick="app.closeSlideSettings()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.saveSlideSettings()">Save Settings</button>
                     </div>
                 </div>
             </div>
@@ -1130,51 +1262,6 @@
         </div>
     </template>
 
-    <!-- Slideshow Widget Template -->
-    <template id="slideshow-widget-template">
-        <div class="widget-card" data-type="slideshow" data-index="">
-            <div class="widget-header">
-                <span class="widget-number"></span>
-                <div class="widget-validation">
-                    <i class="fas fa-check-circle valid" style="display: none;"></i>
-                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
-                </div>
-            </div>
-            <div class="widget-body">
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" class="enabled-input" checked>
-                        <span>Enable Slideshow</span>
-                    </label>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Interval (seconds)</label>
-                        <input type="number" class="input interval-input" value="30" min="5" max="3600" step="5">
-                    </div>
-                    <div class="form-group">
-                        <label>Transition Effect</label>
-                        <select class="input transition-input">
-                            <option value="fade">Fade</option>
-                            <option value="slide">Slide</option>
-                            <option value="none">None</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Image Folders (comma-separated paths)</label>
-                    <input type="text" class="input folders-input" placeholder="/config/www/slideshow, /media/photos">
-                    <small style="color: var(--text-muted);">Folders containing images to display</small>
-                </div>
-            </div>
-            <div class="widget-footer">
-                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-        </div>
-    </template>
-
     <!-- Video Test Widget Template -->
     <template id="video-test-widget-template">
         <div class="widget-card" data-type="video_test" data-index="">
@@ -1245,7 +1332,7 @@
         </div>
     </template>
 
-    <!-- Plasma Protection Widget Template -->
+    <!-- Plasma Effect Widget Template -->
     <template id="plasma-widget-template">
         <div class="widget-card" data-type="plasma" data-index="">
             <div class="widget-header">
@@ -1328,13 +1415,13 @@
                 </div>
             </div>
             <div class="widget-body">
-                <div class="form-row three-col">
-                    <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" class="enabled-input" checked>
-                            <span>Enable ART3</span>
-                        </label>
-                    </div>
+                <div class="form-group checkbox-group" style="padding: 10px 0;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable ART3 Widget</span>
+                    </label>
+                </div>
+                <div class="form-row">
                     <div class="form-group checkbox-group">
                         <label class="checkbox-label">
                             <input type="checkbox" class="presence-aware-input">

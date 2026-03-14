@@ -1083,23 +1083,6 @@ const app = {
             return;
         }
         
-        // Phase 1: Special handling for slideshow widget - only one allowed
-        if (type === 'slideshow') {
-            if (this.currentDevice.widgets.slideshow) {
-                this.showToast('Only one Slideshow allowed per room', 'warning');
-                return;
-            }
-            this.currentDevice.widgets.slideshow = {
-                enabled: true,
-                interval_sec: 30,
-                transition: 'fade',
-                folders: []
-            };
-            this.renderSlideshowWidget();
-            this.showToast('Slideshow added', 'success');
-            return;
-        }
-        
         // Phase 1: Special handling for video_test widget - multi-instance streams array
         if (type === 'video_test') {
             if (!this.currentDevice.widgets.video_test) {
@@ -1191,7 +1174,6 @@ const app = {
         else if (type === 'art') templateId = 'art-widget-template';
         else if (type === 'cctv') templateId = 'cctv-widget-template';
         else if (type === 'alarm_panel') templateId = 'alarm-panel-widget-template';
-        else if (type === 'slideshow') templateId = 'slideshow-widget-template';
         else if (type === 'video_test') templateId = 'video-test-widget-template';
         else if (type === 'plasma') templateId = 'plasma-widget-template';
         else if (type === 'network_test') templateId = 'network-test-widget-template';
@@ -1719,9 +1701,6 @@ const app = {
         // Phase 1: Render Alarm Panel widget (single instance)
         this.renderAlarmPanelWidget();
         
-        // Phase 1: Render Slideshow widget (single instance)
-        this.renderSlideshowWidget();
-        
         // Phase 1: Render Video Test widget (single instance)
         this.renderVideoTestWidget();
         
@@ -2019,48 +1998,6 @@ const app = {
     // =============================================================================
     // PHASE 1: SLIDESHOW WIDGET
     // =============================================================================
-    
-    // Render Slideshow widget (single instance)
-    renderSlideshowWidget() {
-        const list = document.getElementById('slideshow-list');
-        const addBtn = document.getElementById('add-slideshow-btn');
-        if (!list) return;
-        list.innerHTML = '';
-        
-        const slideshow = this.currentDevice.widgets?.slideshow;
-        
-        if (addBtn) {
-            addBtn.style.display = slideshow ? 'none' : 'inline-flex';
-        }
-        
-        if (!slideshow) {
-            this.updateWidgetCount('slideshow', 0);
-            return;
-        }
-        
-        const template = document.getElementById('slideshow-widget-template');
-        if (!template) return;
-        
-        const clone = template.content.cloneNode(true);
-        const card = clone.querySelector('.widget-card');
-        
-        card.querySelector('.enabled-input').checked = slideshow.enabled !== false;
-        card.querySelector('.interval-input').value = slideshow.interval_sec || 30;
-        card.querySelector('.transition-input').value = slideshow.transition || 'fade';
-        card.querySelector('.folders-input').value = (slideshow.folders || []).join(', ');
-        
-        const inputs = card.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                this.updateWidgetCount('slideshow');
-            });
-        });
-        
-        list.appendChild(clone);
-        this.updateWidgetCount('slideshow', 1);
-    },
-    
-    // =============================================================================
     // PHASE 1: VIDEO TEST WIDGET
     // =============================================================================
     
@@ -2356,6 +2293,259 @@ const app = {
             existingGroup.style.display = 'none';
             createGroup.style.display = 'block';
         }
+    },
+    
+    // =============================================================================
+    // SLIDESHOW MEDIA MANAGER (Site-Level)
+    // =============================================================================
+    
+    // Open slideshow media manager modal
+    openSlideshowManager() {
+        const modal = document.getElementById('slideshow-manager-modal');
+        if (modal) {
+            modal.classList.add('active');
+            this.loadSlideshowFiles();
+            this.renderSlideshowPlaylist();
+        }
+    },
+    
+    // Close slideshow media manager modal
+    closeSlideshowManager() {
+        const modal = document.getElementById('slideshow-manager-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    },
+    
+    // Load available files from server
+    async loadSlideshowFiles() {
+        const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('slideshow-http-port')?.value || '8080';
+        
+        try {
+            const response = await fetch(`http://${serverIp}:${httpPort}/api/files`);
+            if (response.ok) {
+                const data = await response.json();
+                this.slideshowFiles = data;
+                this.renderSlideshowFiles();
+            } else {
+                this.showSlideshowError('Failed to load files from server');
+            }
+        } catch (error) {
+            console.error('Failed to load slideshow files:', error);
+            this.showSlideshowError('Cannot connect to server. Check IP and port.');
+        }
+    },
+    
+    // Show error in slideshow manager
+    showSlideshowError(message) {
+        const statusEl = document.getElementById('slideshow-server-status');
+        if (statusEl) {
+            statusEl.style.background = 'rgba(239,68,68,0.1)';
+            statusEl.style.borderLeftColor = '#ef4444';
+            statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        }
+        const filesContainer = document.getElementById('slideshow-available-files');
+        if (filesContainer) {
+            filesContainer.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+        }
+    },
+    
+    // Render available files grid
+    renderSlideshowFiles() {
+        const container = document.getElementById('slideshow-available-files');
+        if (!container || !this.slideshowFiles) return;
+        
+        const images = this.slideshowFiles.images || [];
+        const videos = this.slideshowFiles.videos || [];
+        
+        if (images.length === 0 && videos.length === 0) {
+            container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No files found on server</div>`;
+            return;
+        }
+        
+        let html = '';
+        
+        // Images
+        images.forEach(img => {
+            html += `
+                <div class="file-item" data-filename="${img.filename}" data-type="image" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image" style="font-size: 32px; color: var(--text-muted);"></i>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.filename}</div>
+                </div>
+            `;
+        });
+        
+        // Videos
+        videos.forEach(vid => {
+            html += `
+                <div class="file-item" data-filename="${vid.filename}" data-type="video" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-video" style="font-size: 32px; color: var(--text-muted);"></i>
+                    </div>
+                    <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${vid.filename}</div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    },
+    
+    // Add file to playlist
+    addToSlideshowPlaylist(filename, type) {
+        if (!this.slideshowPlaylist) {
+            this.slideshowPlaylist = [];
+        }
+        
+        // Default settings based on type
+        const slide = {
+            type: type,
+            filename: filename,
+            scale: 'crop_center'
+        };
+        
+        if (type === 'image') {
+            slide.ken_burns = false;
+            slide.duration = 0; // Use default
+            slide.transition = 'fade';
+        } else {
+            slide.fps = 25;
+            slide.duration = 0;
+            slide.loopcnt = 0;
+        }
+        
+        this.slideshowPlaylist.push(slide);
+        this.renderSlideshowPlaylist();
+    },
+    
+    // Remove item from playlist
+    removeFromSlideshowPlaylist(index) {
+        if (this.slideshowPlaylist) {
+            this.slideshowPlaylist.splice(index, 1);
+            this.renderSlideshowPlaylist();
+        }
+    },
+    
+    // Render playlist
+    renderSlideshowPlaylist() {
+        const container = document.getElementById('slideshow-playlist');
+        if (!container) return;
+        
+        if (!this.slideshowPlaylist || this.slideshowPlaylist.length === 0) {
+            container.innerHTML = `
+                <div class="empty-playlist" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                    <i class="fas fa-film" style="font-size: 24px; margin-bottom: 8px;"></i>
+                    <p>No slides in playlist</p>
+                    <p style="font-size: 12px;">Click files above to add them</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        this.slideshowPlaylist.forEach((slide, index) => {
+            const icon = slide.type === 'image' ? 'fa-image' : 'fa-video';
+            const settings = slide.type === 'image' 
+                ? `${slide.scale}, ${slide.transition}${slide.ken_burns ? ', KB' : ''}`
+                : `${slide.scale}, ${slide.fps}fps`;
+            
+            html += `
+                <div class="playlist-item" data-index="${index}" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border-radius: var(--radius); margin-bottom: 8px; cursor: move;">
+                    <span style="color: var(--text-muted); font-size: 12px;">#${index + 1}</span>
+                    <i class="fas ${icon}" style="color: var(--primary);"></i>
+                    <span style="flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
+                    <span style="font-size: 11px; color: var(--text-muted);">${settings}</span>
+                    <button class="btn btn-sm btn-secondary" onclick="app.openSlideSettings(${index})" title="Settings"><i class="fas fa-cog"></i></button>
+                    <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" title="Remove"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    },
+    
+    // Open slide settings modal
+    openSlideSettings(index) {
+        if (!this.slideshowPlaylist || !this.slideshowPlaylist[index]) return;
+        
+        this.currentSlideIndex = index;
+        const slide = this.slideshowPlaylist[index];
+        
+        const modal = document.getElementById('slideshow-slide-settings-modal');
+        const imageSection = document.getElementById('slide-settings-image');
+        const videoSection = document.getElementById('slide-settings-video');
+        
+        if (slide.type === 'image') {
+            imageSection.style.display = 'block';
+            videoSection.style.display = 'none';
+            document.getElementById('slide-scale').value = slide.scale || 'crop_center';
+            document.getElementById('slide-ken-burns').checked = slide.ken_burns || false;
+            document.getElementById('slide-duration').value = slide.duration || 0;
+            document.getElementById('slide-transition').value = slide.transition || 'fade';
+        } else {
+            imageSection.style.display = 'none';
+            videoSection.style.display = 'block';
+            document.getElementById('slide-video-scale').value = slide.scale || 'crop_center';
+            document.getElementById('slide-fps').value = slide.fps || 25;
+            document.getElementById('slide-video-duration').value = slide.duration || 0;
+            document.getElementById('slide-loopcnt').value = slide.loopcnt || 0;
+        }
+        
+        if (modal) modal.classList.add('active');
+    },
+    
+    // Close slide settings modal
+    closeSlideSettings() {
+        const modal = document.getElementById('slideshow-slide-settings-modal');
+        if (modal) modal.classList.remove('active');
+        this.currentSlideIndex = null;
+    },
+    
+    // Save slide settings
+    saveSlideSettings() {
+        if (this.currentSlideIndex === null || !this.slideshowPlaylist) return;
+        
+        const slide = this.slideshowPlaylist[this.currentSlideIndex];
+        
+        if (slide.type === 'image') {
+            slide.scale = document.getElementById('slide-scale').value;
+            slide.ken_burns = document.getElementById('slide-ken-burns').checked;
+            slide.duration = parseInt(document.getElementById('slide-duration').value) || 0;
+            slide.transition = document.getElementById('slide-transition').value;
+        } else {
+            slide.scale = document.getElementById('slide-video-scale').value;
+            slide.fps = parseInt(document.getElementById('slide-fps').value) || 25;
+            slide.duration = parseInt(document.getElementById('slide-video-duration').value) || 0;
+            slide.loopcnt = parseInt(document.getElementById('slide-loopcnt').value) || 0;
+        }
+        
+        this.renderSlideshowPlaylist();
+        this.closeSlideSettings();
+    },
+    
+    // Save slideshow playlist to config
+    saveSlideshowPlaylist() {
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        
+        const server = document.getElementById('slideshow-server')?.value || '192.168.1.100';
+        const streamPort = parseInt(document.getElementById('slideshow-stream-port')?.value) || 8090;
+        const httpPort = parseInt(document.getElementById('slideshow-http-port')?.value) || 8080;
+        const defaultDuration = parseInt(document.getElementById('slideshow-default-duration')?.value) || 10;
+        
+        this.config.services.slideshow = {
+            server: server,
+            stream_port: streamPort,
+            http_port: httpPort,
+            default_duration: defaultDuration,
+            slides: this.slideshowPlaylist || []
+        };
+        
+        this.closeSlideshowManager();
+        this.showToast('Slideshow playlist saved', 'success');
     },
     
     // Show toast notification
