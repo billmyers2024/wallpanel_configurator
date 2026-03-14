@@ -74,34 +74,7 @@
                 </div>
 
                 <div id="device-editor" class="device-editor" style="display: none;">
-                    <!-- Site Services (Global) - Camera Management -->
-                    <div class="site-services-panel">
-                        <div class="section-header" onclick="app.toggleSection('site-services')">
-                            <div class="section-title">
-                                <i class="fas fa-server"></i>
-                                <h3>Site Services</h3>
-                                <span class="badge" id="cameras-count">0</span>
-                                <i class="fas fa-chevron-down toggle-icon" id="site-services-icon"></i>
-                            </div>
-                        </div>
-                        <div id="site-services-content" class="section-content" style="display: none;">
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Configure cameras here, then reference them in device CCTV widgets
-                            </div>
-                            
-                            <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
-                                Cameras <button class="btn btn-sm btn-primary" onclick="app.addCamera()" style="margin-left: 10px;"><i class="fas fa-plus"></i> Add Camera</button>
-                            </h4>
-                            <div id="cameras-list" class="widget-list">
-                                <!-- Camera entries populated by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Spacer between Site Services and Site Settings -->
-                    <div class="site-settings-spacer"></div>
-
-                    <!-- Site Settings (Global) -->
+                    <!-- Site Settings (Global) - Restyled to match Site Services -->
                     <div class="site-settings-panel">
                         <div class="section-header" onclick="app.toggleSection('site-settings')">
                             <div class="section-title">
@@ -163,7 +136,60 @@
                         </div>
                     </div>
 
-                    <!-- Spacer between Site Settings and Room -->
+                    <!-- Spacer -->
+                    <div class="site-settings-spacer"></div>
+
+                    <!-- Site Services (Global) - Camera Management -->
+                    <div class="site-services-panel">
+                        <div class="section-header" onclick="app.toggleSection('site-services')">
+                            <div class="section-title">
+                                <i class="fas fa-server"></i>
+                                <h3>Site Services</h3>
+                                <span class="badge" id="cameras-count">0</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="site-services-icon"></i>
+                            </div>
+                        </div>
+                        <div id="site-services-content" class="section-content" style="display: none;">
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Configure cameras here, then reference them in device CCTV widgets
+                            </div>
+                            
+                            <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                                Cameras <button class="btn btn-sm btn-primary" onclick="app.addCamera()" style="margin-left: 10px;"><i class="fas fa-plus"></i> Add Camera</button>
+                            </h4>
+                            <div id="cameras-list" class="widget-list">
+                                <!-- Camera entries populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spacer -->
+                    <div class="site-settings-spacer"></div>
+
+                    <!-- Slideshow (Global) - Placeholder for Phase 2 -->
+                    <div class="slideshow-panel">
+                        <div class="section-header" onclick="app.toggleSection('slideshow')">
+                            <div class="section-title">
+                                <i class="fas fa-images"></i>
+                                <h3>Slideshow</h3>
+                                <span class="badge" id="slideshow-count">0</span>
+                                <i class="fas fa-chevron-down toggle-icon" id="slideshow-icon"></i>
+                            </div>
+                        </div>
+                        <div id="slideshow-content" class="section-content" style="display: none;">
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Global slideshow configuration (Phase 2 - Coming Soon)
+                            </div>
+                            <div class="form-group checkbox-group" style="padding: 10px;">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="slideshow-enabled" disabled>
+                                    <span>Enable Slideshow (Coming in Phase 2)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spacer between Global Settings and Room -->
                     <div class="site-settings-spacer"></div>
 
                     <!-- Room Name Header -->
