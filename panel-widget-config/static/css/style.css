@@ -295,7 +295,7 @@ body {
 .device-editor {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
     overflow: hidden;
     min-height: 0;
 }
@@ -528,7 +528,6 @@ body {
     flex-direction: column;
     gap: 24px;
     min-height: 0;
-    max-height: calc(100vh - 400px);
 }
 
 /* Ensure scrollbar is always visible on WebKit browsers */
