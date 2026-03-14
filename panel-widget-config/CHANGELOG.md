@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.5
+
+### Fixed
+- Removed `max-height` restriction from `.widgets-container` to allow scrolling to all widget sections including Alarm Panel
+- Alarm Panel and other lower widgets now properly accessible via scroll
+
 ## 1.6.4
 
 ### Fixed
