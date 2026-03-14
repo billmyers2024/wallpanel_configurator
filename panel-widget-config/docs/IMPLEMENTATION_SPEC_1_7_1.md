@@ -269,6 +269,165 @@ The slideshow service manages site-wide synchronized slideshow content. This is 
 
 ---
 
+## 6. MJPEG Sender HTTP Server Extension (C++)
+
+### Overview
+The mjpeg_sender requires an HTTP server component for file introspection and upload management. This enables the configurator to query available media files and upload new content.
+
+### HTTP Server Configuration
+
+Add to `mjpeg_config.h`:
+```cpp
+struct MJPEGConfigData {
+    // ... existing fields ...
+    
+    // HTTP server settings (NEW)
+    int http_server_port;           // Default: 8080
+    bool http_server_enabled;       // Default: true
+};
+```
+
+Add to `mjpeg_sender_config.yaml`:
+```yaml
+# =============================================================================
+# HTTP SERVER (for file introspection and upload)
+# =============================================================================
+http_server:
+  # Enable HTTP server for file management
+  enabled: true
+  
+  # HTTP port for file introspection and upload API
+  # Must be different from the binary stream port (server.port)
+  port: 8080
+```
+
+### HTTP API Endpoints
+
+#### 1. GET /api/files
+List all available media files.
+
+**Response:**
+```json
+{
+  "images": [
+    {
+      "filename": "image1.jpg",
+      "path": "/home/vibe/esphome/mjpeg_streamer/jpeg_files/image1.jpg",
+      "size": 12345,
+      "modified": "2024-03-14T10:30:00Z",
+      "width": 720,
+      "height": 720
+    }
+  ],
+  "videos": [
+    {
+      "filename": "video1.mjpeg",
+      "path": "/home/vibe/esphome/mjpeg_streamer/mjpeg_files/video1.mjpeg",
+      "size": 567890,
+      "modified": "2024-03-14T11:00:00Z",
+      "duration_sec": 30,
+      "fps": 30
+    }
+  ]
+}
+```
+
+#### 2. POST /api/upload
+Upload a new file to the server.
+
+**Request:**
+- Content-Type: `multipart/form-data`
+- Fields:
+  - `file`: Binary file data
+  - `type`: "image" or "video"
+
+**Response:**
+```json
+{
+  "success": true,
+  "filename": "uploaded_image.jpg",
+  "path": "/home/vibe/esphome/mjpeg_streamer/jpeg_files/uploaded_image.jpg",
+  "size": 12345
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "error": "Invalid file type or upload failed"
+}
+```
+
+#### 3. DELETE /api/files/{filename}
+Delete a file from the server.
+
+**Request:**
+- Query parameter: `type=image` or `type=video`
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "File deleted successfully"
+}
+```
+
+#### 4. GET /api/health
+Health check endpoint.
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "binary_port": 8090,
+  "http_port": 8080
+}
+```
+
+### Implementation Details
+
+#### New Files
+- `http_server.cpp` - HTTP server implementation
+- `http_server.h` - HTTP server header
+
+#### Modified Files
+- `mjpeg_config.h` - Add HTTP server configuration
+- `mjpeg_sender.cpp` - Integrate HTTP server thread
+
+#### HTTP Server Thread
+```cpp
+// In mjpeg_sender.cpp main():
+std::thread http_server(http_server_thread);
+http_server.detach();
+
+// HTTP server thread function
+void http_server_thread() {
+    // Create TCP socket
+    // Bind to http_port
+    // Listen for connections
+    // Parse HTTP requests
+    // Route to appropriate handler
+}
+```
+
+#### CORS Support
+All HTTP responses must include CORS headers for browser compatibility:
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type
+```
+
+### Security Considerations
+- File uploads validated for type (JPEG/MJPEG only)
+- Filename sanitization to prevent directory traversal
+- File size limits (configurable, default 100MB)
+- Read-only directories should be enforced
+
+---
+
 ## Implementation Notes
 
 ### Widget Registration
@@ -283,14 +442,23 @@ Widgets self-register using the `WIDGET_REGISTER` macro with priority:
 - Command: `0xFE 0xFD 0xFC 0xFB`
 
 ### File Storage
-- Images: `/config/www/art/` (existing ART display location)
-- Videos: To be determined (likely `/config/www/videos/`)
+- Images: `/config/www/art/` (existing ART display location) OR configured `image_dir`
+- Videos: `/config/www/videos/` OR configured `mjpeg_dir`
 - Slideshow config: `/config/panels/site_settings.json`
+
+### HTTP Server Libraries
+Options for C++ HTTP server implementation:
+1. **Custom lightweight HTTP parser** (recommended for minimal dependencies)
+2. **mongoose** (embedded web server library)
+3. **cpp-httplib** (header-only library)
+
+Recommended: Custom implementation using existing socket code for minimal dependencies.
 
 ---
 
 ## Task List
 
+### Configurator Changes (Python/JS/HTML)
 - [ ] Update ART3 widget schema with full configuration (8 fields)
 - [ ] Fix Test Video widget schema (streams array)
 - [ ] Fix Network Test widget schema (add enabled flag)
@@ -303,3 +471,17 @@ Widgets self-register using the `WIDGET_REGISTER` macro with priority:
 - [ ] Update JavaScript render functions
 - [ ] Update widget types API
 - [ ] Test and validate all configurations
+
+### MJPEG Sender Changes (C++)
+- [ ] Add HTTP server configuration to mjpeg_config.h
+- [ ] Create http_server.h header file
+- [ ] Create http_server.cpp implementation
+- [ ] Implement GET /api/files endpoint
+- [ ] Implement POST /api/upload endpoint
+- [ ] Implement DELETE /api/files/{filename} endpoint
+- [ ] Implement GET /api/health endpoint
+- [ ] Add CORS headers to all responses
+- [ ] Integrate HTTP server thread into mjpeg_sender.cpp
+- [ ] Add file validation (type, size, name sanitization)
+- [ ] Test HTTP server with curl/browser
+- [ ] Test configurator integration
