@@ -399,7 +399,7 @@ body {
     background: var(--card);
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    margin: 20px 24px 0 24px;
+    margin: 0 24px;
     overflow: visible;
 }
 
@@ -424,6 +424,64 @@ body {
 .site-settings-panel .section-content {
     padding: 20px;
     border-top: 1px solid var(--border);
+}
+
+/* Site Services Panel - Same styling as Site Settings */
+.site-services-panel {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin: 0 24px;
+    overflow: visible;
+}
+
+.site-services-panel .section-header {
+    cursor: pointer;
+}
+
+.site-services-panel .section-content {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    max-height: 2000px;
+    overflow: visible;
+}
+
+.site-services-panel .toggle-icon {
+    margin-left: auto;
+    transition: transform 0.2s;
+}
+
+.site-services-panel .toggle-icon.expanded {
+    transform: rotate(180deg);
+}
+
+/* Slideshow Panel - Same styling as Site Settings */
+.slideshow-panel {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin: 0 24px;
+    overflow: visible;
+}
+
+.slideshow-panel .section-header {
+    cursor: pointer;
+}
+
+.slideshow-panel .section-content {
+    padding: 20px;
+    border-top: 1px solid var(--border);
+    max-height: 2000px;
+    overflow: visible;
+}
+
+.slideshow-panel .toggle-icon {
+    margin-left: auto;
+    transition: transform 0.2s;
+}
+
+.slideshow-panel .toggle-icon.expanded {
+    transform: rotate(180deg);
 }
 
 /* Site Settings to Room spacing */
