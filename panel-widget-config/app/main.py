@@ -130,7 +130,7 @@ def get_default_config():
     """Get default empty configuration"""
     return {
         "site_meta": {
-            "version": "1.0",
+            "version": "1.6",
             "last_updated": datetime.now().strftime("%Y-%m-%d")
         },
         "site_info": {
@@ -144,6 +144,9 @@ def get_default_config():
             "climate_check_interval": 60,
             "site_cover_up_time": 14300,
             "site_cover_down_time": 11500
+        },
+        "services": {
+            "cameras": []
         },
         "devices": []
     }
@@ -222,6 +225,72 @@ CLIMATE2_SCHEMA = {
         "entity": {"type": "string", "pattern": "^climate\\."},
         "name": {"type": "string", "minLength": 1},
         "ui_mode": {"type": "string", "enum": ["simple", "advanced"], "default": "simple"}
+    },
+    "required": ["entity", "name"]
+}
+
+# =============================================================================
+# PHASE 1 SCHEMAS - Foundation (v1.6.0)
+# =============================================================================
+
+# Global Services - Camera registry (referenced by CCTV widgets)
+CAMERA_SERVICE_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "minLength": 1, "description": "Unique camera identifier"},
+            "name": {"type": "string", "minLength": 1, "description": "Display name"},
+            "host": {"type": "string", "description": "IP address or hostname"},
+            "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+            "entity": {"type": "string", "pattern": "^camera\\.", "description": "HA camera entity"}
+        },
+        "required": ["id", "name", "host", "port", "entity"]
+    }
+}
+
+# CCTV Widget - References cameras from services
+CCTV_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "References camera service ID"
+            },
+            "show_cam_entity": {
+                "type": "string",
+                "pattern": "^binary_sensor\\.",
+                "description": "Optional: Show camera when this sensor is on"
+            }
+        },
+        "required": ["id"]
+    }
+}
+
+# Alarm Panel Widget
+ALARM_PANEL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "entity": {
+            "type": "string",
+            "pattern": "^alarm_control_panel\\.",
+            "description": "HA alarm control panel entity"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Display name for UI"
+        },
+        "auto_hide_sec": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 300,
+            "default": 30,
+            "description": "Auto-hide timeout when inactive"
+        }
     },
     "required": ["entity", "name"]
 }
@@ -624,7 +693,11 @@ def get_schema(widget_type):
         'cover': COVER_SCHEMA,
         'tester': TESTER_SCHEMA,
         'art': ART_SCHEMA,
-        'climate2': CLIMATE2_SCHEMA
+        'climate2': CLIMATE2_SCHEMA,
+        # Phase 1 schemas
+        'cctv': CCTV_SCHEMA,
+        'alarm_panel': ALARM_PANEL_SCHEMA,
+        'camera_service': CAMERA_SERVICE_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -684,19 +757,31 @@ def widget_types():
                 "note": "Zero external dependencies - use for validation testing"
             },
             {
+                "id": "cctv",
+                "name": "CCTV",
+                "description": "Multi-camera surveillance interface with live streaming from configured cameras",
+                "icon": "mdi:cctv",
+                "icon_code": "F0B5",
+                "capabilities": ["camera_stream", "multi_view"],
+                "status": "beta",
+                "note": "Requires cameras to be configured in Site Services"
+            },
+            {
+                "id": "alarm_panel",
+                "name": "Alarm Panel",
+                "description": "House alarm control panel with PIN entry, arm/disarm, and status display",
+                "icon": "mdi:shield-home",
+                "icon_code": "F0B5B",
+                "capabilities": ["arm", "disarm", "status", "pin_entry", "auto_hide"],
+                "status": "beta",
+                "note": "One per device. Supports all alarm modes (home, away, night, custom, vacation)"
+            },
+            {
                 "id": "weather",
                 "name": "Weather",
                 "description": "Display weather information",
                 "icon": "mdi:weather-partly-cloudy",
                 "capabilities": ["display"],
-                "status": "planned"
-            },
-            {
-                "id": "alarm",
-                "name": "Alarm",
-                "description": "House alarm control panel",
-                "icon": "mdi:shield-home",
-                "capabilities": ["arm", "disarm", "status"],
                 "status": "planned"
             },
             {
