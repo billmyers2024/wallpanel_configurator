@@ -1100,35 +1100,57 @@ const app = {
             return;
         }
         
-        // Phase 1: Special handling for video_test widget - only one allowed
+        // Phase 1: Special handling for video_test widget - multi-instance streams array
         if (type === 'video_test') {
-            if (this.currentDevice.widgets.video_test) {
-                this.showToast('Only one Video Test allowed per room', 'warning');
-                return;
+            if (!this.currentDevice.widgets.video_test) {
+                this.currentDevice.widgets.video_test = { streams: [] };
             }
-            this.currentDevice.widgets.video_test = {
-                enabled: true,
-                pattern: 'bars',
-                auto_hide_sec: 60
-            };
+            
+            this.currentDevice.widgets.video_test.streams.push({
+                name: 'Test Stream',
+                video_server_ip: '192.168.1.100',
+                video_server_port: 8090,
+                jpeg_filename: '',
+                jpeg_scale: 0,
+                mjpeg_filename: '',
+                mjpeg_fps: 30,
+                mjpeg_loopcnt: 0,
+                mjpeg_duration_secs: 0
+            });
             this.renderVideoTestWidget();
-            this.showToast('Video Test added', 'success');
+            this.showToast('Video Test stream added', 'success');
             return;
         }
         
         // Phase 1: Special handling for plasma widget - only one allowed
         if (type === 'plasma') {
             if (this.currentDevice.widgets.plasma) {
-                this.showToast('Only one Plasma Protection allowed per room', 'warning');
+                this.showToast('Only one Plasma Effect allowed per room', 'warning');
                 return;
             }
             this.currentDevice.widgets.plasma = {
-                enabled: true,
-                interval_min: 5,
-                shift_pixels: 2
+                enabled: 'Y'
             };
             this.renderPlasmaWidget();
-            this.showToast('Plasma Protection added', 'success');
+            this.showToast('Plasma Effect added', 'success');
+            return;
+        }
+        
+        // Phase 1: Special handling for network_test widget - only one allowed
+        if (type === 'network_test') {
+            if (this.currentDevice.widgets.network_test) {
+                this.showToast('Only one Network Test allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.network_test = {
+                enabled: 'Y',
+                server_ip: '192.168.1.100',
+                server_port: 8090,
+                duration_sec: 10,
+                packet_size: 8192
+            };
+            this.renderNetworkTestWidget();
+            this.showToast('Network Test added', 'success');
             return;
         }
         
@@ -1139,10 +1161,14 @@ const app = {
                 return;
             }
             this.currentDevice.widgets.art3 = {
-                enabled: true,
-                artwork_id: '',
-                rotation_interval_min: 60,
-                brightness: 80
+                enabled: 'Y',
+                presence_aware: 'N',
+                suppress_screensaver: 'N',
+                auto_start_after_sec: 0,
+                enabled_start_time: '00:00',
+                enabled_end_time: '23:59',
+                stream_server: '192.168.1.100',
+                stream_port: 8090
             };
             this.renderArt3Widget();
             this.showToast('ART3 added', 'success');
@@ -1168,6 +1194,7 @@ const app = {
         else if (type === 'slideshow') templateId = 'slideshow-widget-template';
         else if (type === 'video_test') templateId = 'video-test-widget-template';
         else if (type === 'plasma') templateId = 'plasma-widget-template';
+        else if (type === 'network_test') templateId = 'network-test-widget-template';
         else if (type === 'art3') templateId = 'art3-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
         
@@ -1701,6 +1728,9 @@ const app = {
         // Phase 1: Render Plasma Protection widget (single instance)
         this.renderPlasmaWidget();
         
+        // Phase 1: Render Network Test widget (single instance)
+        this.renderNetworkTestWidget();
+        
         // Phase 1: Render ART3 widget (single instance)
         this.renderArt3Widget();
     },
@@ -2037,40 +2067,43 @@ const app = {
     // Render Video Test widget (single instance)
     renderVideoTestWidget() {
         const list = document.getElementById('video-test-list');
-        const addBtn = document.getElementById('add-video-test-btn');
         if (!list) return;
         list.innerHTML = '';
         
         const videoTest = this.currentDevice.widgets?.video_test;
-        
-        if (addBtn) {
-            addBtn.style.display = videoTest ? 'none' : 'inline-flex';
-        }
-        
-        if (!videoTest) {
-            this.updateWidgetCount('video_test', 0);
-            return;
-        }
+        const streams = videoTest?.streams || [];
         
         const template = document.getElementById('video-test-widget-template');
         if (!template) return;
         
-        const clone = template.content.cloneNode(true);
-        const card = clone.querySelector('.widget-card');
-        
-        card.querySelector('.enabled-input').checked = videoTest.enabled !== false;
-        card.querySelector('.pattern-input').value = videoTest.pattern || 'bars';
-        card.querySelector('.auto-hide-input').value = videoTest.auto_hide_sec || 60;
-        
-        const inputs = card.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                this.updateWidgetCount('video_test');
+        streams.forEach((stream, index) => {
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            
+            card.dataset.index = index;
+            card.querySelector('.widget-number').textContent = `#${index + 1}`;
+            
+            card.querySelector('.name-input').value = stream.name || 'Test Stream';
+            card.querySelector('.server-ip-input').value = stream.video_server_ip || '192.168.1.100';
+            card.querySelector('.server-port-input').value = stream.video_server_port || 8090;
+            card.querySelector('.jpeg-filename-input').value = stream.jpeg_filename || '';
+            card.querySelector('.jpeg-scale-input').value = stream.jpeg_scale || 0;
+            card.querySelector('.mjpeg-filename-input').value = stream.mjpeg_filename || '';
+            card.querySelector('.mjpeg-fps-input').value = stream.mjpeg_fps || 30;
+            card.querySelector('.mjpeg-loopcnt-input').value = stream.mjpeg_loopcnt || 0;
+            card.querySelector('.mjpeg-duration-input').value = stream.mjpeg_duration_secs || 0;
+            
+            const inputs = card.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    this.updateWidgetCount('video_test');
+                });
             });
+            
+            list.appendChild(card);
         });
         
-        list.appendChild(clone);
-        this.updateWidgetCount('video_test', 1);
+        this.updateWidgetCount('video_test', streams.length);
     },
     
     // =============================================================================
@@ -2101,9 +2134,7 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
-        card.querySelector('.enabled-input').checked = plasma.enabled !== false;
-        card.querySelector('.interval-input').value = plasma.interval_min || 5;
-        card.querySelector('.shift-input').value = plasma.shift_pixels || 2;
+        card.querySelector('.enabled-input').checked = plasma.enabled === 'Y';
         
         const inputs = card.querySelectorAll('input');
         inputs.forEach(input => {
@@ -2114,6 +2145,51 @@ const app = {
         
         list.appendChild(clone);
         this.updateWidgetCount('plasma', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: NETWORK TEST WIDGET
+    // =============================================================================
+    
+    // Render Network Test widget (single instance)
+    renderNetworkTestWidget() {
+        const list = document.getElementById('network-test-list');
+        const addBtn = document.getElementById('add-network-test-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const networkTest = this.currentDevice.widgets?.network_test;
+        
+        if (addBtn) {
+            addBtn.style.display = networkTest ? 'none' : 'inline-flex';
+        }
+        
+        if (!networkTest) {
+            this.updateWidgetCount('network_test', 0);
+            return;
+        }
+        
+        const template = document.getElementById('network-test-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        card.querySelector('.enabled-input').checked = networkTest.enabled === 'Y';
+        card.querySelector('.server-ip-input').value = networkTest.server_ip || '192.168.1.100';
+        card.querySelector('.server-port-input').value = networkTest.server_port || 8090;
+        card.querySelector('.duration-input').value = networkTest.duration_sec || 10;
+        card.querySelector('.packet-size-input').value = networkTest.packet_size || 8192;
+        
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('network_test');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('network_test', 1);
     },
     
     // =============================================================================
@@ -2144,10 +2220,14 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
-        card.querySelector('.enabled-input').checked = art3.enabled !== false;
-        card.querySelector('.artwork-input').value = art3.artwork_id || '';
-        card.querySelector('.rotation-input').value = art3.rotation_interval_min || 60;
-        card.querySelector('.brightness-input').value = art3.brightness || 80;
+        card.querySelector('.enabled-input').checked = art3.enabled === 'Y';
+        card.querySelector('.presence-aware-input').checked = art3.presence_aware === 'Y';
+        card.querySelector('.suppress-screensaver-input').checked = art3.suppress_screensaver === 'Y';
+        card.querySelector('.auto-start-input').value = art3.auto_start_after_sec || 0;
+        card.querySelector('.start-time-input').value = art3.enabled_start_time || '00:00';
+        card.querySelector('.end-time-input').value = art3.enabled_end_time || '23:59';
+        card.querySelector('.stream-server-input').value = art3.stream_server || '192.168.1.100';
+        card.querySelector('.stream-port-input').value = art3.stream_port || 8090;
         
         const inputs = card.querySelectorAll('input');
         inputs.forEach(input => {

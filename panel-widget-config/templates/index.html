@@ -501,6 +501,25 @@
                             <div id="plasma-list" class="widget-list"></div>
                         </section>
 
+                        <!-- Network Test Section -->
+                        <section class="widget-section" data-widget="network_test">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Ethernet Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                                    <h3>Network Test</h3>
+                                    <span class="badge" id="network-test-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('network_test')" id="add-network-test-btn">
+                                    <i class="fas fa-plus"></i> Add Test
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(16,185,129,0.1);border-left:3px solid #10b981;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Network throughput validator to test infrastructure. One per device.
+                            </div>
+                            <div id="network-test-list" class="widget-list"></div>
+                        </section>
+
                         <!-- ART3 Section -->
                         <section class="widget-section" data-widget="art3">
                             <div class="section-header">
@@ -1167,25 +1186,54 @@
                 </div>
             </div>
             <div class="widget-body">
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" class="enabled-input" checked>
-                        <span>Enable Video Test</span>
-                    </label>
+                <div class="form-group">
+                    <label>Stream Name</label>
+                    <input type="text" class="input name-input" value="Test Stream" placeholder="Test Stream">
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Test Pattern</label>
-                        <select class="input pattern-input">
-                            <option value="bars">Color Bars</option>
-                            <option value="gradient">Gradient</option>
-                            <option value="noise">Noise</option>
-                            <option value="solid">Solid Color</option>
-                        </select>
+                        <label>Video Server IP</label>
+                        <input type="text" class="input server-ip-input" value="192.168.1.100" placeholder="192.168.1.100">
                     </div>
                     <div class="form-group">
-                        <label>Auto-Hide (seconds)</label>
-                        <input type="number" class="input auto-hide-input" value="60" min="5" max="300" step="5">
+                        <label>Video Server Port</label>
+                        <input type="number" class="input server-port-input" value="8090" min="1" max="65535">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>JPEG Filename</label>
+                        <input type="text" class="input jpeg-filename-input" placeholder="test1.jpg">
+                        <small style="color: var(--text-muted);">Static image to display</small>
+                    </div>
+                    <div class="form-group">
+                        <label>JPEG Scale</label>
+                        <select class="input jpeg-scale-input">
+                            <option value="0">Default (0)</option>
+                            <option value="1">Min (1)</option>
+                            <option value="2">Max (2)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>MJPEG Filename</label>
+                        <input type="text" class="input mjpeg-filename-input" placeholder="test.mjpeg">
+                        <small style="color: var(--text-muted);">Video file to play</small>
+                    </div>
+                    <div class="form-group">
+                        <label>MJPEG FPS</label>
+                        <input type="number" class="input mjpeg-fps-input" value="30" min="1" max="60">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Loop Count (0=infinite)</label>
+                        <input type="number" class="input mjpeg-loopcnt-input" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Duration Seconds (0=no limit)</label>
+                        <input type="number" class="input mjpeg-duration-input" value="0" min="0">
                     </div>
                 </div>
             </div>
@@ -1208,20 +1256,56 @@
                 </div>
             </div>
             <div class="widget-body">
-                <div class="form-group checkbox-group">
+                <div class="form-group checkbox-group" style="padding: 20px;">
                     <label class="checkbox-label">
                         <input type="checkbox" class="enabled-input" checked>
-                        <span>Enable Plasma Protection</span>
+                        <span>Enable Plasma Effect Widget</span>
+                    </label>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Network Test Widget Template -->
+    <template id="network-test-widget-template">
+        <div class="widget-card" data-type="network_test" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group checkbox-group" style="padding: 10px 0;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable Network Test Widget</span>
                     </label>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Interval (minutes)</label>
-                        <input type="number" class="input interval-input" value="5" min="1" max="60">
+                        <label>Test Server IP</label>
+                        <input type="text" class="input server-ip-input" value="192.168.1.100" placeholder="192.168.1.100">
                     </div>
                     <div class="form-group">
-                        <label>Pixel Shift Amount</label>
-                        <input type="number" class="input shift-input" value="2" min="1" max="10">
+                        <label>Test Server Port</label>
+                        <input type="number" class="input server-port-input" value="8090" min="1" max="65535">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Duration (seconds)</label>
+                        <input type="number" class="input duration-input" value="10" min="1" max="300">
+                    </div>
+                    <div class="form-group">
+                        <label>Packet Size (bytes)</label>
+                        <input type="number" class="input packet-size-input" value="8192" min="64" max="65535">
                     </div>
                 </div>
             </div>
@@ -1244,25 +1328,48 @@
                 </div>
             </div>
             <div class="widget-body">
-                <div class="form-group checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" class="enabled-input" checked>
-                        <span>Enable ART3</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>Artwork ID</label>
-                    <input type="text" class="input artwork-input" placeholder="e.g., monet_waterlilies">
-                    <small style="color: var(--text-muted);">Selected artwork or collection ID</small>
+                <div class="form-row three-col">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="enabled-input" checked>
+                            <span>Enable ART3</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="presence-aware-input">
+                            <span>Presence Aware</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="suppress-screensaver-input">
+                            <span>Suppress Screensaver</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Rotation (minutes)</label>
-                        <input type="number" class="input rotation-input" value="60" min="1" max="1440">
+                        <label>Auto-Start After (seconds, 0=disabled)</label>
+                        <input type="number" class="input auto-start-input" value="0" min="0" max="3600">
                     </div>
                     <div class="form-group">
-                        <label>Brightness (%)</label>
-                        <input type="number" class="input brightness-input" value="80" min="10" max="100">
+                        <label>Stream Server</label>
+                        <input type="text" class="input stream-server-input" value="192.168.1.100" placeholder="192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label>Stream Port</label>
+                        <input type="number" class="input stream-port-input" value="8090" min="1" max="65535">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Enabled Start Time (HH:MM)</label>
+                        <input type="time" class="input start-time-input" value="00:00">
+                    </div>
+                    <div class="form-group">
+                        <label>Enabled End Time (HH:MM)</label>
+                        <input type="time" class="input end-time-input" value="23:59">
                     </div>
                 </div>
             </div>
