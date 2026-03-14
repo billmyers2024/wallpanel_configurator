@@ -295,6 +295,119 @@ ALARM_PANEL_SCHEMA = {
     "required": ["entity", "name"]
 }
 
+SLIDESHOW_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable slideshow feature"
+        },
+        "interval_sec": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 3600,
+            "default": 30,
+            "description": "Seconds between slides"
+        },
+        "transition": {
+            "type": "string",
+            "enum": ["fade", "slide", "none"],
+            "default": "fade",
+            "description": "Transition effect between slides"
+        },
+        "folders": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "description": "List of folder paths for images"
+        }
+    },
+    "required": ["enabled"]
+}
+
+VIDEO_TEST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable video test pattern"
+        },
+        "pattern": {
+            "type": "string",
+            "enum": ["bars", "gradient", "noise", "solid"],
+            "default": "bars",
+            "description": "Test pattern type"
+        },
+        "auto_hide_sec": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 300,
+            "default": 60,
+            "description": "Auto-hide timeout"
+        }
+    },
+    "required": ["enabled"]
+}
+
+PLASMA_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable plasma/burn-in protection"
+        },
+        "interval_min": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "default": 5,
+            "description": "Minutes between pixel shifts"
+        },
+        "shift_pixels": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 2,
+            "description": "Pixels to shift"
+        }
+    },
+    "required": ["enabled"]
+}
+
+ART3_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable ART3 digital art display"
+        },
+        "artwork_id": {
+            "type": "string",
+            "description": "Selected artwork ID"
+        },
+        "rotation_interval_min": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1440,
+            "default": 60,
+            "description": "Minutes between artwork rotation"
+        },
+        "brightness": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 100,
+            "default": 80,
+            "description": "Display brightness percentage"
+        }
+    },
+    "required": ["enabled"]
+}
+
 
 @app.route('/')
 def index():
@@ -697,7 +810,11 @@ def get_schema(widget_type):
         # Phase 1 schemas
         'cctv': CCTV_SCHEMA,
         'alarm_panel': ALARM_PANEL_SCHEMA,
-        'camera_service': CAMERA_SERVICE_SCHEMA
+        'camera_service': CAMERA_SERVICE_SCHEMA,
+        'slideshow': SLIDESHOW_SCHEMA,
+        'video_test': VIDEO_TEST_SCHEMA,
+        'plasma': PLASMA_SCHEMA,
+        'art3': ART3_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -825,6 +942,46 @@ def widget_types():
                 "icon": "mdi:microphone",
                 "capabilities": ["streaming", "wake_word"],
                 "status": "future"
+            },
+            {
+                "id": "slideshow",
+                "name": "Slideshow",
+                "description": "Image slideshow with configurable intervals and transition effects",
+                "icon": "mdi:image-multiple",
+                "icon_code": "F2E9",
+                "capabilities": ["display", "slideshow", "transitions"],
+                "status": "beta",
+                "note": "Configure folders and interval settings"
+            },
+            {
+                "id": "video_test",
+                "name": "Video Test",
+                "description": "Display test patterns for display calibration",
+                "icon": "mdi:television-guide",
+                "icon_code": "F050",
+                "capabilities": ["test_pattern", "auto_hide"],
+                "status": "beta",
+                "note": "Bars, gradient, noise, or solid patterns"
+            },
+            {
+                "id": "plasma",
+                "name": "Plasma Protection",
+                "description": "Screen burn-in protection for OLED/plasma displays with pixel shifting",
+                "icon": "mdi:monitor-shimmer",
+                "icon_code": "F1B1",
+                "capabilities": ["pixel_shift", "burn_in_protection"],
+                "status": "beta",
+                "note": "Configurable interval and shift amount"
+            },
+            {
+                "id": "art3",
+                "name": "ART3",
+                "description": "Advanced digital art display with curated artwork rotation",
+                "icon": "mdi:palette",
+                "icon_code": "F1E6",
+                "capabilities": ["display", "artwork", "rotation", "brightness"],
+                "status": "beta",
+                "note": "Digital art with brightness and rotation controls"
             }
         ]
     })

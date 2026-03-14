@@ -443,6 +443,82 @@
                                 <!-- Alarm panel widget (single) -->
                             </div>
                         </section>
+
+                        <!-- Slideshow Section -->
+                        <section class="widget-section" data-widget="slideshow">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Image Multiple Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2m-11-4 2.03 2.71L16 11l4 5H8M2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/></svg>
+                                    <h3>Slideshow</h3>
+                                    <span class="badge" id="slideshow-widget-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('slideshow')" id="add-slideshow-btn">
+                                    <i class="fas fa-plus"></i> Add Slideshow
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Image slideshow with configurable intervals and transitions. One per device.
+                            </div>
+                            <div id="slideshow-list" class="widget-list"></div>
+                        </section>
+
+                        <!-- Video Test Section -->
+                        <section class="widget-section" data-widget="video_test">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Television Guide Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M3 5h18v12h-5v2h3v2H5v-2h3v-2H3V5m2 2v8h14V7H5m2 2h10v4H7V9z"/></svg>
+                                    <h3>Video Test</h3>
+                                    <span class="badge" id="video-test-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('video_test')" id="add-video-test-btn">
+                                    <i class="fas fa-plus"></i> Add Test
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(234,179,8,0.1);border-left:3px solid #eab308;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Display test patterns for calibration: bars, gradient, noise, solid.
+                            </div>
+                            <div id="video-test-list" class="widget-list"></div>
+                        </section>
+
+                        <!-- Plasma Protection Section -->
+                        <section class="widget-section" data-widget="plasma">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Monitor Shimmer Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M21 16H3V4h18m0-2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2H8v2h8v-2h-2v-2h5c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2m-9 3.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2M7.5 9c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2m9 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/></svg>
+                                    <h3>Plasma Protection</h3>
+                                    <span class="badge" id="plasma-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('plasma')" id="add-plasma-btn">
+                                    <i class="fas fa-plus"></i> Add Protection
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid #3b82f6;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> OLED/plasma burn-in protection with pixel shifting. One per device.
+                            </div>
+                            <div id="plasma-list" class="widget-list"></div>
+                        </section>
+
+                        <!-- ART3 Section -->
+                        <section class="widget-section" data-widget="art3">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Palette Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 22A10 10 0 0 1 2 12 10 10 0 0 1 12 2c5.5 0 10 4.5 10 10 0 1.5-.5 2.5-1 3.5-.5 1-1 2-1 3.5 0 1.5-1.5 3-3 3H15v-2h2c.5 0 1-.5 1-1 0-1.5.5-2.5 1-3.5.5-1 1-2 1-3.5A8 8 0 0 0 12 4 8 8 0 0 0 4 12a8 8 0 0 0 8 8v2m-3-8a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3z"/></svg>
+                                    <h3>ART3</h3>
+                                    <span class="badge" id="art3-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('art3')" id="add-art3-btn">
+                                    <i class="fas fa-plus"></i> Add ART3
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(236,72,153,0.1);border-left:3px solid #ec4899;margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Advanced digital art display with curated artwork and brightness control.
+                            </div>
+                            <div id="art3-list" class="widget-list"></div>
+                        </section>
                     </div>
                 </div>
             </main>
@@ -1025,6 +1101,169 @@
                     <label>Auto-Hide Timeout (seconds)</label>
                     <input type="number" class="input auto-hide-input" value="30" min="5" max="300" step="5">
                     <small style="color: var(--text-muted);">Panel auto-hides after this many seconds of inactivity</small>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Slideshow Widget Template -->
+    <template id="slideshow-widget-template">
+        <div class="widget-card" data-type="slideshow" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable Slideshow</span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Interval (seconds)</label>
+                        <input type="number" class="input interval-input" value="30" min="5" max="3600" step="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Transition Effect</label>
+                        <select class="input transition-input">
+                            <option value="fade">Fade</option>
+                            <option value="slide">Slide</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Image Folders (comma-separated paths)</label>
+                    <input type="text" class="input folders-input" placeholder="/config/www/slideshow, /media/photos">
+                    <small style="color: var(--text-muted);">Folders containing images to display</small>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Video Test Widget Template -->
+    <template id="video-test-widget-template">
+        <div class="widget-card" data-type="video_test" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable Video Test</span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Test Pattern</label>
+                        <select class="input pattern-input">
+                            <option value="bars">Color Bars</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="noise">Noise</option>
+                            <option value="solid">Solid Color</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Auto-Hide (seconds)</label>
+                        <input type="number" class="input auto-hide-input" value="60" min="5" max="300" step="5">
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Plasma Protection Widget Template -->
+    <template id="plasma-widget-template">
+        <div class="widget-card" data-type="plasma" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable Plasma Protection</span>
+                    </label>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Interval (minutes)</label>
+                        <input type="number" class="input interval-input" value="5" min="1" max="60">
+                    </div>
+                    <div class="form-group">
+                        <label>Pixel Shift Amount</label>
+                        <input type="number" class="input shift-input" value="2" min="1" max="10">
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- ART3 Widget Template -->
+    <template id="art3-widget-template">
+        <div class="widget-card" data-type="art3" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" class="enabled-input" checked>
+                        <span>Enable ART3</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>Artwork ID</label>
+                    <input type="text" class="input artwork-input" placeholder="e.g., monet_waterlilies">
+                    <small style="color: var(--text-muted);">Selected artwork or collection ID</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rotation (minutes)</label>
+                        <input type="number" class="input rotation-input" value="60" min="1" max="1440">
+                    </div>
+                    <div class="form-group">
+                        <label>Brightness (%)</label>
+                        <input type="number" class="input brightness-input" value="80" min="10" max="100">
+                    </div>
                 </div>
             </div>
             <div class="widget-footer">

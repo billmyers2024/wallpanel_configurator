@@ -1083,6 +1083,72 @@ const app = {
             return;
         }
         
+        // Phase 1: Special handling for slideshow widget - only one allowed
+        if (type === 'slideshow') {
+            if (this.currentDevice.widgets.slideshow) {
+                this.showToast('Only one Slideshow allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.slideshow = {
+                enabled: true,
+                interval_sec: 30,
+                transition: 'fade',
+                folders: []
+            };
+            this.renderSlideshowWidget();
+            this.showToast('Slideshow added', 'success');
+            return;
+        }
+        
+        // Phase 1: Special handling for video_test widget - only one allowed
+        if (type === 'video_test') {
+            if (this.currentDevice.widgets.video_test) {
+                this.showToast('Only one Video Test allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.video_test = {
+                enabled: true,
+                pattern: 'bars',
+                auto_hide_sec: 60
+            };
+            this.renderVideoTestWidget();
+            this.showToast('Video Test added', 'success');
+            return;
+        }
+        
+        // Phase 1: Special handling for plasma widget - only one allowed
+        if (type === 'plasma') {
+            if (this.currentDevice.widgets.plasma) {
+                this.showToast('Only one Plasma Protection allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.plasma = {
+                enabled: true,
+                interval_min: 5,
+                shift_pixels: 2
+            };
+            this.renderPlasmaWidget();
+            this.showToast('Plasma Protection added', 'success');
+            return;
+        }
+        
+        // Phase 1: Special handling for art3 widget - only one allowed
+        if (type === 'art3') {
+            if (this.currentDevice.widgets.art3) {
+                this.showToast('Only one ART3 allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.art3 = {
+                enabled: true,
+                artwork_id: '',
+                rotation_interval_min: 60,
+                brightness: 80
+            };
+            this.renderArt3Widget();
+            this.showToast('ART3 added', 'success');
+            return;
+        }
+        
         if (!this.currentDevice.widgets[type]) {
             this.currentDevice.widgets[type] = [];
         } // end if
@@ -1099,6 +1165,10 @@ const app = {
         else if (type === 'art') templateId = 'art-widget-template';
         else if (type === 'cctv') templateId = 'cctv-widget-template';
         else if (type === 'alarm_panel') templateId = 'alarm-panel-widget-template';
+        else if (type === 'slideshow') templateId = 'slideshow-widget-template';
+        else if (type === 'video_test') templateId = 'video-test-widget-template';
+        else if (type === 'plasma') templateId = 'plasma-widget-template';
+        else if (type === 'art3') templateId = 'art3-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
         
         const template = document.getElementById(templateId);
@@ -1621,6 +1691,18 @@ const app = {
         
         // Phase 1: Render Alarm Panel widget (single instance)
         this.renderAlarmPanelWidget();
+        
+        // Phase 1: Render Slideshow widget (single instance)
+        this.renderSlideshowWidget();
+        
+        // Phase 1: Render Video Test widget (single instance)
+        this.renderVideoTestWidget();
+        
+        // Phase 1: Render Plasma Protection widget (single instance)
+        this.renderPlasmaWidget();
+        
+        // Phase 1: Render ART3 widget (single instance)
+        this.renderArt3Widget();
     },
     
     // Render art widget (special case - single instance with different structure)
@@ -1902,6 +1984,180 @@ const app = {
         
         list.appendChild(clone);
         this.updateWidgetCount('alarm_panel');
+    },
+    
+    // =============================================================================
+    // PHASE 1: SLIDESHOW WIDGET
+    // =============================================================================
+    
+    // Render Slideshow widget (single instance)
+    renderSlideshowWidget() {
+        const list = document.getElementById('slideshow-list');
+        const addBtn = document.getElementById('add-slideshow-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const slideshow = this.currentDevice.widgets?.slideshow;
+        
+        if (addBtn) {
+            addBtn.style.display = slideshow ? 'none' : 'inline-flex';
+        }
+        
+        if (!slideshow) {
+            this.updateWidgetCount('slideshow', 0);
+            return;
+        }
+        
+        const template = document.getElementById('slideshow-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        card.querySelector('.enabled-input').checked = slideshow.enabled !== false;
+        card.querySelector('.interval-input').value = slideshow.interval_sec || 30;
+        card.querySelector('.transition-input').value = slideshow.transition || 'fade';
+        card.querySelector('.folders-input').value = (slideshow.folders || []).join(', ');
+        
+        const inputs = card.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('slideshow');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('slideshow', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: VIDEO TEST WIDGET
+    // =============================================================================
+    
+    // Render Video Test widget (single instance)
+    renderVideoTestWidget() {
+        const list = document.getElementById('video-test-list');
+        const addBtn = document.getElementById('add-video-test-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const videoTest = this.currentDevice.widgets?.video_test;
+        
+        if (addBtn) {
+            addBtn.style.display = videoTest ? 'none' : 'inline-flex';
+        }
+        
+        if (!videoTest) {
+            this.updateWidgetCount('video_test', 0);
+            return;
+        }
+        
+        const template = document.getElementById('video-test-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        card.querySelector('.enabled-input').checked = videoTest.enabled !== false;
+        card.querySelector('.pattern-input').value = videoTest.pattern || 'bars';
+        card.querySelector('.auto-hide-input').value = videoTest.auto_hide_sec || 60;
+        
+        const inputs = card.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('video_test');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('video_test', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: PLASMA PROTECTION WIDGET
+    // =============================================================================
+    
+    // Render Plasma Protection widget (single instance)
+    renderPlasmaWidget() {
+        const list = document.getElementById('plasma-list');
+        const addBtn = document.getElementById('add-plasma-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const plasma = this.currentDevice.widgets?.plasma;
+        
+        if (addBtn) {
+            addBtn.style.display = plasma ? 'none' : 'inline-flex';
+        }
+        
+        if (!plasma) {
+            this.updateWidgetCount('plasma', 0);
+            return;
+        }
+        
+        const template = document.getElementById('plasma-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        card.querySelector('.enabled-input').checked = plasma.enabled !== false;
+        card.querySelector('.interval-input').value = plasma.interval_min || 5;
+        card.querySelector('.shift-input').value = plasma.shift_pixels || 2;
+        
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('plasma');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('plasma', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: ART3 WIDGET
+    // =============================================================================
+    
+    // Render ART3 widget (single instance)
+    renderArt3Widget() {
+        const list = document.getElementById('art3-list');
+        const addBtn = document.getElementById('add-art3-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const art3 = this.currentDevice.widgets?.art3;
+        
+        if (addBtn) {
+            addBtn.style.display = art3 ? 'none' : 'inline-flex';
+        }
+        
+        if (!art3) {
+            this.updateWidgetCount('art3', 0);
+            return;
+        }
+        
+        const template = document.getElementById('art3-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        card.querySelector('.enabled-input').checked = art3.enabled !== false;
+        card.querySelector('.artwork-input').value = art3.artwork_id || '';
+        card.querySelector('.rotation-input').value = art3.rotation_interval_min || 60;
+        card.querySelector('.brightness-input').value = art3.brightness || 80;
+        
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('art3');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('art3', 1);
     },
     
     // Render widget list for a type
