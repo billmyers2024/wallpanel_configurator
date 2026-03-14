@@ -2303,9 +2303,11 @@ const app = {
     openSlideshowManager() {
         const modal = document.getElementById('slideshow-manager-modal');
         if (modal) {
-            modal.classList.add('active');
+            modal.style.display = 'flex';
+            this.slideshowPlaylist = this.config?.services?.slideshow?.slides || [];
             this.loadSlideshowFiles();
             this.renderSlideshowPlaylist();
+            this.setupSlideshowUpload();
         }
     },
     
@@ -2313,27 +2315,125 @@ const app = {
     closeSlideshowManager() {
         const modal = document.getElementById('slideshow-manager-modal');
         if (modal) {
-            modal.classList.remove('active');
+            modal.style.display = 'none';
+        }
+    },
+    
+    // Setup upload drag and drop
+    setupSlideshowUpload() {
+        const dropZone = document.getElementById('slideshow-drop-zone');
+        const fileInput = document.getElementById('slideshow-file-input');
+        
+        if (!dropZone || !fileInput) return;
+        
+        // Click to upload
+        dropZone.onclick = () => fileInput.click();
+        
+        // File selection
+        fileInput.onchange = (e) => {
+            if (e.target.files.length > 0) {
+                this.uploadSlideshowFiles(e.target.files);
+            }
+        };
+        
+        // Drag and drop
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.background = 'rgba(59,130,246,0.1)';
+        };
+        
+        dropZone.ondragleave = () => {
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'var(--dark)';
+        };
+        
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'var(--dark)';
+            if (e.dataTransfer.files.length > 0) {
+                this.uploadSlideshowFiles(e.dataTransfer.files);
+            }
+        };
+    },
+    
+    // Upload files to server
+    async uploadSlideshowFiles(files) {
+        const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('slideshow-http-port')?.value || '8050';
+        const dropZone = document.getElementById('slideshow-drop-zone');
+        const originalContent = dropZone.innerHTML;
+        
+        dropZone.innerHTML = `<i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i><p>Uploading ${files.length} file(s)...</p>`;
+        
+        let uploaded = 0;
+        let failed = 0;
+        
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', file.name.endsWith('.mjpeg') ? 'video' : 'image');
+            
+            try {
+                const response = await fetch(`http://${serverIp}:${httpPort}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    uploaded++;
+                } else {
+                    failed++;
+                }
+            } catch (error) {
+                console.error('Upload failed:', error);
+                failed++;
+            }
+        }
+        
+        dropZone.innerHTML = originalContent;
+        this.setupSlideshowUpload(); // Re-setup event listeners
+        
+        if (uploaded > 0) {
+            this.showToast(`Uploaded ${uploaded} file(s)${failed > 0 ? `, ${failed} failed` : ''}`, failed > 0 ? 'warning' : 'success');
+            this.loadSlideshowFiles(); // Refresh file list
+        } else if (failed > 0) {
+            this.showToast('Upload failed. Check server connection.', 'error');
         }
     },
     
     // Load available files from server
     async loadSlideshowFiles() {
         const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
-        const httpPort = document.getElementById('slideshow-http-port')?.value || '8080';
+        const httpPort = document.getElementById('slideshow-http-port')?.value || '8050';
+        const statusEl = document.getElementById('slideshow-server-status');
+        
+        if (statusEl) {
+            statusEl.style.background = 'rgba(59,130,246,0.1)';
+            statusEl.style.borderLeftColor = 'var(--primary)';
+            statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connecting to ${serverIp}:${httpPort}...`;
+        }
         
         try {
             const response = await fetch(`http://${serverIp}:${httpPort}/api/files`);
             if (response.ok) {
                 const data = await response.json();
                 this.slideshowFiles = data;
-                this.renderSlideshowFiles();
+                if (statusEl) {
+                    const imgCount = data.images?.length || 0;
+                    const vidCount = data.videos?.length || 0;
+                    statusEl.style.background = 'rgba(16,185,129,0.1)';
+                    statusEl.style.borderLeftColor = '#10b981';
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Connected to ${serverIp}:${httpPort} (${imgCount} images, ${vidCount} videos)`;
+                }
+                this.renderSlideshowFiles(serverIp, httpPort);
             } else {
-                this.showSlideshowError('Failed to load files from server');
+                this.showSlideshowError('Server returned error: ' + response.status);
             }
         } catch (error) {
             console.error('Failed to load slideshow files:', error);
-            this.showSlideshowError('Cannot connect to server. Check IP and port.');
+            this.showSlideshowError(`Cannot connect to ${serverIp}:${httpPort}. Check server is running.`);
         }
     },
     
@@ -2347,12 +2447,12 @@ const app = {
         }
         const filesContainer = document.getElementById('slideshow-available-files');
         if (filesContainer) {
-            filesContainer.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+            filesContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
         }
     },
     
-    // Render available files grid
-    renderSlideshowFiles() {
+    // Render available files list with thumbnails
+    renderSlideshowFiles(serverIp, httpPort) {
         const container = document.getElementById('slideshow-available-files');
         if (!container || !this.slideshowFiles) return;
         
@@ -2360,28 +2460,30 @@ const app = {
         const videos = this.slideshowFiles.videos || [];
         
         if (images.length === 0 && videos.length === 0) {
-            container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; text-align: center; padding: 24px; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No files found on server</div>`;
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No files found on server</div>`;
             return;
         }
         
         let html = '';
         
-        // Images
+        // Images with thumbnails
         images.forEach(img => {
+            const imageUrl = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(img.filename)}`;
             html += `
-                <div class="file-item" data-filename="${img.filename}" data-type="image" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
-                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-image" style="font-size: 32px; color: var(--text-muted);"></i>
+                <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <img src="${imageUrl}" alt="${img.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <i class="fas fa-image" style="font-size: 32px; color: var(--text-muted); display: none;"></i>
                     </div>
                     <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.filename}</div>
                 </div>
             `;
         });
         
-        // Videos
+        // Videos with icons
         videos.forEach(vid => {
             html += `
-                <div class="file-item" data-filename="${vid.filename}" data-type="video" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                <div class="file-item" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
                     <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-video" style="font-size: 32px; color: var(--text-muted);"></i>
                     </div>
@@ -2403,16 +2505,16 @@ const app = {
         const slide = {
             type: type,
             filename: filename,
-            scale: 'crop_center'
+            scale: 'crop_center',
+            use_default_duration: true,
+            duration: 0
         };
         
         if (type === 'image') {
             slide.ken_burns = false;
-            slide.duration = 0; // Use default
             slide.transition = 'fade';
         } else {
             slide.fps = 25;
-            slide.duration = 0;
             slide.loopcnt = 0;
         }
         
@@ -2428,14 +2530,14 @@ const app = {
         }
     },
     
-    // Render playlist
+    // Render playlist with ART-style layout
     renderSlideshowPlaylist() {
         const container = document.getElementById('slideshow-playlist');
         if (!container) return;
         
         if (!this.slideshowPlaylist || this.slideshowPlaylist.length === 0) {
             container.innerHTML = `
-                <div class="empty-playlist" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                <div style="text-align: center; padding: 32px; color: var(--text-muted);">
                     <i class="fas fa-film" style="font-size: 24px; margin-bottom: 8px;"></i>
                     <p>No slides in playlist</p>
                     <p style="font-size: 12px;">Click files above to add them</p>
@@ -2444,85 +2546,145 @@ const app = {
             return;
         }
         
+        const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('slideshow-http-port')?.value || '8050';
+        
         let html = '';
         this.slideshowPlaylist.forEach((slide, index) => {
-            const icon = slide.type === 'image' ? 'fa-image' : 'fa-video';
-            const settings = slide.type === 'image' 
-                ? `${slide.scale}, ${slide.transition}${slide.ken_burns ? ', KB' : ''}`
-                : `${slide.scale}, ${slide.fps}fps`;
+            const isImage = slide.type === 'image';
+            const thumbnail = isImage 
+                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"><i class="fas fa-image" style="font-size: 24px; color: var(--text-muted); display: none;"></i>`
+                : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
+            
+            // Duration control
+            const durationHtml = slide.use_default_duration 
+                ? `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" checked onclick="app.setSlideDurationType(${index}, true)"> Default</label>`
+                : `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" onclick="app.setSlideDurationType(${index}, true)"> Default</label>`;
+            const customDurationHtml = !slide.use_default_duration
+                ? `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" checked onclick="app.setSlideDurationType(${index}, false)"> Custom</label> <input type="number" value="${slide.duration || 10}" min="1" max="300" style="width: 50px; font-size: 11px;" onchange="app.setSlideDuration(${index}, this.value)">s`
+                : `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" onclick="app.setSlideDurationType(${index}, false)"> Custom</label>`;
+            
+            // Type-specific options
+            let optionsHtml = '';
+            if (isImage) {
+                optionsHtml = `
+                    <select style="font-size: 11px; width: 80px;" onchange="app.setSlideOption(${index}, 'scale', this.value)">
+                        <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
+                        <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
+                        <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
+                    </select>
+                    <select style="font-size: 11px; width: 70px;" onchange="app.setSlideOption(${index}, 'transition', this.value)">
+                        <option value="fade" ${slide.transition === 'fade' ? 'selected' : ''}>Fade</option>
+                        <option value="cut" ${slide.transition === 'cut' ? 'selected' : ''}>Cut</option>
+                        <option value="slide_right" ${slide.transition === 'slide_right' ? 'selected' : ''}>Slide R</option>
+                        <option value="slide_left" ${slide.transition === 'slide_left' ? 'selected' : ''}>Slide L</option>
+                    </select>
+                    <label style="font-size: 11px; white-space: nowrap;"><input type="checkbox" ${slide.ken_burns ? 'checked' : ''} onchange="app.setSlideOption(${index}, 'ken_burns', this.checked)"> KB</label>
+                `;
+            } else {
+                optionsHtml = `
+                    <select style="font-size: 11px; width: 80px;" onchange="app.setSlideOption(${index}, 'scale', this.value)">
+                        <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
+                        <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
+                        <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
+                    </select>
+                    <input type="number" value="${slide.fps || 25}" min="1" max="60" style="width: 40px; font-size: 11px;" onchange="app.setSlideOption(${index}, 'fps', this.value)">fps
+                    <input type="number" value="${slide.loopcnt || 0}" min="0" style="width: 40px; font-size: 11px;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">loops
+                `;
+            }
             
             html += `
-                <div class="playlist-item" data-index="${index}" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--card); border-radius: var(--radius); margin-bottom: 8px; cursor: move;">
-                    <span style="color: var(--text-muted); font-size: 12px;">#${index + 1}</span>
-                    <i class="fas ${icon}" style="color: var(--primary);"></i>
-                    <span style="flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
-                    <span style="font-size: 11px; color: var(--text-muted);">${settings}</span>
-                    <button class="btn btn-sm btn-secondary" onclick="app.openSlideSettings(${index})" title="Settings"><i class="fas fa-cog"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" title="Remove"><i class="fas fa-trash"></i></button>
+                <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); gap: 10px;">
+                    <span class="drag-handle" style="color: var(--text-muted); cursor: grab;"><i class="fas fa-grip-vertical"></i></span>
+                    <span style="color: var(--text-muted); min-width: 25px; text-align: center;">${index + 1}</span>
+                    <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--dark); border-radius: 4px; flex-shrink: 0;">${thumbnail}</div>
+                    <span style="flex: 1; font-family: monospace; font-size: 12px; word-break: break-all;">${slide.filename}</span>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">${optionsHtml}</div>
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">${durationHtml}${customDurationHtml}</div>
+                    <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 </div>
             `;
         });
         
         container.innerHTML = html;
+        this.setupSlideshowDragAndDrop();
     },
     
-    // Open slide settings modal
-    openSlideSettings(index) {
-        if (!this.slideshowPlaylist || !this.slideshowPlaylist[index]) return;
-        
-        this.currentSlideIndex = index;
-        const slide = this.slideshowPlaylist[index];
-        
-        const modal = document.getElementById('slideshow-slide-settings-modal');
-        const imageSection = document.getElementById('slide-settings-image');
-        const videoSection = document.getElementById('slide-settings-video');
-        
-        if (slide.type === 'image') {
-            imageSection.style.display = 'block';
-            videoSection.style.display = 'none';
-            document.getElementById('slide-scale').value = slide.scale || 'crop_center';
-            document.getElementById('slide-ken-burns').checked = slide.ken_burns || false;
-            document.getElementById('slide-duration').value = slide.duration || 0;
-            document.getElementById('slide-transition').value = slide.transition || 'fade';
-        } else {
-            imageSection.style.display = 'none';
-            videoSection.style.display = 'block';
-            document.getElementById('slide-video-scale').value = slide.scale || 'crop_center';
-            document.getElementById('slide-fps').value = slide.fps || 25;
-            document.getElementById('slide-video-duration').value = slide.duration || 0;
-            document.getElementById('slide-loopcnt').value = slide.loopcnt || 0;
+    // Set slide duration type
+    setSlideDurationType(index, useDefault) {
+        if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
+            this.slideshowPlaylist[index].use_default_duration = useDefault;
+            this.renderSlideshowPlaylist();
         }
-        
-        if (modal) modal.classList.add('active');
     },
     
-    // Close slide settings modal
-    closeSlideSettings() {
-        const modal = document.getElementById('slideshow-slide-settings-modal');
-        if (modal) modal.classList.remove('active');
-        this.currentSlideIndex = null;
-    },
-    
-    // Save slide settings
-    saveSlideSettings() {
-        if (this.currentSlideIndex === null || !this.slideshowPlaylist) return;
-        
-        const slide = this.slideshowPlaylist[this.currentSlideIndex];
-        
-        if (slide.type === 'image') {
-            slide.scale = document.getElementById('slide-scale').value;
-            slide.ken_burns = document.getElementById('slide-ken-burns').checked;
-            slide.duration = parseInt(document.getElementById('slide-duration').value) || 0;
-            slide.transition = document.getElementById('slide-transition').value;
-        } else {
-            slide.scale = document.getElementById('slide-video-scale').value;
-            slide.fps = parseInt(document.getElementById('slide-fps').value) || 25;
-            slide.duration = parseInt(document.getElementById('slide-video-duration').value) || 0;
-            slide.loopcnt = parseInt(document.getElementById('slide-loopcnt').value) || 0;
+    // Set slide duration
+    setSlideDuration(index, value) {
+        if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
+            this.slideshowPlaylist[index].duration = parseInt(value) || 10;
         }
+    },
+    
+    // Set slide option
+    setSlideOption(index, key, value) {
+        if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
+            this.slideshowPlaylist[index][key] = value;
+        }
+    },
+    
+    // Setup drag and drop for playlist
+    setupSlideshowDragAndDrop() {
+        const list = document.getElementById('slideshow-playlist');
+        if (!list) return;
         
+        let draggedItem = null;
+        
+        list.querySelectorAll('.slideshow-slide-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                item.style.opacity = '0.5';
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            
+            item.addEventListener('dragend', () => {
+                item.style.opacity = '1';
+                draggedItem = null;
+                this.updateSlideshowOrder();
+            });
+            
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                if (draggedItem && draggedItem !== item) {
+                    const rect = item.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midY) {
+                        item.parentNode.insertBefore(draggedItem, item);
+                    } else {
+                        item.parentNode.insertBefore(draggedItem, item.nextSibling);
+                    }
+                }
+            });
+        });
+    },
+    
+    // Update playlist order after drag
+    updateSlideshowOrder() {
+        const list = document.getElementById('slideshow-playlist');
+        if (!list || !this.slideshowPlaylist) return;
+        
+        const newOrder = [];
+        list.querySelectorAll('.slideshow-slide-item').forEach(item => {
+            const oldIndex = parseInt(item.dataset.index);
+            newOrder.push(this.slideshowPlaylist[oldIndex]);
+        });
+        
+        this.slideshowPlaylist = newOrder;
         this.renderSlideshowPlaylist();
-        this.closeSlideSettings();
     },
     
     // Save slideshow playlist to config
@@ -2533,7 +2695,7 @@ const app = {
         
         const server = document.getElementById('slideshow-server')?.value || '192.168.1.100';
         const streamPort = parseInt(document.getElementById('slideshow-stream-port')?.value) || 8090;
-        const httpPort = parseInt(document.getElementById('slideshow-http-port')?.value) || 8080;
+        const httpPort = parseInt(document.getElementById('slideshow-http-port')?.value) || 8050;
         const defaultDuration = parseInt(document.getElementById('slideshow-default-duration')?.value) || 10;
         
         this.config.services.slideshow = {

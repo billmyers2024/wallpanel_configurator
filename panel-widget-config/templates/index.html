@@ -728,72 +728,7 @@
             </div>
         </div>
 
-        <!-- Slideshow Slide Settings Modal -->
-        <div id="slideshow-slide-settings-modal" class="modal">
-            <div class="modal-content" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h3>Slide Settings</h3>
-                    <button class="btn-close" onclick="app.closeSlideSettings()">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div id="slide-settings-image" style="display: none;">
-                        <div class="form-group">
-                            <label>Scale Mode</label>
-                            <select id="slide-scale" class="input">
-                                <option value="crop_center">Crop Center (default)</option>
-                                <option value="stretch">Stretch</option>
-                                <option value="fit_letterbox">Fit Letterbox</option>
-                            </select>
-                        </div>
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="slide-ken-burns">
-                                <span>Enable Ken Burns Effect</span>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label>Duration (seconds, 0=use default)</label>
-                            <input type="number" id="slide-duration" class="input" value="0" min="0" max="300">
-                        </div>
-                        <div class="form-group">
-                            <label>Transition</label>
-                            <select id="slide-transition" class="input">
-                                <option value="fade">Fade (default)</option>
-                                <option value="cut">Cut</option>
-                                <option value="slide_right">Slide Right</option>
-                                <option value="slide_left">Slide Left</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="slide-settings-video" style="display: none;">
-                        <div class="form-group">
-                            <label>Scale Mode</label>
-                            <select id="slide-video-scale" class="input">
-                                <option value="crop_center">Crop Center (default)</option>
-                                <option value="stretch">Stretch</option>
-                                <option value="fit_letterbox">Fit Letterbox</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>FPS (1-60, default: 25)</label>
-                            <input type="number" id="slide-fps" class="input" value="25" min="1" max="60">
-                        </div>
-                        <div class="form-group">
-                            <label>Duration (seconds, 0=no limit)</label>
-                            <input type="number" id="slide-video-duration" class="input" value="0" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label>Loop Count (0=infinite)</label>
-                            <input type="number" id="slide-loopcnt" class="input" value="0" min="0">
-                        </div>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="btn btn-secondary" onclick="app.closeSlideSettings()">Cancel</button>
-                        <button class="btn btn-primary" onclick="app.saveSlideSettings()">Save Settings</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <!-- Templates for JavaScript rendering -->
