@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.6.0
+
+### Added
+- **Site Services Panel** - New global configuration section for shared services
+  - Camera Service Management: Configure cameras once, use across multiple devices
+  - Each camera has: ID, Name, Host/IP, Port, and HA entity reference
+  - Cameras are referenced by CCTV widgets in room configurations
+
+- **CCTV Widget** - Multi-camera surveillance interface
+  - Add multiple cameras per room referencing global camera services
+  - Optional presence sensor to auto-show specific cameras
+  - Camera dropdown populated from Site Services configuration
+  - Validation ensures referenced cameras exist in global services
+
+- **Alarm Panel Widget** - Security system control
+  - One alarm panel per room (single instance)
+  - PIN-based arming/disarming
+  - Supports all alarm modes: home, away, night, custom, vacation
+  - Auto-hide timeout configuration (5-300 seconds)
+  - Entity picker for `alarm_control_panel` entities
+  - Visual state display with color coding
+
+### Changed
+- Default configuration now includes `services.cameras` array
+- Version bumped to 1.6.0 for Phase 1 release
+
 ## 1.4.4
 
 ### Added
