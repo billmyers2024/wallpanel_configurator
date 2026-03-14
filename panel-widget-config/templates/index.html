@@ -1125,5 +1125,21 @@
     </div>
 
     <script src="./static/js/app.js?v=2"></script>
+    <script>
+        setTimeout(() => {
+            const list = document.getElementById('alarm-panel-list');
+            const section = document.querySelector('[data-widget="alarm_panel"]');
+            const container = document.querySelector('.widgets-container');
+            console.log('=== DEBUG ===');
+            console.log('Alarm panel list:', list ? 'found' : 'not found');
+            console.log('Alarm panel section:', section ? { hidden: section.hidden, display: getComputedStyle(section).display, visible: section.offsetHeight > 0 } : 'not found');
+            console.log('Widgets container:', container ? { scrollHeight: container.scrollHeight, clientHeight: container.clientHeight, overflow: getComputedStyle(container).overflowY } : 'not found');
+            
+            if (list && list.children.length > 0) {
+                const card = list.querySelector('.widget-card');
+                console.log('Alarm card rect:', card ? card.getBoundingClientRect() : 'no card');
+            }
+        }, 2000);
+    </script>
 </body>
 </html>
