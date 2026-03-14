@@ -267,6 +267,16 @@ The slideshow service manages site-wide synchronized slideshow content. This is 
   - For videos: FPS input, Duration input, Loop count input
 - Save button to generate playlist JSON
 
+#### Reference Implementation
+**The existing "ART Display" widget's media management is the reference design for this functionality.** It provides:
+- Clean visual thumbnail grid of available images
+- Drag-and-drop ordering for playlist creation
+- Simple "Click to Upload" with drag-and-drop support
+- Intuitive add/remove from playlist workflow
+- Clear visual feedback on selected vs available images
+
+This proven approach strikes the right balance - practical for users to create slide orders without being overly complicated. The Slideshow Service media management should follow this same interaction pattern, extended to support both images and video files.
+
 ---
 
 ## 6. MJPEG Sender HTTP Server Extension (C++)
