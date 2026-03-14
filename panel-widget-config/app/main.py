@@ -330,49 +330,118 @@ SLIDESHOW_SCHEMA = {
 VIDEO_TEST_SCHEMA = {
     "type": "object",
     "properties": {
-        "enabled": {
-            "type": "boolean",
-            "default": False,
-            "description": "Enable video test pattern"
-        },
-        "pattern": {
-            "type": "string",
-            "enum": ["bars", "gradient", "noise", "solid"],
-            "default": "bars",
-            "description": "Test pattern type"
-        },
-        "auto_hide_sec": {
-            "type": "integer",
-            "minimum": 5,
-            "maximum": 300,
-            "default": 60,
-            "description": "Auto-hide timeout"
+        "streams": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "default": "Test Stream",
+                        "description": "Display name for this stream config"
+                    },
+                    "video_server_ip": {
+                        "type": "string",
+                        "default": "192.168.1.100",
+                        "description": "Video server IP address"
+                    },
+                    "video_server_port": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 65535,
+                        "default": 8090,
+                        "description": "Video server port"
+                    },
+                    "jpeg_filename": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Static JPEG file to display"
+                    },
+                    "jpeg_scale": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2,
+                        "default": 0,
+                        "description": "Scale factor for JPEG (0=default/none, 1=min, 2=max)"
+                    },
+                    "mjpeg_filename": {
+                        "type": "string",
+                        "default": "",
+                        "description": "MJPEG video file to play"
+                    },
+                    "mjpeg_fps": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 60,
+                        "default": 30,
+                        "description": "Frames per second for MJPEG"
+                    },
+                    "mjpeg_loopcnt": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 0,
+                        "description": "Loop count (0=infinite)"
+                    },
+                    "mjpeg_duration_secs": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 0,
+                        "description": "Duration in seconds (0=no limit)"
+                    }
+                },
+                "required": ["name"]
+            }
         }
-    },
-    "required": ["enabled"]
+    }
 }
 
 PLASMA_SCHEMA = {
     "type": "object",
     "properties": {
         "enabled": {
-            "type": "boolean",
-            "default": False,
-            "description": "Enable plasma/burn-in protection"
+            "type": "string",
+            "enum": ["Y", "N"],
+            "default": "Y",
+            "description": "Whether to add the widget to the device"
+        }
+    },
+    "required": ["enabled"]
+}
+
+NETWORK_TEST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "type": "string",
+            "enum": ["Y", "N"],
+            "default": "Y",
+            "description": "Whether to add the widget to the device"
         },
-        "interval_min": {
+        "server_ip": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "Test server IP address"
+        },
+        "server_port": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 60,
-            "default": 5,
-            "description": "Minutes between pixel shifts"
+            "maximum": 65535,
+            "default": 8090,
+            "description": "Test server port"
         },
-        "shift_pixels": {
+        "duration_sec": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 10,
-            "default": 2,
-            "description": "Pixels to shift"
+            "maximum": 300,
+            "default": 10,
+            "description": "Test duration in seconds"
+        },
+        "packet_size": {
+            "type": "integer",
+            "minimum": 64,
+            "maximum": 65535,
+            "default": 8192,
+            "description": "Packet size in bytes"
         }
     },
     "required": ["enabled"]
@@ -382,27 +451,53 @@ ART3_SCHEMA = {
     "type": "object",
     "properties": {
         "enabled": {
-            "type": "boolean",
-            "default": False,
-            "description": "Enable ART3 digital art display"
-        },
-        "artwork_id": {
             "type": "string",
-            "description": "Selected artwork ID"
+            "enum": ["Y", "N"],
+            "default": "Y",
+            "description": "Whether to add the widget to the device"
         },
-        "rotation_interval_min": {
+        "presence_aware": {
+            "type": "string",
+            "enum": ["Y", "N"],
+            "default": "N",
+            "description": "Turn off widget when no one is present in the room"
+        },
+        "suppress_screensaver": {
+            "type": "string",
+            "enum": ["Y", "N"],
+            "default": "N",
+            "description": "Disable screensaver while this widget is running"
+        },
+        "auto_start_after_sec": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3600,
+            "default": 0,
+            "description": "Auto-start slideshow after N seconds (0=disabled)"
+        },
+        "enabled_start_time": {
+            "type": "string",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "default": "00:00",
+            "description": "Time of day when widget becomes available (HH:MM)"
+        },
+        "enabled_end_time": {
+            "type": "string",
+            "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]$",
+            "default": "23:59",
+            "description": "Time of day when widget becomes unavailable (HH:MM)"
+        },
+        "stream_server": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "MJPEG/slideshow server IP address"
+        },
+        "stream_port": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 1440,
-            "default": 60,
-            "description": "Minutes between artwork rotation"
-        },
-        "brightness": {
-            "type": "integer",
-            "minimum": 10,
-            "maximum": 100,
-            "default": 80,
-            "description": "Display brightness percentage"
+            "maximum": 65535,
+            "default": 8090,
+            "description": "MJPEG/slideshow server port"
         }
     },
     "required": ["enabled"]
@@ -814,6 +909,7 @@ def get_schema(widget_type):
         'slideshow': SLIDESHOW_SCHEMA,
         'video_test': VIDEO_TEST_SCHEMA,
         'plasma': PLASMA_SCHEMA,
+        'network_test': NETWORK_TEST_SCHEMA,
         'art3': ART3_SCHEMA
     }
     
