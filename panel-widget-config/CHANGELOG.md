@@ -26,6 +26,15 @@
 - Default configuration now includes `services.cameras` array
 - Version bumped to 1.6.0 for Phase 1 release
 
+### UI Improvements
+- Reorganized global configuration panels:
+  1. **Site Settings** (top) - Site name, WiFi, cover timing
+  2. **Site Services** (middle) - Camera configuration  
+  3. **Slideshow** (bottom) - Placeholder for Phase 2
+- All three panels use consistent collapsible section styling
+- Alarm Panel widget includes working Remove button
+- Add button properly reappears when Alarm Panel is removed
+
 ## 1.4.4
 
 ### Added
