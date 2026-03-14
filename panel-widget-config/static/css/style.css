@@ -394,94 +394,12 @@ body {
     color: var(--text);
 }
 
-/* Site Settings Panel */
-.site-settings-panel {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin: 0 24px;
-    overflow: visible;
-}
-
-.site-settings-panel .section-content {
-    max-height: 2000px;
-    overflow: visible;
-}
-
-.site-settings-panel .section-header {
-    cursor: pointer;
-}
-
-.site-settings-panel .toggle-icon {
-    margin-left: auto;
-    transition: transform 0.2s;
-}
-
-.site-settings-panel .toggle-icon.expanded {
-    transform: rotate(180deg);
-}
-
-.site-settings-panel .section-content {
-    padding: 20px;
-    border-top: 1px solid var(--border);
-}
-
-/* Site Services Panel - Same styling as Site Settings */
-.site-services-panel {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin: 0 24px;
-    overflow: visible;
-}
-
-.site-services-panel .section-header {
-    cursor: pointer;
-}
-
-.site-services-panel .section-content {
-    padding: 20px;
-    border-top: 1px solid var(--border);
-    max-height: 2000px;
-    overflow: visible;
-}
-
-.site-services-panel .toggle-icon {
-    margin-left: auto;
-    transition: transform 0.2s;
-}
-
-.site-services-panel .toggle-icon.expanded {
-    transform: rotate(180deg);
-}
-
-/* Slideshow Panel - Same styling as Site Settings */
+/* Global Configuration Panels - Site Settings, Site Services, Slideshow */
+/* All use consistent styling with default .section-header/.section-title classes */
+.site-settings-panel,
+.site-services-panel,
 .slideshow-panel {
-    background: var(--card);
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
     margin: 0 24px;
-    overflow: visible;
-}
-
-.slideshow-panel .section-header {
-    cursor: pointer;
-}
-
-.slideshow-panel .section-content {
-    padding: 20px;
-    border-top: 1px solid var(--border);
-    max-height: 2000px;
-    overflow: visible;
-}
-
-.slideshow-panel .toggle-icon {
-    margin-left: auto;
-    transition: transform 0.2s;
-}
-
-.slideshow-panel .toggle-icon.expanded {
-    transform: rotate(180deg);
 }
 
 /* Site Settings to Room spacing */

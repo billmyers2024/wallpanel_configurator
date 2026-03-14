@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.3
+
+### Changed
+- Simplified global panel styling - all three panels (Site Settings, Site Services, Slideshow) now use clean, consistent default styling
+- Removed custom panel CSS in favor of shared `.section-header` and `.section-title` classes
+
 ## 1.6.2
 
 ### Fixed
