@@ -2472,8 +2472,7 @@ const app = {
             html += `
                 <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
                     <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="${imageUrl}" alt="${img.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                        <i class="fas fa-image" style="font-size: 32px; color: var(--text-muted); display: none;"></i>
+                        <img src="${imageUrl}" alt="${img.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image\\' style=\\'font-size: 32px; color: var(--text-muted);\\'></i>'">
                     </div>
                     <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.filename}</div>
                 </div>
@@ -2553,7 +2552,7 @@ const app = {
         this.slideshowPlaylist.forEach((slide, index) => {
             const isImage = slide.type === 'image';
             const thumbnail = isImage 
-                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"><i class="fas fa-image" style="font-size: 24px; color: var(--text-muted); display: none;"></i>`
+                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex'"><i class="fas fa-image fallback-icon" style="font-size: 24px; color: var(--text-muted); display: none; position: absolute;"></i>`
                 : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
             
             // Duration control
