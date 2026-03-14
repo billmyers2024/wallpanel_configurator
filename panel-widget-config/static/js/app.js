@@ -73,9 +73,10 @@ const app = {
     // Get default empty configuration
     getDefaultConfig() {
         return {
-            site_meta: { version: '1.0', last_updated: new Date().toISOString().split('T')[0] },
+            site_meta: { version: '1.6', last_updated: new Date().toISOString().split('T')[0] },
             site_info: { site_name: 'My Home', guest_ssid: '', guest_wifi_password: '' },
             defaults: { cover_opening_time: '08:00', cover_closing_time: '19:00', site_cover_up_time: 14300, site_cover_down_time: 11500 },
+            services: { cameras: [] },
             devices: []
         };
     },
@@ -519,6 +520,11 @@ const app = {
         this.updateWidgetsFromCards('climate2');
         this.updateWidgetsFromCards('tests');
         this.updateArtFromForm();
+        
+        // Phase 1: Update cameras and new widgets
+        this.updateCamerasFromForm();
+        this.updateCCTVFromForm();
+        this.updateAlarmPanelFromForm();
     },
     
     // Update widget array from card forms
@@ -657,6 +663,72 @@ const app = {
         
         // Update badge
         this.updateWidgetCount('art');
+    },
+    
+    // Phase 1: Update CCTV widgets from form
+    updateCCTVFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('cctv-list');
+        if (!container) return;
+        
+        const cards = container.querySelectorAll('.widget-card');
+        const cctvWidgets = [];
+        
+        cards.forEach(card => {
+            const cameraId = card.querySelector('.camera-id-input')?.value?.trim();
+            if (!cameraId) return; // Skip empty
+            
+            const widget = {
+                id: cameraId,
+                show_cam_entity: card.querySelector('.show-cam-entity')?.value?.trim() || ''
+            };
+            
+            // Optional name override
+            const nameOverride = card.querySelector('.camera-name-input')?.value?.trim();
+            if (nameOverride) {
+                widget.name = nameOverride;
+            }
+            
+            cctvWidgets.push(widget);
+        });
+        
+        if (cctvWidgets.length > 0) {
+            this.currentDevice.widgets.cctv = cctvWidgets;
+        } else {
+            delete this.currentDevice.widgets.cctv;
+        }
+        
+        this.updateWidgetCount('cctv');
+    },
+    
+    // Phase 1: Update Alarm Panel widget from form
+    updateAlarmPanelFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('alarm-panel-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            // No alarm panel configured
+            delete this.currentDevice.widgets.alarm_panel;
+            return;
+        }
+        
+        const entity = card.querySelector('.entity-input')?.value?.trim();
+        if (!entity) {
+            delete this.currentDevice.widgets.alarm_panel;
+            return;
+        }
+        
+        this.currentDevice.widgets.alarm_panel = {
+            entity: entity,
+            name: card.querySelector('.name-input')?.value?.trim() || 'Alarm',
+            auto_hide_sec: parseInt(card.querySelector('.auto-hide-input')?.value) || 30
+        };
+        
+        this.updateWidgetCount('alarm_panel');
     },
     
     // =========================================================================
@@ -937,6 +1009,80 @@ const app = {
             return;
         }
         
+        // Phase 1: Special handling for CCTV widget
+        if (type === 'cctv') {
+            if (!this.currentDevice.widgets.cctv) {
+                this.currentDevice.widgets.cctv = [];
+            }
+            
+            const list = document.getElementById('cctv-list');
+            const template = document.getElementById('cctv-widget-template');
+            
+            if (template && list) {
+                const clone = template.content.cloneNode(true);
+                const card = clone.querySelector('.widget-card');
+                const currentCount = list.querySelectorAll('.widget-card').length;
+                
+                card.dataset.index = currentCount;
+                
+                // Set number
+                const number = card.querySelector('.widget-number');
+                if (number) {
+                    number.textContent = `#${currentCount + 1}`;
+                }
+                
+                // Populate camera dropdown with available cameras
+                const cameraSelect = card.querySelector('.camera-id-input');
+                const cameras = this.getAvailableCameras();
+                
+                // Add default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = cameras.length === 0 ? 'No cameras configured' : 'Select a camera...';
+                cameraSelect.appendChild(defaultOption);
+                
+                cameras.forEach(cam => {
+                    const option = document.createElement('option');
+                    option.value = cam.id;
+                    option.textContent = `${cam.name} (${cam.id})`;
+                    cameraSelect.appendChild(option);
+                });
+                
+                // Add change listener
+                const inputs = card.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    input.addEventListener('change', () => {
+                        this.updateWidgetCount('cctv');
+                    });
+                });
+                
+                list.appendChild(card);
+                this.updateWidgetCount('cctv');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                if (cameras.length === 0) {
+                    this.showToast('No cameras configured in Site Services', 'warning');
+                }
+            }
+            return;
+        }
+        
+        // Phase 1: Special handling for alarm_panel widget - only one allowed
+        if (type === 'alarm_panel') {
+            if (this.currentDevice.widgets.alarm_panel) {
+                this.showToast('Only one Alarm Panel allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.alarm_panel = {
+                entity: '',
+                name: '',
+                auto_hide_sec: 30
+            };
+            this.renderAlarmPanelWidget();
+            this.showToast('Alarm Panel added', 'success');
+            return;
+        }
+        
         if (!this.currentDevice.widgets[type]) {
             this.currentDevice.widgets[type] = [];
         } // end if
@@ -951,6 +1097,8 @@ const app = {
         else if (type === 'climate2') templateId = 'climate2-widget-template';
         else if (type === 'tests') templateId = 'tests-widget-template';
         else if (type === 'art') templateId = 'art-widget-template';
+        else if (type === 'cctv') templateId = 'cctv-widget-template';
+        else if (type === 'alarm_panel') templateId = 'alarm-panel-widget-template';
         else templateId = `${type.slice(0, -1)}-widget-template`;
         
         const template = document.getElementById(templateId);
@@ -1016,32 +1164,71 @@ const app = {
     // Remove widget
     removeWidget(button) {
         const card = button.closest('.widget-card');
-        const type = card.dataset.type + 's';
-        const list = document.getElementById(`${type}-list`);
+        const type = card.dataset.type;
         
+        // Handle special cases for list IDs
+        let listId;
+        if (type === 'art' || type === 'alarm_panel') {
+            // Single-instance widgets
+            listId = `${type}-list`;
+        } else {
+            // Multi-instance widgets (plural)
+            listId = `${type}s-list`;
+        }
+        
+        const list = document.getElementById(listId);
         card.remove();
         
-        // Renumber remaining cards
-        const cards = list.querySelectorAll('.widget-card');
-        cards.forEach((c, i) => {
-            c.dataset.index = i;
-            const number = c.querySelector('.widget-number');
-            if (number) {
-                number.textContent = `#${i + 1}`;
-            }
-        });
+        // Renumber remaining cards (for multi-instance widgets)
+        if (type !== 'art' && type !== 'alarm_panel') {
+            const cards = list.querySelectorAll('.widget-card');
+            cards.forEach((c, i) => {
+                c.dataset.index = i;
+                const number = c.querySelector('.widget-number');
+                if (number) {
+                    number.textContent = `#${i + 1}`;
+                }
+            });
+        }
+        
+        // Show add button for single-instance widgets when removed
+        if (type === 'alarm_panel') {
+            const addBtn = document.getElementById('add-alarm-panel-btn');
+            if (addBtn) addBtn.style.display = 'inline-flex';
+        }
         
         this.updateWidgetCount(type);
     },
     
     // Update widget count badge
     updateWidgetCount(type) {
+        // Normalize type (remove 's' suffix if present)
+        const baseType = type.endsWith('s') ? type.slice(0, -1) : type;
+        
         // Get count from DOM
-        const list = document.getElementById(`${type}-list`);
+        let listId;
+        if (baseType === 'art' || baseType === 'alarm_panel') {
+            listId = `${baseType}-list`;
+        } else {
+            listId = `${baseType}s-list`;
+        }
+        
+        const list = document.getElementById(listId);
         const count = list ? list.querySelectorAll('.widget-card').length : 0;
         
-        // Badge IDs are plural: lights-count, covers-count
-        const badge = document.getElementById(`${type}-count`);
+        // Badge IDs: lights-count, covers-count, cctv-count, alarm-panel-count
+        let badgeId;
+        if (baseType === 'cctv') {
+            badgeId = 'cctv-count';
+        } else if (baseType === 'alarm_panel') {
+            badgeId = 'alarm-panel-count';
+        } else if (baseType === 'art') {
+            badgeId = 'art-count';
+        } else {
+            badgeId = `${baseType}s-count`;
+        }
+        
+        const badge = document.getElementById(badgeId);
         if (badge) {
             badge.textContent = count;
         }
@@ -1425,6 +1612,15 @@ const app = {
         
         // Render art widget (single instance)
         this.renderArtWidget();
+        
+        // Phase 1: Render cameras in Site Services panel
+        this.renderCameras();
+        
+        // Phase 1: Render CCTV widgets
+        this.renderCCTVWidgets();
+        
+        // Phase 1: Render Alarm Panel widget (single instance)
+        this.renderAlarmPanelWidget();
     },
     
     // Render art widget (special case - single instance with different structure)
@@ -1461,6 +1657,251 @@ const app = {
         });
         
         list.appendChild(clone);
+    },
+    
+    // =============================================================================
+    // PHASE 1: CAMERA SERVICES & WIDGETS
+    // =============================================================================
+    
+    // Add a new camera to services.cameras
+    addCamera() {
+        if (!this.config.services) {
+            this.config.services = { cameras: [] };
+        }
+        if (!this.config.services.cameras) {
+            this.config.services.cameras = [];
+        }
+        
+        const template = document.getElementById('camera-service-template');
+        const list = document.getElementById('cameras-list');
+        
+        if (template && list) {
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            const currentCount = list.querySelectorAll('.widget-card').length;
+            
+            card.dataset.index = currentCount;
+            
+            // Set number
+            const number = card.querySelector('.widget-number');
+            if (number) {
+                number.textContent = `#${currentCount + 1}`;
+            }
+            
+            // Add change listener to update count
+            const inputs = card.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    this.updateCameraCount();
+                });
+            });
+            
+            list.appendChild(card);
+            this.updateCameraCount();
+            
+            // Scroll to new camera
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+    
+    // Remove a camera from the list
+    removeCamera(button) {
+        const card = button.closest('.widget-card');
+        if (card) {
+            card.remove();
+            this.renumberCameras();
+            this.updateCameraCount();
+        }
+    },
+    
+    // Renumber cameras after removal
+    renumberCameras() {
+        const list = document.getElementById('cameras-list');
+        if (!list) return;
+        
+        const cards = list.querySelectorAll('.widget-card');
+        cards.forEach((card, index) => {
+            card.dataset.index = index;
+            const number = card.querySelector('.widget-number');
+            if (number) {
+                number.textContent = `#${index + 1}`;
+            }
+        });
+    },
+    
+    // Update camera count badge
+    updateCameraCount() {
+        const list = document.getElementById('cameras-list');
+        const count = list ? list.querySelectorAll('.widget-card').length : 0;
+        const badge = document.getElementById('cameras-count');
+        if (badge) {
+            badge.textContent = count;
+        }
+    },
+    
+    // Render cameras from config to Site Services panel
+    renderCameras() {
+        const list = document.getElementById('cameras-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const cameras = this.config.services?.cameras || [];
+        
+        const template = document.getElementById('camera-service-template');
+        if (!template) return;
+        
+        cameras.forEach((camera, index) => {
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            
+            card.dataset.index = index;
+            card.querySelector('.widget-number').textContent = `#${index + 1}`;
+            
+            // Set values
+            card.querySelector('.cam-id-input').value = camera.id || '';
+            card.querySelector('.cam-name-input').value = camera.name || '';
+            card.querySelector('.cam-host-input').value = camera.host || '';
+            card.querySelector('.cam-port-input').value = camera.port || 8080;
+            card.querySelector('.cam-entity-input').value = camera.entity || '';
+            
+            // Add change listener
+            const inputs = card.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    this.updateCameraCount();
+                });
+            });
+            
+            list.appendChild(card);
+        });
+        
+        this.updateCameraCount();
+    },
+    
+    // Save cameras from form to config
+    updateCamerasFromForm() {
+        const list = document.getElementById('cameras-list');
+        if (!list) return;
+        
+        const cards = list.querySelectorAll('.widget-card');
+        const cameras = [];
+        
+        cards.forEach(card => {
+            const id = card.querySelector('.cam-id-input').value.trim();
+            if (!id) return; // Skip empty
+            
+            cameras.push({
+                id: id,
+                name: card.querySelector('.cam-name-input').value.trim() || id,
+                host: card.querySelector('.cam-host-input').value.trim(),
+                port: parseInt(card.querySelector('.cam-port-input').value) || 8080,
+                entity: card.querySelector('.cam-entity-input').value.trim()
+            });
+        });
+        
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        this.config.services.cameras = cameras;
+    },
+    
+    // Get available cameras for CCTV dropdown
+    getAvailableCameras() {
+        return this.config.services?.cameras || [];
+    },
+    
+    // =============================================================================
+    // PHASE 1: CCTV WIDGET
+    // =============================================================================
+    
+    // Render CCTV widgets for current device
+    renderCCTVWidgets() {
+        const list = document.getElementById('cctv-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const cctvWidgets = this.currentDevice.widgets?.cctv || [];
+        const cameras = this.getAvailableCameras();
+        
+        const template = document.getElementById('cctv-widget-template');
+        if (!template) return;
+        
+        cctvWidgets.forEach((widget, index) => {
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            
+            card.dataset.index = index;
+            card.querySelector('.widget-number').textContent = `#${index + 1}`;
+            
+            // Populate camera dropdown
+            const cameraSelect = card.querySelector('.camera-id-input');
+            cameras.forEach(cam => {
+                const option = document.createElement('option');
+                option.value = cam.id;
+                option.textContent = `${cam.name} (${cam.id})`;
+                cameraSelect.appendChild(option);
+            });
+            cameraSelect.value = widget.id || '';
+            
+            // Set other values
+            card.querySelector('.camera-name-input').value = widget.name || '';
+            card.querySelector('.show-cam-entity').value = widget.show_cam_entity || '';
+            
+            // Add change listener
+            const inputs = card.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    this.updateWidgetCount('cctv');
+                });
+            });
+            
+            list.appendChild(card);
+        });
+        
+        this.updateWidgetCount('cctv');
+    },
+    
+    // =============================================================================
+    // PHASE 1: ALARM PANEL WIDGET
+    // =============================================================================
+    
+    // Render Alarm Panel widget (single instance)
+    renderAlarmPanelWidget() {
+        const list = document.getElementById('alarm-panel-list');
+        const addBtn = document.getElementById('add-alarm-panel-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const alarmPanel = this.currentDevice.widgets?.alarm_panel;
+        
+        // Show/hide add button based on whether alarm panel exists
+        if (addBtn) {
+            addBtn.style.display = alarmPanel ? 'none' : 'inline-flex';
+        }
+        
+        if (!alarmPanel) return;
+        
+        const template = document.getElementById('alarm-panel-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        // Set values
+        card.querySelector('.entity-input').value = alarmPanel.entity || '';
+        card.querySelector('.name-input').value = alarmPanel.name || '';
+        card.querySelector('.auto-hide-input').value = alarmPanel.auto_hide_sec || 30;
+        
+        // Add change listener
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('alarm_panel');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('alarm_panel');
     },
     
     // Render widget list for a type
