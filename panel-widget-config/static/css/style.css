@@ -396,10 +396,11 @@ body {
 
 /* Global Configuration Panels - Site Settings, Site Services, Slideshow */
 /* All use consistent styling with default .section-header/.section-title classes */
+/* No left/right margin - panels extend full width like original site-settings */
 .site-settings-panel,
 .site-services-panel,
 .slideshow-panel {
-    margin: 0 24px;
+    margin: 0;
 }
 
 /* Site Settings to Room spacing */
