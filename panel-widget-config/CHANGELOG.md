@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.1
+
+### Fixed
+- Alarm Panel widget now properly displays Remove button
+- Panel reordering: Site Settings → Site Services → Slideshow
+
+### Changed
+- Site Settings panel restyled to match Site Services collapsible format
+- Slideshow panel added as placeholder for Phase 2
+
 ## 1.6.0
 
 ### Added
