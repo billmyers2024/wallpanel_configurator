@@ -1635,7 +1635,11 @@ const app = {
             'mdi:image': '<i class="fas fa-image"></i>',
             'mdi:phone': '<i class="fas fa-phone"></i>',
             'mdi:bullhorn': '<i class="fas fa-bullhorn"></i>',
-            'mdi:microphone': '<i class="fas fa-microphone"></i>'
+            'mdi:microphone': '<i class="fas fa-microphone"></i>',
+            'mdi:video': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M17 10.5V7C17 6.45 16.55 6 16 6H4C3.45 6 3 6.45 3 7V17C3 17.55 3.45 18 4 18H16C16.55 18 17 17.55 17 17V13.5L21 17.5V6.5L17 10.5Z"/></svg>',
+            'mdi:cctv': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M6 8.5H4V15.5H6V8.5M21 8.5H19V15.5H21V8.5M18 17H2V15.5H4V8.5H2V7H18V8.5H16V15.5H18V17M18 2H6C4.9 2 4 2.9 4 4H20C20 2.9 19.1 2 18 2M18 20H6V22H18V20Z"/></svg>',
+            'mdi:lightning-bolt': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M11 15H6L13 1V9H18L11 23V15Z"/></svg>',
+            'mdi:palette': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 22A10 10 0 0 1 2 12 10 10 0 0 1 12 2c5.5 0 10 4.5 10 10 0 1.5-.5 2.5-1 3.5-.5 1-1 2-1 3.5 0 1.5-1.5 3-3 3H15v-2h2c.5 0 1-.5 1-1 0-1.5.5-2.5 1-3.5.5-1 1-2 1-3.5A8 8 0 0 0 12 4 8 8 0 0 0 4 12a8 8 0 0 0 8 8v2m-3-8a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3z"/></svg>'
         };
         
         this.widgetTypes.forEach(type => {
@@ -2141,6 +2145,10 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
+        // Show green checkmark since widget is enabled
+        const validIcon = card.querySelector('.valid');
+        if (validIcon) validIcon.style.display = 'inline';
+        
         const inputs = card.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('change', () => {
@@ -2179,6 +2187,10 @@ const app = {
         
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
+        
+        // Show green checkmark since widget is enabled
+        const validIcon = card.querySelector('.valid');
+        if (validIcon) validIcon.style.display = 'inline';
         
         card.querySelector('.server-ip-input').value = networkTest.server_ip || '192.168.1.100';
         card.querySelector('.server-port-input').value = networkTest.server_port || 8090;
@@ -2223,6 +2235,10 @@ const app = {
         
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
+        
+        // Show green checkmark since widget is enabled
+        const validIcon = card.querySelector('.valid');
+        if (validIcon) validIcon.style.display = 'inline';
         
         card.querySelector('.presence-aware-input').checked = art3.presence_aware === 'Y';
         card.querySelector('.suppress-screensaver-input').checked = art3.suppress_screensaver === 'Y';
