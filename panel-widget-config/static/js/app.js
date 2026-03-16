@@ -525,6 +525,26 @@ const app = {
         this.updateCamerasFromForm();
         this.updateCCTVFromForm();
         this.updateAlarmPanelFromForm();
+        
+        // Save slideshow settings from form to config
+        this.updateSlideshowSettingsFromForm();
+    },
+    
+    // Update slideshow settings from form fields
+    updateSlideshowSettingsFromForm() {
+        const serverInput = document.getElementById('slideshow-server');
+        const streamPortInput = document.getElementById('slideshow-stream-port');
+        const httpPortInput = document.getElementById('slideshow-http-port');
+        const durationInput = document.getElementById('slideshow-default-duration');
+        
+        if (!this.config.slideshow) {
+            this.config.slideshow = {};
+        }
+        
+        if (serverInput) this.config.slideshow.server = serverInput.value || '192.168.1.100';
+        if (streamPortInput) this.config.slideshow.stream_port = parseInt(streamPortInput.value) || 8090;
+        if (httpPortInput) this.config.slideshow.http_port = parseInt(httpPortInput.value) || 8050;
+        if (durationInput) this.config.slideshow.default_duration = parseInt(durationInput.value) || 10;
     },
     
     // Update widget array from card forms
@@ -1741,6 +1761,27 @@ const app = {
         
         // Phase 1: Render ART3 widget (single instance)
         this.renderArt3Widget();
+        
+        // Load slideshow settings from config
+        this.loadSlideshowSettings();
+    },
+    
+    // Load slideshow settings from config into form fields
+    loadSlideshowSettings() {
+        const slideshow = this.config?.slideshow;
+        if (!slideshow) return;
+        
+        const serverInput = document.getElementById('slideshow-server');
+        const streamPortInput = document.getElementById('slideshow-stream-port');
+        const httpPortInput = document.getElementById('slideshow-http-port');
+        const durationInput = document.getElementById('slideshow-default-duration');
+        
+        // Only set values if they exist in config AND form fields are currently empty
+        // This prevents overwriting user input, but ensures saved values are loaded on fresh page load
+        if (serverInput && slideshow.server) serverInput.value = slideshow.server;
+        if (streamPortInput && slideshow.stream_port) streamPortInput.value = slideshow.stream_port;
+        if (httpPortInput && slideshow.http_port) httpPortInput.value = slideshow.http_port;
+        if (durationInput && slideshow.default_duration) durationInput.value = slideshow.default_duration;
     },
     
     // Render art widget (special case - single instance with different structure)
@@ -2916,6 +2957,7 @@ const app = {
     // Get slideshow configuration from form fields
     getSlideshowFromForm() {
         return {
+            enabled: true,  // CRITICAL: Must be true for mjpeg_sender to process playlist
             server: document.getElementById('slideshow-server')?.value || '192.168.1.100',
             stream_port: parseInt(document.getElementById('slideshow-stream-port')?.value) || 8090,
             http_port: parseInt(document.getElementById('slideshow-http-port')?.value) || 8050,
