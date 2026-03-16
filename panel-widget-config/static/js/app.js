@@ -525,6 +525,9 @@ const app = {
         this.updateCamerasFromForm();
         this.updateCCTVFromForm();
         this.updateAlarmPanelFromForm();
+        this.updatePlasmaFromForm();
+        this.updateNetworkTestFromForm();
+        this.updateArt3FromForm();
         
         // Save slideshow settings from form to config
         this.updateSlideshowSettingsFromForm();
@@ -749,6 +752,81 @@ const app = {
         };
         
         this.updateWidgetCount('alarm_panel');
+    },
+    
+    // Phase 1: Update Plasma widget from form
+    updatePlasmaFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('plasma-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            // No plasma widget configured
+            delete this.currentDevice.widgets.plasma;
+            return;
+        }
+        
+        // Widget exists, just keep the enabled flag
+        this.currentDevice.widgets.plasma = {
+            enabled: 'Y'
+        };
+        
+        this.updateWidgetCount('plasma');
+    },
+    
+    // Phase 1: Update Network Test widget from form
+    updateNetworkTestFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('network-test-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            // No network test widget configured
+            delete this.currentDevice.widgets.network_test;
+            return;
+        }
+        
+        this.currentDevice.widgets.network_test = {
+            enabled: 'Y',
+            server_ip: card.querySelector('.server-ip-input')?.value?.trim() || '192.168.1.100',
+            server_port: parseInt(card.querySelector('.server-port-input')?.value) || 8090,
+            duration_sec: parseInt(card.querySelector('.duration-input')?.value) || 10,
+            packet_size: parseInt(card.querySelector('.packet-size-input')?.value) || 8192
+        };
+        
+        this.updateWidgetCount('network_test');
+    },
+    
+    // Phase 1: Update ART3 widget from form
+    updateArt3FromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('art3-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            // No ART3 widget configured
+            delete this.currentDevice.widgets.art3;
+            return;
+        }
+        
+        this.currentDevice.widgets.art3 = {
+            enabled: 'Y',
+            presence_aware: card.querySelector('.presence-aware-input')?.checked ? 'Y' : 'N',
+            suppress_screensaver: card.querySelector('.suppress-screensaver-input')?.checked ? 'Y' : 'N',
+            auto_start_after_sec: parseInt(card.querySelector('.auto-start-input')?.value) || 0,
+            enabled_start_time: card.querySelector('.start-time-input')?.value || '00:00',
+            enabled_end_time: card.querySelector('.end-time-input')?.value || '23:59',
+            stream_server: card.querySelector('.stream-server-input')?.value?.trim() || '192.168.1.100',
+            stream_port: parseInt(card.querySelector('.stream-port-input')?.value) || 8090
+        };
+        
+        this.updateWidgetCount('art3');
     },
     
     // =========================================================================
@@ -1267,7 +1345,7 @@ const app = {
         
         // Handle special cases for list IDs
         let listId;
-        if (type === 'art' || type === 'alarm_panel') {
+        if (type === 'art' || type === 'alarm_panel' || type === 'plasma' || type === 'network_test' || type === 'art3') {
             // Single-instance widgets
             listId = `${type}-list`;
         } else {
@@ -1278,8 +1356,15 @@ const app = {
         const list = document.getElementById(listId);
         card.remove();
         
+        // Delete from currentDevice.widgets for single-instance widgets
+        if (type === 'art' || type === 'alarm_panel' || type === 'plasma' || type === 'network_test' || type === 'art3') {
+            if (this.currentDevice && this.currentDevice.widgets) {
+                delete this.currentDevice.widgets[type];
+            }
+        }
+        
         // Renumber remaining cards (for multi-instance widgets)
-        if (type !== 'art' && type !== 'alarm_panel') {
+        if (type !== 'art' && type !== 'alarm_panel' && type !== 'plasma' && type !== 'network_test' && type !== 'art3') {
             const cards = list.querySelectorAll('.widget-card');
             cards.forEach((c, i) => {
                 c.dataset.index = i;
@@ -1293,6 +1378,15 @@ const app = {
         // Show add button for single-instance widgets when removed
         if (type === 'alarm_panel') {
             const addBtn = document.getElementById('add-alarm-panel-btn');
+            if (addBtn) addBtn.style.display = 'inline-flex';
+        } else if (type === 'plasma') {
+            const addBtn = document.getElementById('add-plasma-btn');
+            if (addBtn) addBtn.style.display = 'inline-flex';
+        } else if (type === 'network_test') {
+            const addBtn = document.getElementById('add-network-test-btn');
+            if (addBtn) addBtn.style.display = 'inline-flex';
+        } else if (type === 'art3') {
+            const addBtn = document.getElementById('add-art3-btn');
             if (addBtn) addBtn.style.display = 'inline-flex';
         }
         
