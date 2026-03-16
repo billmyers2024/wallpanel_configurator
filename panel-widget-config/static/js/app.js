@@ -2305,14 +2305,36 @@ const app = {
         if (modal) {
             modal.style.display = 'flex';
             
-            // Load server settings from config
-            const slideshow = this.config?.services?.slideshow;
+            // Load server settings from config - slideshow is at ROOT level, not in services
+            const slideshow = this.config?.slideshow;
             if (slideshow) {
                 document.getElementById('slideshow-server').value = slideshow.server || '192.168.1.100';
                 document.getElementById('slideshow-stream-port').value = slideshow.stream_port || 8090;
                 document.getElementById('slideshow-http-port').value = slideshow.http_port || 8050;
                 document.getElementById('slideshow-default-duration').value = slideshow.default_duration || 10;
-                this.slideshowPlaylist = slideshow.slides || [];
+                
+                // Map slides and handle field name differences ("file" vs "filename")
+                // Also map "effect": "ken_burns" to "ken_burns": true
+                this.slideshowPlaylist = (slideshow.slides || []).map(slide => {
+                    const mappedSlide = {
+                        type: slide.type,
+                        filename: slide.file || slide.filename,  // Map "file" to "filename"
+                        scale: slide.scale || 'crop_center',
+                        use_default_duration: slide.use_default_duration || false,
+                        duration: slide.duration || 10
+                    };
+                    
+                    if (slide.type === 'image') {
+                        // Map "effect": "ken_burns" to "ken_burns": true
+                        mappedSlide.ken_burns = (slide.effect === 'ken_burns') || slide.ken_burns || false;
+                        mappedSlide.transition = slide.transition || 'fade';
+                    } else {
+                        mappedSlide.fps = slide.fps || 25;
+                        mappedSlide.loopcnt = slide.loopcnt || 0;
+                    }
+                    
+                    return mappedSlide;
+                });
             } else {
                 this.slideshowPlaylist = [];
             }
@@ -2558,6 +2580,11 @@ const app = {
         this.renderSlideshowPlaylist();
     },
     
+    // Helper to get filename from slide (handles both "file" and "filename" for backward compatibility)
+    getSlideFilename(slide) {
+        return slide.filename || slide.file || '';
+    },
+    
     // Remove item from playlist
     removeFromSlideshowPlaylist(index) {
         if (this.slideshowPlaylist) {
@@ -2581,16 +2608,17 @@ const app = {
         if (!modal || !img || !metadata) return;
         
         const isImage = slide.type === 'image';
+        const filename = this.getSlideFilename(slide);
         
         if (isImage) {
-            img.src = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}`;
+            img.src = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(filename)}`;
             img.style.display = 'block';
         } else {
             img.style.display = 'none';
         }
         
         // Build metadata display
-        let metaHtml = `<strong>Filename:</strong> ${slide.filename}<br>`;
+        let metaHtml = `<strong>Filename:</strong> ${filename}<br>`;
         metaHtml += `<strong>Type:</strong> ${isImage ? 'Image' : 'Video'}<br>`;
         metaHtml += `<strong>Scale:</strong> ${slide.scale || 'crop_center'}<br>`;
         metaHtml += `<strong>Duration:</strong> ${slide.duration || 10}s<br>`;
@@ -2661,8 +2689,9 @@ const app = {
         
         this.slideshowPlaylist.forEach((slide, index) => {
             const isImage = slide.type === 'image';
+            const filename = this.getSlideFilename(slide);
             const thumbnail = isImage 
-                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'">`
+                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'">`
                 : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
             
             // Duration with +/- buttons
@@ -2706,7 +2735,7 @@ const app = {
                     <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
                         <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
                         <div style="text-align: center;">${thumbnail}</div>
-                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
+                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
                         ${scaleHtml}
                         ${transitionHtml}
                         ${durationHtml}
@@ -2736,7 +2765,7 @@ const app = {
                     <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
                         <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
                         <div style="text-align: center;">${thumbnail}</div>
-                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
+                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
                         ${scaleHtml}
                         ${videoOptionsHtml}
                         ${loopsHtml}
@@ -2846,24 +2875,21 @@ const app = {
         this.renderSlideshowPlaylist();
     },
     
-    // Save slideshow playlist to config
-    saveSlideshowPlaylist() {
-        if (!this.config.services) {
-            this.config.services = {};
-        }
-        
-        const server = document.getElementById('slideshow-server')?.value || '192.168.1.100';
-        const streamPort = parseInt(document.getElementById('slideshow-stream-port')?.value) || 8090;
-        const httpPort = parseInt(document.getElementById('slideshow-http-port')?.value) || 8050;
-        const defaultDuration = parseInt(document.getElementById('slideshow-default-duration')?.value) || 10;
-        
-        this.config.services.slideshow = {
-            server: server,
-            stream_port: streamPort,
-            http_port: httpPort,
-            default_duration: defaultDuration,
+    // Get slideshow configuration from form fields
+    getSlideshowFromForm() {
+        return {
+            server: document.getElementById('slideshow-server')?.value || '192.168.1.100',
+            stream_port: parseInt(document.getElementById('slideshow-stream-port')?.value) || 8090,
+            http_port: parseInt(document.getElementById('slideshow-http-port')?.value) || 8050,
+            default_duration: parseInt(document.getElementById('slideshow-default-duration')?.value) || 10,
             slides: this.slideshowPlaylist || []
         };
+    },
+    
+    // Save slideshow playlist to config
+    saveSlideshowPlaylist() {
+        // Save to ROOT level slideshow object, not in services
+        this.config.slideshow = this.getSlideshowFromForm();
         
         this.closeSlideshowManager();
         this.showToast('Slideshow playlist saved', 'success');

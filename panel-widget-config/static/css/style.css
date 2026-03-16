@@ -631,6 +631,11 @@ body {
     min-height: 520px;
 }
 
+/* ART3 widget needs more height for all fields */
+.widget-card[data-type="art3"] {
+    min-height: 480px;
+}
+
 .widget-body {
     padding: 16px;
     display: flex;
