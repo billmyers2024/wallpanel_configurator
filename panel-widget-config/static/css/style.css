@@ -633,7 +633,7 @@ body {
 
 /* ART3 widget needs more height for all fields */
 .widget-card[data-type="art3"] {
-    min-height: 520px;
+    min-height: 560px;
 }
 
 .widget-body {

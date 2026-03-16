@@ -1284,20 +1284,38 @@ const app = {
         // Normalize type (remove 's' suffix if present)
         const baseType = type.endsWith('s') ? type.slice(0, -1) : type;
         
-        // Get count from DOM or use explicit count if provided
+        // Get count - handle different widget data structures
         let count;
         if (typeof explicitCount === 'number') {
             count = explicitCount;
         } else {
-            let listId;
-            if (baseType === 'art' || baseType === 'alarm_panel' || baseType === 'video_test' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3') {
-                listId = `${baseType}-list`;
+            // Get count from device widgets config based on widget type structure
+            const widgets = this.currentDevice?.widgets;
+            if (!widgets) {
+                count = 0;
+            } else if (baseType === 'climate' || baseType === 'climate2' || baseType === 'cctv') {
+                // Array widgets - count array length
+                count = widgets[baseType]?.length || 0;
+            } else if (baseType === 'art') {
+                // Art widget - single object with images array
+                count = widgets.art?.images?.length || 0;
+            } else if (baseType === 'alarm_panel' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3') {
+                // Single-instance widgets - 1 if exists, 0 if not
+                count = widgets[baseType] ? 1 : 0;
+            } else if (baseType === 'video_test') {
+                // Video test - object with streams array
+                count = widgets.video_test?.streams?.length || 0;
             } else {
-                listId = `${baseType}s-list`;
+                // Default: count from DOM for other types
+                let listId;
+                if (baseType === 'art' || baseType === 'alarm_panel') {
+                    listId = `${baseType}-list`;
+                } else {
+                    listId = `${baseType}s-list`;
+                }
+                const list = document.getElementById(listId);
+                count = list ? list.querySelectorAll('.widget-card').length : 0;
             }
-            
-            const list = document.getElementById(listId);
-            count = list ? list.querySelectorAll('.widget-card').length : 0;
         }
         
         // Badge IDs mapping for all widget types
@@ -2316,13 +2334,19 @@ const app = {
         if (modal) {
             modal.style.display = 'flex';
             
-            // Load server settings from config - slideshow is at ROOT level, not in services
+            // Load server settings from config ONLY if form fields are empty
+            // This preserves user-entered values when re-opening the manager
             const slideshow = this.config?.slideshow;
             if (slideshow) {
-                document.getElementById('slideshow-server').value = slideshow.server || '192.168.1.100';
-                document.getElementById('slideshow-stream-port').value = slideshow.stream_port || 8090;
-                document.getElementById('slideshow-http-port').value = slideshow.http_port || 8050;
-                document.getElementById('slideshow-default-duration').value = slideshow.default_duration || 10;
+                const serverInput = document.getElementById('slideshow-server');
+                const streamPortInput = document.getElementById('slideshow-stream-port');
+                const httpPortInput = document.getElementById('slideshow-http-port');
+                const durationInput = document.getElementById('slideshow-default-duration');
+                
+                if (serverInput && !serverInput.value) serverInput.value = slideshow.server || '192.168.1.100';
+                if (streamPortInput && !streamPortInput.value) streamPortInput.value = slideshow.stream_port || 8090;
+                if (httpPortInput && !httpPortInput.value) httpPortInput.value = slideshow.http_port || 8050;
+                if (durationInput && !durationInput.value) durationInput.value = slideshow.default_duration || 10;
                 
                 // Map slides and handle field name differences ("file" vs "filename")
                 // Also map "effect": "ken_burns" to "ken_burns": true
@@ -2745,7 +2769,7 @@ const app = {
                         ${transitionHtml}
                         ${durationHtml}
                         <div style="text-align: center;">${kenBurnsHtml}</div>
-                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" style="height: 32px; padding: 4px 10px;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -2754,14 +2778,14 @@ const app = {
                 // Video row - different columns
                 const videoOptionsHtml = `
                     <div style="display: flex; gap: 4px; align-items: center;">
-                        <input type="number" value="${slide.fps || 25}" min="1" max="60" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'fps', this.value)">
+                        <input type="number" value="${slide.fps || 25}" min="1" max="60" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; height: 32px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'fps', this.value)">
                         <span style="font-size: 10px; color: var(--text-muted);">fps</span>
                     </div>
                 `;
                 
                 const loopsHtml = `
                     <div style="display: flex; gap: 4px; align-items: center;">
-                        <input type="number" value="${slide.loopcnt || 0}" min="0" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">
+                        <input type="number" value="${slide.loopcnt || 0}" min="0" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; height: 32px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">
                         <span style="font-size: 10px; color: var(--text-muted);">loops</span>
                     </div>
                 `;
@@ -2775,7 +2799,7 @@ const app = {
                         ${videoOptionsHtml}
                         ${loopsHtml}
                         ${durationHtml}
-                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" style="height: 32px; padding: 4px 10px;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
