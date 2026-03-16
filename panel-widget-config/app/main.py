@@ -1071,7 +1071,7 @@ def widget_types():
             },
             {
                 "id": "art3",
-                "name": "ART3",
+                "name": "Art Slideshow",
                 "description": "Advanced digital art display with curated artwork rotation",
                 "icon": "mdi:palette",
                 "icon_code": "F1E6",

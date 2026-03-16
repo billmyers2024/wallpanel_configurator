@@ -1740,7 +1740,7 @@ const app = {
         };
         
         // Define sort order by function: Core -> Security -> Media -> Test -> Future
-        // Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Plasma Effect, Tester, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
+        // Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Art Slideshow, Plasma Effect, Tester, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
         const sortOrder = [
             'lights', 'covers', 'climate', 'climate2', 'cctv', 'alarm_panel',
             'art', 'art3', 'plasma', 'tester', 'video_test', 'network_test',
