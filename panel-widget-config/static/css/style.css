@@ -296,7 +296,7 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     min-height: 0;
 }
 
@@ -519,16 +519,13 @@ body {
     margin-top: 20px;
 }
 
-/* Widgets Container - Scrollable area for all widgets */
+/* Widgets Container - holds all widget sections */
 .widgets-container {
-    flex: 1;
-    overflow-y: auto;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
-    min-height: 0;
-    max-height: 100vh;
+    min-height: min-content;
 }
 
 /* Ensure scrollbar is always visible on WebKit browsers */
