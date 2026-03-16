@@ -2304,7 +2304,19 @@ const app = {
         const modal = document.getElementById('slideshow-manager-modal');
         if (modal) {
             modal.style.display = 'flex';
-            this.slideshowPlaylist = this.config?.services?.slideshow?.slides || [];
+            
+            // Load server settings from config
+            const slideshow = this.config?.services?.slideshow;
+            if (slideshow) {
+                document.getElementById('slideshow-server').value = slideshow.server || '192.168.1.100';
+                document.getElementById('slideshow-stream-port').value = slideshow.stream_port || 8090;
+                document.getElementById('slideshow-http-port').value = slideshow.http_port || 8050;
+                document.getElementById('slideshow-default-duration').value = slideshow.default_duration || 10;
+                this.slideshowPlaylist = slideshow.slides || [];
+            } else {
+                this.slideshowPlaylist = [];
+            }
+            
             this.loadSlideshowFiles();
             this.renderSlideshowPlaylist();
             this.setupSlideshowUpload();
