@@ -1733,10 +1733,30 @@ const app = {
             'mdi:video': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M17 10.5V7C17 6.45 16.55 6 16 6H4C3.45 6 3 6.45 3 7V17C3 17.55 3.45 18 4 18H16C16.55 18 17 17.55 17 17V13.5L21 17.5V6.5L17 10.5Z"/></svg>',
             'mdi:cctv': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M6 8.5H4V15.5H6V8.5M21 8.5H19V15.5H21V8.5M18 17H2V15.5H4V8.5H2V7H18V8.5H16V15.5H18V17M18 2H6C4.9 2 4 2.9 4 4H20C20 2.9 19.1 2 18 2M18 20H6V22H18V20Z"/></svg>',
             'mdi:lightning-bolt': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M11 15H6L13 1V9H18L11 23V15Z"/></svg>',
-            'mdi:palette': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 22A10 10 0 0 1 2 12 10 10 0 0 1 12 2c5.5 0 10 4.5 10 10 0 1.5-.5 2.5-1 3.5-.5 1-1 2-1 3.5 0 1.5-1.5 3-3 3H15v-2h2c.5 0 1-.5 1-1 0-1.5.5-2.5 1-3.5.5-1 1-2 1-3.5A8 8 0 0 0 12 4 8 8 0 0 0 4 12a8 8 0 0 0 8 8v2m-3-8a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3z"/></svg>'
+            'mdi:palette': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 22A10 10 0 0 1 2 12 10 10 0 0 1 12 2c5.5 0 10 4.5 10 10 0 1.5-.5 2.5-1 3.5-.5 1-1 2-1 3.5 0 1.5-1.5 3-3 3H15v-2h2c.5 0 1-.5 1-1 0-1.5.5-2.5 1-3.5.5-1 1-2 1-3.5A8 8 0 0 0 12 4 8 8 0 0 0 4 12a8 8 0 0 0 8 8v2m-3-8a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3z"/></svg>',
+            'mdi:check': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M21 7L9 19L3.5 13.5L4.91 12.09L9 16.17L19.59 5.59L21 7Z"/></svg>',
+            'mdi:ethernet': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
+            'mdi:television-guide': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M3 5h18v12h-5v2h3v2H5v-2h3v-2H3V5m2 2v8h14V7H5m2 2h10v4H7V9z"/></svg>'
         };
         
-        this.widgetTypes.forEach(type => {
+        // Define sort order: Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Art Slideshow, Plasma Effect, Widget Test, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
+        const sortOrder = [
+            'lights', 'covers', 'climate', 'climate2', 'cctv', 'alarm_panel',
+            'art', 'art2', 'plasma', 'tests', 'video_test', 'network_test',
+            'music', 'intercom', 'public_address', 'voice_assistant', 'weather'
+        ];
+        
+        // Sort widget types by the defined order
+        const sortedTypes = [...this.widgetTypes].sort((a, b) => {
+            const indexA = sortOrder.indexOf(a.id);
+            const indexB = sortOrder.indexOf(b.id);
+            if (indexA === -1 && indexB === -1) return 0;
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+        
+        sortedTypes.forEach(type => {
             const item = document.createElement('div');
             item.className = 'widget-type-item';
             
