@@ -1280,32 +1280,43 @@ const app = {
     },
     
     // Update widget count badge
-    updateWidgetCount(type) {
+    updateWidgetCount(type, explicitCount) {
         // Normalize type (remove 's' suffix if present)
         const baseType = type.endsWith('s') ? type.slice(0, -1) : type;
         
-        // Get count from DOM
-        let listId;
-        if (baseType === 'art' || baseType === 'alarm_panel') {
-            listId = `${baseType}-list`;
+        // Get count from DOM or use explicit count if provided
+        let count;
+        if (typeof explicitCount === 'number') {
+            count = explicitCount;
         } else {
-            listId = `${baseType}s-list`;
+            let listId;
+            if (baseType === 'art' || baseType === 'alarm_panel' || baseType === 'video_test' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3') {
+                listId = `${baseType}-list`;
+            } else {
+                listId = `${baseType}s-list`;
+            }
+            
+            const list = document.getElementById(listId);
+            count = list ? list.querySelectorAll('.widget-card').length : 0;
         }
         
-        const list = document.getElementById(listId);
-        const count = list ? list.querySelectorAll('.widget-card').length : 0;
+        // Badge IDs mapping for all widget types
+        const badgeIdMap = {
+            'light': 'lights-count',
+            'cover': 'covers-count',
+            'climate': 'climate-count',
+            'climate2': 'climate2-count',
+            'test': 'tests-count',
+            'art': 'art-count',
+            'cctv': 'cctv-count',
+            'alarm_panel': 'alarm-panel-count',
+            'video_test': 'video-test-count',
+            'plasma': 'plasma-count',
+            'network_test': 'network-test-count',
+            'art3': 'art3-count'
+        };
         
-        // Badge IDs: lights-count, covers-count, cctv-count, alarm-panel-count
-        let badgeId;
-        if (baseType === 'cctv') {
-            badgeId = 'cctv-count';
-        } else if (baseType === 'alarm_panel') {
-            badgeId = 'alarm-panel-count';
-        } else if (baseType === 'art') {
-            badgeId = 'art-count';
-        } else {
-            badgeId = `${baseType}s-count`;
-        }
+        const badgeId = badgeIdMap[baseType] || `${baseType}s-count`;
         
         const badge = document.getElementById(badgeId);
         if (badge) {
@@ -2668,7 +2679,7 @@ const app = {
         
         // Column headers style
         const headerHtml = `
-            <div style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border-color); background: var(--dark); font-size: 11px; font-weight: bold; color: var(--text-muted);">
+            <div style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--dark); font-size: 11px; font-weight: bold; color: var(--text-muted);">
                 <span></span>
                 <span>Order</span>
                 <span>File</span>
@@ -2682,11 +2693,6 @@ const app = {
         
         let html = headerHtml;
         
-        // Styled select class
-        const selectClass = "input";
-        const selectStyle = "background: var(--dark); color: var(--text); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 100%;";
-        const inputStyle = "background: var(--dark); color: var(--text); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 100%; text-align: center;";
-        
         this.slideshowPlaylist.forEach((slide, index) => {
             const isImage = slide.type === 'image';
             const filename = this.getSlideFilename(slide);
@@ -2694,18 +2700,18 @@ const app = {
                 ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'">`
                 : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
             
-            // Duration with +/- buttons
+            // Duration with styled +/- buttons and boxed number (no spinners)
             const durationHtml = `
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <button type="button" onclick="app.adjustSlideDuration(${index}, -1)" style="background: var(--dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text); width: 22px; height: 22px; font-size: 12px; cursor: pointer;">-</button>
-                    <input type="number" value="${slide.duration || 10}" min="1" max="300" style="${inputStyle} width: 40px;" onchange="app.setSlideDuration(${index}, this.value)">
-                    <button type="button" onclick="app.adjustSlideDuration(${index}, 1)" style="background: var(--dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text); width: 22px; height: 22px; font-size: 12px; cursor: pointer;">+</button>
+                <div class="duration-control">
+                    <button type="button" onclick="app.adjustSlideDuration(${index}, -1)">-</button>
+                    <input type="number" class="duration-value" value="${slide.duration || 10}" min="1" max="300" onchange="app.setSlideDuration(${index}, this.value)">
+                    <button type="button" onclick="app.adjustSlideDuration(${index}, 1)">+</button>
                 </div>
             `;
             
-            // Scale select (styled)
+            // Scale select (styled like main UI)
             const scaleHtml = `
-                <select class="${selectClass}" style="${selectStyle}" onchange="app.setSlideOption(${index}, 'scale', this.value)">
+                <select onchange="app.setSlideOption(${index}, 'scale', this.value)">
                     <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
                     <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
                     <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
@@ -2715,9 +2721,9 @@ const app = {
             let rowHtml = '';
             
             if (isImage) {
-                // Transition select
+                // Transition select (styled like main UI)
                 const transitionHtml = `
-                    <select class="${selectClass}" style="${selectStyle}" onchange="app.setSlideOption(${index}, 'transition', this.value)">
+                    <select onchange="app.setSlideOption(${index}, 'transition', this.value)">
                         <option value="fade" ${slide.transition === 'fade' ? 'selected' : ''}>Fade</option>
                         <option value="cut" ${slide.transition === 'cut' ? 'selected' : ''}>Cut</option>
                         <option value="slide_right" ${slide.transition === 'slide_right' ? 'selected' : ''}>Slide R</option>
@@ -2725,14 +2731,13 @@ const app = {
                     </select>
                 `;
                 
-                // Ken Burns checkbox - when enabled, set duration to 15
-                const kenBurnsDuration = slide.ken_burns ? 15 : (slide.duration || 10);
+                // Ken Burns checkbox
                 const kenBurnsHtml = `
                     <input type="checkbox" ${slide.ken_burns ? 'checked' : ''} onchange="app.setKenBurns(${index}, this.checked)" style="width: 16px; height: 16px; cursor: pointer;">
                 `;
                 
                 rowHtml = `
-                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
                         <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
@@ -2740,7 +2745,7 @@ const app = {
                         ${transitionHtml}
                         ${durationHtml}
                         <div style="text-align: center;">${kenBurnsHtml}</div>
-                        <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" style="padding: 4px 8px;">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -2749,20 +2754,20 @@ const app = {
                 // Video row - different columns
                 const videoOptionsHtml = `
                     <div style="display: flex; gap: 4px; align-items: center;">
-                        <input type="number" value="${slide.fps || 25}" min="1" max="60" style="${inputStyle} width: 40px;" onchange="app.setSlideOption(${index}, 'fps', this.value)">
+                        <input type="number" value="${slide.fps || 25}" min="1" max="60" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'fps', this.value)">
                         <span style="font-size: 10px; color: var(--text-muted);">fps</span>
                     </div>
                 `;
                 
                 const loopsHtml = `
                     <div style="display: flex; gap: 4px; align-items: center;">
-                        <input type="number" value="${slide.loopcnt || 0}" min="0" style="${inputStyle} width: 40px;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">
+                        <input type="number" value="${slide.loopcnt || 0}" min="0" style="background: var(--dark); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 45px; text-align: center; -moz-appearance: textfield;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">
                         <span style="font-size: 10px; color: var(--text-muted);">loops</span>
                     </div>
                 `;
                 
                 rowHtml = `
-                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
                         <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
@@ -2770,7 +2775,7 @@ const app = {
                         ${videoOptionsHtml}
                         ${loopsHtml}
                         ${durationHtml}
-                        <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" style="padding: 4px 8px;">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
