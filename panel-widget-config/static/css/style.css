@@ -521,15 +521,14 @@ body {
 
 /* Widgets Container - Scrollable area for all widgets */
 .widgets-container {
-    flex: 1 1 auto;
-    overflow-y: scroll;
+    flex: 1;
+    overflow-y: auto;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
     min-height: 0;
-    /* Fill available space in flex parent */
-    height: 0;
+    max-height: calc(100vh - 150px);
 }
 
 /* Ensure scrollbar is always visible on WebKit browsers */
