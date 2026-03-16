@@ -528,7 +528,7 @@ body {
     flex-direction: column;
     gap: 24px;
     min-height: 0;
-    /* Allow container to grow - remove fixed max-height that was cutting off content */
+    max-height: calc(100vh - 200px);  /* Ensure scrollbar appears with room for header */
 }
 
 /* Ensure scrollbar is always visible on WebKit browsers */
