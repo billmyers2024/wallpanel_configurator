@@ -2553,7 +2553,7 @@ const app = {
                 let imagesHtml = '';
                 images.forEach(img => {
                     const imageUrl = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(img.filename)}`;
-                    const tooltip = `Resolution: ${img.width || 'unknown'}x${img.height || 'unknown'}\nSize: ${this.formatFileSize(img.size)}`;
+                    const tooltip = `Size: ${this.formatFileSize(img.size)}`;
                     imagesHtml += `
                         <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
                             <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
@@ -2574,7 +2574,7 @@ const app = {
             } else {
                 let videosHtml = '';
                 videos.forEach(vid => {
-                    const tooltip = `Resolution: ${vid.width || 'unknown'}x${vid.height || 'unknown'}\nSize: ${this.formatFileSize(vid.size)}\nFrames: ${vid.frames || 'unknown'}`;
+                    const tooltip = `Size: ${this.formatFileSize(vid.size)}\nFrames: ${vid.frames || 'unknown'}`;
                     videosHtml += `
                         <div class="file-item" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
                             <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
@@ -2762,7 +2762,7 @@ const app = {
                 
                 rowHtml = `
                     <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
-                        <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
+                        <span class="slide-number-circle" style="text-align: center;">${index + 1}</span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
                         ${scaleHtml}
@@ -2792,7 +2792,7 @@ const app = {
                 
                 rowHtml = `
                     <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
-                        <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
+                        <span class="slide-number-circle" style="text-align: center;">${index + 1}</span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
                         ${scaleHtml}

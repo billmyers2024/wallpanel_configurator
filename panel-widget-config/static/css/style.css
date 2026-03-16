@@ -1209,3 +1209,27 @@ select.input {
     align-items: center;
     justify-content: center;
 }
+
+/* Slide number circle - blue circle like ART Display */
+.slide-number-circle {
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+/* ART3 widget checkbox alignment */
+.widget-card[data-type="art3"] .art3-checkbox-row {
+    margin-top: 8px;
+}
+
+.widget-card[data-type="art3"] .art3-checkbox-row .checkbox-label {
+    margin-left: 0;
+}
