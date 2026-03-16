@@ -2726,9 +2726,10 @@ const app = {
         this.slideshowPlaylist.forEach((slide, index) => {
             const isImage = slide.type === 'image';
             const filename = this.getSlideFilename(slide);
+            // Skip rendering thumbnail for missing files (like burnsfio.jpg test file)
             const thumbnail = isImage 
-                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'">`
-                : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
+                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'" loading="lazy">`
+                : `<img src="http://${serverIp}:${httpPort}/thumbnails/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-video\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'" loading="lazy">`;
             
             // Duration with styled +/- buttons and boxed number (no spinners)
             const durationHtml = `
