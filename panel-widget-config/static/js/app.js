@@ -2457,55 +2457,80 @@ const app = {
             statusEl.style.borderLeftColor = '#ef4444';
             statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         }
-        const filesContainer = document.getElementById('slideshow-available-files');
-        if (filesContainer) {
-            filesContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+        const imageContainer = document.getElementById('slideshow-image-files');
+        const videoContainer = document.getElementById('slideshow-video-files');
+        const errorHtml = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+        if (imageContainer) {
+            imageContainer.innerHTML = errorHtml;
+        }
+        if (videoContainer) {
+            videoContainer.innerHTML = errorHtml;
         }
     },
     
+    // Format file size from bytes to KB/MB
+    formatFileSize(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const kb = bytes / 1024;
+        if (kb < 1024) {
+            return `${kb.toFixed(1)} KB`;
+        }
+        const mb = kb / 1024;
+        return `${mb.toFixed(1)} MB`;
+    },
+
     // Render available files list with thumbnails
     renderSlideshowFiles(serverIp, httpPort) {
-        const container = document.getElementById('slideshow-available-files');
-        if (!container || !this.slideshowFiles) return;
+        const imageContainer = document.getElementById('slideshow-image-files');
+        const videoContainer = document.getElementById('slideshow-video-files');
+        if (!this.slideshowFiles) return;
         
         const images = this.slideshowFiles.images || [];
         const videos = this.slideshowFiles.videos || [];
         
-        if (images.length === 0 && videos.length === 0) {
-            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No files found on server</div>`;
-            return;
+        // Render images
+        if (imageContainer) {
+            if (images.length === 0) {
+                imageContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No images found</div>`;
+            } else {
+                let imagesHtml = '';
+                images.forEach(img => {
+                    const imageUrl = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(img.filename)}`;
+                    const tooltip = `Resolution: ${img.width || 'unknown'}x${img.height || 'unknown'}\nSize: ${this.formatFileSize(img.size)}`;
+                    imagesHtml += `
+                        <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
+                            <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <img src="${imageUrl}" alt="${img.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 32px; color: var(--text-muted);\'></i>'">
+                            </div>
+                            <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.filename}</div>
+                        </div>
+                    `;
+                });
+                imageContainer.innerHTML = imagesHtml;
+            }
         }
         
-        let html = '';
-        
-        // Images with thumbnails
-        images.forEach(img => {
-            const imageUrl = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(img.filename)}`;
-            html += `
-                <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
-                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                        <img src="${imageUrl}" alt="${img.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image\\' style=\\'font-size: 32px; color: var(--text-muted);\\'></i>'">
-                    </div>
-                    <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${img.filename}</div>
-                </div>
-            `;
-        });
-        
-        // Videos with icons
-        videos.forEach(vid => {
-            html += `
-                <div class="file-item" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
-                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-video" style="font-size: 32px; color: var(--text-muted);"></i>
-                    </div>
-                    <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${vid.filename}</div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML = html;
+        // Render videos
+        if (videoContainer) {
+            if (videos.length === 0) {
+                videoContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-folder-open"></i> No videos found</div>`;
+            } else {
+                let videosHtml = '';
+                videos.forEach(vid => {
+                    const tooltip = `Resolution: ${vid.width || 'unknown'}x${vid.height || 'unknown'}\nSize: ${this.formatFileSize(vid.size)}\nFrames: ${vid.frames || 'unknown'}`;
+                    videosHtml += `
+                        <div class="file-item" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
+                            <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-video" style="font-size: 32px; color: var(--text-muted);"></i>
+                            </div>
+                            <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${vid.filename}</div>
+                        </div>
+                    `;
+                });
+                videoContainer.innerHTML = videosHtml;
+            }
+        }
     },
-    
     // Add file to playlist
     addToSlideshowPlaylist(filename, type) {
         if (!this.slideshowPlaylist) {
@@ -2517,8 +2542,8 @@ const app = {
             type: type,
             filename: filename,
             scale: 'crop_center',
-            use_default_duration: true,
-            duration: 0
+            use_default_duration: false,
+            duration: 10
         };
         
         if (type === 'image') {
@@ -2541,7 +2566,60 @@ const app = {
         }
     },
     
-    // Render playlist with ART-style layout
+    // Open slideshow preview modal
+    openSlideshowPreview(index) {
+        if (!this.slideshowPlaylist || !this.slideshowPlaylist[index]) return;
+        
+        const slide = this.slideshowPlaylist[index];
+        const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('slideshow-http-port')?.value || '8050';
+        
+        const modal = document.getElementById('slideshow-preview-modal');
+        const img = document.getElementById('slideshow-preview-img');
+        const metadata = document.getElementById('slideshow-preview-metadata');
+        
+        if (!modal || !img || !metadata) return;
+        
+        const isImage = slide.type === 'image';
+        
+        if (isImage) {
+            img.src = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}`;
+            img.style.display = 'block';
+        } else {
+            img.style.display = 'none';
+        }
+        
+        // Build metadata display
+        let metaHtml = `<strong>Filename:</strong> ${slide.filename}<br>`;
+        metaHtml += `<strong>Type:</strong> ${isImage ? 'Image' : 'Video'}<br>`;
+        metaHtml += `<strong>Scale:</strong> ${slide.scale || 'crop_center'}<br>`;
+        metaHtml += `<strong>Duration:</strong> ${slide.duration || 10}s<br>`;
+        
+        if (isImage) {
+            metaHtml += `<strong>Transition:</strong> ${slide.transition || 'fade'}<br>`;
+            metaHtml += `<strong>Ken Burns:</strong> ${slide.ken_burns ? 'Yes' : 'No'}`;
+        } else {
+            metaHtml += `<strong>FPS:</strong> ${slide.fps || 25}<br>`;
+            metaHtml += `<strong>Loops:</strong> ${slide.loopcnt || 0}`;
+        }
+        
+        metadata.innerHTML = metaHtml;
+        modal.classList.add('active');
+    },
+    
+    // Close slideshow preview modal
+    closeSlideshowPreview() {
+        const modal = document.getElementById('slideshow-preview-modal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        const img = document.getElementById('slideshow-preview-img');
+        if (img) {
+            img.src = '';
+        }
+    },
+    
+    // Render playlist with grid layout
     renderSlideshowPlaylist() {
         const container = document.getElementById('slideshow-playlist');
         if (!container) return;
@@ -2560,76 +2638,146 @@ const app = {
         const serverIp = document.getElementById('slideshow-server')?.value || '192.168.1.100';
         const httpPort = document.getElementById('slideshow-http-port')?.value || '8050';
         
-        let html = '';
+        // Column headers style
+        const headerHtml = `
+            <div style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--border-color); background: var(--dark); font-size: 11px; font-weight: bold; color: var(--text-muted);">
+                <span></span>
+                <span>Order</span>
+                <span>File</span>
+                <span>Scale</span>
+                <span>Transition</span>
+                <span>Duration</span>
+                <span>Ken Burns</span>
+                <span></span>
+            </div>
+        `;
+        
+        let html = headerHtml;
+        
+        // Styled select class
+        const selectClass = "input";
+        const selectStyle = "background: var(--dark); color: var(--text); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 100%;";
+        const inputStyle = "background: var(--dark); color: var(--text); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 4px 8px; font-size: 11px; width: 100%; text-align: center;";
+        
         this.slideshowPlaylist.forEach((slide, index) => {
             const isImage = slide.type === 'image';
             const thumbnail = isImage 
-                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); flex-shrink: 0;" onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-icon').style.display='flex'"><i class="fas fa-image fallback-icon" style="font-size: 24px; color: var(--text-muted); display: none; position: absolute;"></i>`
+                ? `<img src="http://${serverIp}:${httpPort}/images/${encodeURIComponent(slide.filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" onclick="app.openSlideshowPreview(${index})" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'">`
                 : `<i class="fas fa-video" style="font-size: 24px; color: var(--text-muted);"></i>`;
             
-            // Duration control
-            const durationHtml = slide.use_default_duration 
-                ? `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" checked onclick="app.setSlideDurationType(${index}, true)"> Default</label>`
-                : `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" onclick="app.setSlideDurationType(${index}, true)"> Default</label>`;
-            const customDurationHtml = !slide.use_default_duration
-                ? `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" checked onclick="app.setSlideDurationType(${index}, false)"> Custom</label> <input type="number" value="${slide.duration || 10}" min="1" max="300" style="width: 50px; font-size: 11px;" onchange="app.setSlideDuration(${index}, this.value)">s`
-                : `<label class="checkbox-label" style="font-size: 11px;"><input type="radio" name="duration-${index}" onclick="app.setSlideDurationType(${index}, false)"> Custom</label>`;
+            // Duration with +/- buttons
+            const durationHtml = `
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <button type="button" onclick="app.adjustSlideDuration(${index}, -1)" style="background: var(--dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text); width: 22px; height: 22px; font-size: 12px; cursor: pointer;">-</button>
+                    <input type="number" value="${slide.duration || 10}" min="1" max="300" style="${inputStyle} width: 40px;" onchange="app.setSlideDuration(${index}, this.value)">
+                    <button type="button" onclick="app.adjustSlideDuration(${index}, 1)" style="background: var(--dark); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text); width: 22px; height: 22px; font-size: 12px; cursor: pointer;">+</button>
+                </div>
+            `;
             
-            // Type-specific options
-            let optionsHtml = '';
+            // Scale select (styled)
+            const scaleHtml = `
+                <select class="${selectClass}" style="${selectStyle}" onchange="app.setSlideOption(${index}, 'scale', this.value)">
+                    <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
+                    <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
+                    <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
+                </select>
+            `;
+            
+            let rowHtml = '';
+            
             if (isImage) {
-                optionsHtml = `
-                    <select style="font-size: 11px; width: 80px;" onchange="app.setSlideOption(${index}, 'scale', this.value)">
-                        <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
-                        <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
-                        <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
-                    </select>
-                    <select style="font-size: 11px; width: 70px;" onchange="app.setSlideOption(${index}, 'transition', this.value)">
+                // Transition select
+                const transitionHtml = `
+                    <select class="${selectClass}" style="${selectStyle}" onchange="app.setSlideOption(${index}, 'transition', this.value)">
                         <option value="fade" ${slide.transition === 'fade' ? 'selected' : ''}>Fade</option>
                         <option value="cut" ${slide.transition === 'cut' ? 'selected' : ''}>Cut</option>
                         <option value="slide_right" ${slide.transition === 'slide_right' ? 'selected' : ''}>Slide R</option>
                         <option value="slide_left" ${slide.transition === 'slide_left' ? 'selected' : ''}>Slide L</option>
                     </select>
-                    <label style="font-size: 11px; white-space: nowrap;"><input type="checkbox" ${slide.ken_burns ? 'checked' : ''} onchange="app.setSlideOption(${index}, 'ken_burns', this.checked)"> KB</label>
+                `;
+                
+                // Ken Burns checkbox - when enabled, set duration to 15
+                const kenBurnsDuration = slide.ken_burns ? 15 : (slide.duration || 10);
+                const kenBurnsHtml = `
+                    <input type="checkbox" ${slide.ken_burns ? 'checked' : ''} onchange="app.setKenBurns(${index}, this.checked)" style="width: 16px; height: 16px; cursor: pointer;">
+                `;
+                
+                rowHtml = `
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
+                        <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
+                        <div style="text-align: center;">${thumbnail}</div>
+                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
+                        ${scaleHtml}
+                        ${transitionHtml}
+                        ${durationHtml}
+                        <div style="text-align: center;">${kenBurnsHtml}</div>
+                        <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" style="padding: 4px 8px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
             } else {
-                optionsHtml = `
-                    <select style="font-size: 11px; width: 80px;" onchange="app.setSlideOption(${index}, 'scale', this.value)">
-                        <option value="crop_center" ${slide.scale === 'crop_center' ? 'selected' : ''}>Crop</option>
-                        <option value="stretch" ${slide.scale === 'stretch' ? 'selected' : ''}>Stretch</option>
-                        <option value="fit_letterbox" ${slide.scale === 'fit_letterbox' ? 'selected' : ''}>Letterbox</option>
-                    </select>
-                    <input type="number" value="${slide.fps || 25}" min="1" max="60" style="width: 40px; font-size: 11px;" onchange="app.setSlideOption(${index}, 'fps', this.value)">fps
-                    <input type="number" value="${slide.loopcnt || 0}" min="0" style="width: 40px; font-size: 11px;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">loops
+                // Video row - different columns
+                const videoOptionsHtml = `
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <input type="number" value="${slide.fps || 25}" min="1" max="60" style="${inputStyle} width: 40px;" onchange="app.setSlideOption(${index}, 'fps', this.value)">
+                        <span style="font-size: 10px; color: var(--text-muted);">fps</span>
+                    </div>
+                `;
+                
+                const loopsHtml = `
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <input type="number" value="${slide.loopcnt || 0}" min="0" style="${inputStyle} width: 40px;" onchange="app.setSlideOption(${index}, 'loopcnt', this.value)">
+                        <span style="font-size: 10px; color: var(--text-muted);">loops</span>
+                    </div>
+                `;
+                
+                rowHtml = `
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); align-items: center;">
+                        <span class="drag-handle" style="color: var(--text-muted); cursor: grab; text-align: center;"><i class="fas fa-grip-vertical"></i></span>
+                        <div style="text-align: center;">${thumbnail}</div>
+                        <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${slide.filename}</span>
+                        ${scaleHtml}
+                        ${videoOptionsHtml}
+                        ${loopsHtml}
+                        ${durationHtml}
+                        <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})" style="padding: 4px 8px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 `;
             }
             
-            html += `
-                <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); background: var(--bg-secondary); gap: 10px;">
-                    <span class="drag-handle" style="color: var(--text-muted); cursor: grab;"><i class="fas fa-grip-vertical"></i></span>
-                    <span style="color: var(--text-muted); min-width: 25px; text-align: center;">${index + 1}</span>
-                    <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: var(--dark); border-radius: 4px; flex-shrink: 0;">${thumbnail}</div>
-                    <span style="flex: 1; font-family: monospace; font-size: 12px; word-break: break-all;">${slide.filename}</span>
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">${optionsHtml}</div>
-                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">${durationHtml}${customDurationHtml}</div>
-                    <button class="btn btn-sm btn-danger" onclick="app.removeFromSlideshowPlaylist(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
+            html += rowHtml;
         });
         
         container.innerHTML = html;
         this.setupSlideshowDragAndDrop();
     },
     
-    // Set slide duration type
-    setSlideDurationType(index, useDefault) {
+    // Adjust slide duration by delta
+    adjustSlideDuration(index, delta) {
         if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
-            this.slideshowPlaylist[index].use_default_duration = useDefault;
+            const currentDuration = this.slideshowPlaylist[index].duration || 10;
+            const newDuration = Math.max(1, Math.min(300, currentDuration + delta));
+            this.slideshowPlaylist[index].duration = newDuration;
             this.renderSlideshowPlaylist();
         }
     },
+    
+    // Set Ken Burns option and adjust duration
+    setKenBurns(index, enabled) {
+        if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
+            this.slideshowPlaylist[index].ken_burns = enabled;
+            // When Ken Burns is enabled, set duration to 15 seconds
+            if (enabled) {
+                this.slideshowPlaylist[index].duration = 15;
+            }
+            this.renderSlideshowPlaylist();
+        }
+    },
+    
+
     
     // Set slide duration
     setSlideDuration(index, value) {
