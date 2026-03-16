@@ -2647,7 +2647,7 @@ const app = {
             filename: filename,
             scale: 'crop_center',
             use_default_duration: false,
-            duration: 10
+            duration: type === 'image' ? 10 : 0  // Videos default to 0 (use loopcnt instead)
         };
         
         if (type === 'image') {
@@ -2655,7 +2655,7 @@ const app = {
             slide.transition = 'fade';
         } else {
             slide.fps = 25;
-            slide.loopcnt = 0;
+            slide.loopcnt = 0;  // When loopcnt is 0, video plays once; when >0, loops that many times
         }
         
         this.slideshowPlaylist.push(slide);
@@ -2773,10 +2773,11 @@ const app = {
                 : `<img src="http://${serverIp}:${httpPort}/thumbnails/${encodeURIComponent(filename)}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-video\' style=\'font-size: 20px; color: var(--text-muted);\'></i>'" loading="lazy">`;
             
             // Duration with styled +/- buttons and boxed number (no spinners)
+            // Videos can have duration=0 when using loopcnt to control playback time
             const durationHtml = `
                 <div class="duration-control">
                     <button type="button" onclick="app.adjustSlideDuration(${index}, -1)">-</button>
-                    <input type="number" class="duration-value" value="${slide.duration || 10}" min="1" max="300" onchange="app.setSlideDuration(${index}, this.value)">
+                    <input type="number" class="duration-value" value="${slide.duration !== undefined ? slide.duration : (isImage ? 10 : 0)}" min="0" max="300" onchange="app.setSlideDuration(${index}, this.value)">
                     <button type="button" onclick="app.adjustSlideDuration(${index}, 1)">+</button>
                 </div>
             `;
@@ -2866,9 +2867,10 @@ const app = {
     // Adjust slide duration by delta
     adjustSlideDuration(index, delta) {
         if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
-            const currentDuration = this.slideshowPlaylist[index].duration || 10;
-            const newDuration = Math.max(1, Math.min(300, currentDuration + delta));
-            this.slideshowPlaylist[index].duration = newDuration;
+            const slide = this.slideshowPlaylist[index];
+            const currentDuration = slide.duration !== undefined ? slide.duration : (slide.type === 'image' ? 10 : 0);
+            const newDuration = Math.max(0, Math.min(300, currentDuration + delta));
+            slide.duration = newDuration;
             this.renderSlideshowPlaylist();
         }
     },
@@ -2890,7 +2892,9 @@ const app = {
     // Set slide duration
     setSlideDuration(index, value) {
         if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
-            this.slideshowPlaylist[index].duration = parseInt(value) || 10;
+            const parsed = parseInt(value);
+            // Allow 0 for videos (when using loopcnt), default to 10 for invalid values on images
+            this.slideshowPlaylist[index].duration = isNaN(parsed) ? 10 : parsed;
         }
     },
     
@@ -2898,6 +2902,15 @@ const app = {
     setSlideOption(index, key, value) {
         if (this.slideshowPlaylist && this.slideshowPlaylist[index]) {
             this.slideshowPlaylist[index][key] = value;
+            
+            // Handle loopcnt changes for video slides
+            if (key === 'loopcnt') {
+                const loopcnt = parseInt(value) || 0;
+                // When loopcnt is non-zero, set duration to 0 (loopcnt controls playback time)
+                // When loopcnt is 0, set duration to 10 (single play with duration control)
+                this.slideshowPlaylist[index].duration = loopcnt > 0 ? 0 : 10;
+                this.renderSlideshowPlaylist();
+            }
         }
     },
     
