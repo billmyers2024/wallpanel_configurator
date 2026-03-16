@@ -2141,8 +2141,6 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
-        card.querySelector('.enabled-input').checked = plasma.enabled === 'Y';
-        
         const inputs = card.querySelectorAll('input');
         inputs.forEach(input => {
             input.addEventListener('change', () => {
@@ -2182,7 +2180,6 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
-        card.querySelector('.enabled-input').checked = networkTest.enabled === 'Y';
         card.querySelector('.server-ip-input').value = networkTest.server_ip || '192.168.1.100';
         card.querySelector('.server-port-input').value = networkTest.server_port || 8090;
         card.querySelector('.duration-input').value = networkTest.duration_sec || 10;
@@ -2227,7 +2224,6 @@ const app = {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.widget-card');
         
-        card.querySelector('.enabled-input').checked = art3.enabled === 'Y';
         card.querySelector('.presence-aware-input').checked = art3.presence_aware === 'Y';
         card.querySelector('.suppress-screensaver-input').checked = art3.suppress_screensaver === 'Y';
         card.querySelector('.auto-start-input').value = art3.auto_start_after_sec || 0;
