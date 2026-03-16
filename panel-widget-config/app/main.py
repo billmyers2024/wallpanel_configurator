@@ -947,7 +947,7 @@ def widget_types():
                 "description": "HVAC control with dual setpoint (heat/cool)",
                 "icon": "mdi:thermostat",
                 "capabilities": ["temperature", "mode", "fan"],
-                "status": "planned"
+                "status": "stable"
             },
             {
                 "id": "climate2",
@@ -995,7 +995,7 @@ def widget_types():
                 "description": "Display weather information",
                 "icon": "mdi:weather-partly-cloudy",
                 "capabilities": ["display"],
-                "status": "planned"
+                "status": "future"
             },
             {
                 "id": "music",
@@ -1046,7 +1046,7 @@ def widget_types():
                 "icon": "mdi:television-guide",
                 "icon_code": "F050",
                 "capabilities": ["mjpeg_stream", "jpeg_display", "network_test"],
-                "status": "beta",
+                "status": "stable",
                 "note": "Configure stream server and file playback settings"
             },
             {
@@ -1056,7 +1056,7 @@ def widget_types():
                 "icon": "mdi:lightning-bolt",
                 "icon_code": "F1E6",
                 "capabilities": ["visualization", "demo"],
-                "status": "beta",
+                "status": "stable",
                 "note": "Visual effect widget for display testing"
             },
             {
@@ -1066,7 +1066,7 @@ def widget_types():
                 "icon": "mdi:ethernet",
                 "icon_code": "F020",
                 "capabilities": ["throughput_test", "bandwidth"],
-                "status": "beta",
+                "status": "stable",
                 "note": "Test network performance between panel and server"
             },
             {
