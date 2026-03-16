@@ -1739,11 +1739,12 @@ const app = {
             'mdi:television-guide': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M3 5h18v12h-5v2h3v2H5v-2h3v-2H3V5m2 2v8h14V7H5m2 2h10v4H7V9z"/></svg>'
         };
         
-        // Define sort order: Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Art Slideshow, Plasma Effect, Widget Test, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
+        // Define sort order by function: Core -> Security -> Media -> Test -> Future
+        // Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Plasma Effect, Tester, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
         const sortOrder = [
             'lights', 'covers', 'climate', 'climate2', 'cctv', 'alarm_panel',
-            'art', 'art2', 'plasma', 'tests', 'video_test', 'network_test',
-            'music', 'intercom', 'public_address', 'voice_assistant', 'weather'
+            'art', 'art3', 'plasma', 'tester', 'video_test', 'network_test',
+            'music', 'intercom', 'pa', 'assistant', 'weather'
         ];
         
         // Sort widget types by the defined order
