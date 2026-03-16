@@ -2553,7 +2553,9 @@ const app = {
                 let imagesHtml = '';
                 images.forEach(img => {
                     const imageUrl = `http://${serverIp}:${httpPort}/images/${encodeURIComponent(img.filename)}`;
-                    const tooltip = `Size: ${this.formatFileSize(img.size)}`;
+                    const width = img.width || '?';
+                    const height = img.height || '?';
+                    const tooltip = `${width}×${height} · ${this.formatFileSize(img.size)}`;
                     imagesHtml += `
                         <div class="file-item" onclick="app.addToSlideshowPlaylist('${img.filename}', 'image')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
                             <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
@@ -2574,11 +2576,15 @@ const app = {
             } else {
                 let videosHtml = '';
                 videos.forEach(vid => {
-                    const tooltip = `Size: ${this.formatFileSize(vid.size)}\nFrames: ${vid.frames || 'unknown'}`;
+                    const thumbnailUrl = `http://${serverIp}:${httpPort}/thumbnails/${encodeURIComponent(vid.filename)}`;
+                    const vwidth = vid.width || '?';
+                    const vheight = vid.height || '?';
+                    const vframes = vid.frames || '?';
+                    const tooltip = `${vwidth}×${vheight} · ${vframes} frames · ${this.formatFileSize(vid.size)}`;
                     videosHtml += `
                         <div class="file-item" onclick="app.addToSlideshowPlaylist('${vid.filename}', 'video')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" title="${tooltip}">
-                            <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-video" style="font-size: 32px; color: var(--text-muted);"></i>
+                            <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                <img src="${thumbnailUrl}" alt="${vid.filename}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'fas fa-video\' style=\'font-size: 32px; color: var(--text-muted);\'></i>'">
                             </div>
                             <div style="padding: 8px; font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${vid.filename}</div>
                         </div>
@@ -2761,7 +2767,8 @@ const app = {
                 `;
                 
                 rowHtml = `
-                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 24px 30px 70px 1fr 100px 90px 100px 70px 32px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
+                        <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
                         <span class="slide-number-circle" style="text-align: center;">${index + 1}</span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
@@ -2769,7 +2776,7 @@ const app = {
                         ${transitionHtml}
                         ${durationHtml}
                         <div style="text-align: center;">${kenBurnsHtml}</div>
-                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" style="height: 32px; padding: 4px 10px;">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" title="Remove">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -2791,7 +2798,8 @@ const app = {
                 `;
                 
                 rowHtml = `
-                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 30px 70px 1fr 100px 90px 100px 70px 40px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
+                    <div class="slideshow-slide-item" draggable="true" data-index="${index}" style="display: grid; grid-template-columns: 24px 30px 70px 1fr 100px 90px 100px 70px 32px; gap: 8px; padding: 10px; border-bottom: 1px solid var(--border); background: var(--card); align-items: center;">
+                        <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
                         <span class="slide-number-circle" style="text-align: center;">${index + 1}</span>
                         <div style="text-align: center;">${thumbnail}</div>
                         <span style="font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${filename}</span>
@@ -2799,7 +2807,7 @@ const app = {
                         ${videoOptionsHtml}
                         ${loopsHtml}
                         ${durationHtml}
-                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" style="height: 32px; padding: 4px 10px;">
+                        <button class="btn btn-sm btn-danger btn-trash" onclick="app.removeFromSlideshowPlaylist(${index})" title="Remove">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>

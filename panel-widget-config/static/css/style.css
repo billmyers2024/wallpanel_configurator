@@ -1200,10 +1200,11 @@ select.input {
     margin: 0;
 }
 
-/* Trash button - narrower and centered */
+/* Trash button - 32x32 pixels */
 .slideshow-slide-item .btn-trash {
-    width: 40px;
-    min-width: 40px;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
     padding: 0;
     display: flex;
     align-items: center;
@@ -1225,9 +1226,38 @@ select.input {
     margin: 0 auto;
 }
 
+/* Drag handle for slideshow slides */
+.slideshow-slide-item .drag-handle {
+    color: var(--text-muted);
+    cursor: grab;
+    font-size: 16px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slideshow-slide-item .drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Checkbox left alignment for widget cards */
+.widget-card .checkbox-group {
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-left: 0;
+}
+
+.widget-card .checkbox-group .checkbox-label {
+    margin-left: 0;
+    padding-left: 0;
+}
+
 /* ART3 widget checkbox alignment */
 .widget-card[data-type="art3"] .art3-checkbox-row {
     margin-top: 8px;
+    justify-content: flex-start;
+    gap: 24px;
 }
 
 .widget-card[data-type="art3"] .art3-checkbox-row .checkbox-label {
