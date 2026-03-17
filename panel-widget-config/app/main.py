@@ -447,6 +447,46 @@ NETWORK_TEST_SCHEMA = {
     "required": ["enabled"]
 }
 
+WEATHER_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "weather_entity": {
+            "type": "string",
+            "default": "weather.home",
+            "description": "Home Assistant weather entity ID"
+        },
+        "room_temp_entity": {
+            "type": "string",
+            "default": "sensor.room_temperature",
+            "description": "Room temperature sensor entity ID"
+        },
+        "video_server_ip": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "MJPEG server IP address"
+        },
+        "video_server_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 8090,
+            "description": "MJPEG server port"
+        },
+        "mjpeg_path": {
+            "type": "string",
+            "default": "/mjpeg_files/",
+            "description": "Base path for MJPEG files"
+        },
+        "fps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "default": 30,
+            "description": "MJPEG playback frames per second"
+        }
+    }
+}
+
 ART3_SCHEMA = {
     "type": "object",
     "properties": {
@@ -910,6 +950,7 @@ def get_schema(widget_type):
         'video_test': VIDEO_TEST_SCHEMA,
         'plasma': PLASMA_SCHEMA,
         'network_test': NETWORK_TEST_SCHEMA,
+        'weather': WEATHER_SCHEMA,
         'art3': ART3_SCHEMA
     }
     
@@ -992,10 +1033,12 @@ def widget_types():
             {
                 "id": "weather",
                 "name": "Weather",
-                "description": "Display weather information",
+                "description": "Animated weather backgrounds with MJPEG video and translucent overlay panel showing forecast, time, date, and room temperature",
                 "icon": "mdi:weather-partly-cloudy",
-                "capabilities": ["display"],
-                "status": "future"
+                "icon_code": "F0595",
+                "capabilities": ["display", "weather", "mjpeg_background", "overlay"],
+                "status": "beta",
+                "note": "Requires MJPEG weather video files on server (sunny.mjpeg, rain.mjpeg, etc.)"
             },
             {
                 "id": "music",

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.32
+
+### Added
+- **Weather Widget** (`weather`) - New widget with animated MJPEG backgrounds
+  - Displays animated weather backgrounds (sunny, rainy, cloudy, windy, etc.)
+  - Left-side translucent panel showing weather info (temp, condition, date, time, room temp)
+  - Configuration options: weather entity, room temp entity, MJPEG server settings
+  - Supports test mode to cycle through different weather conditions
+  - Requires MJPEG video files on server (rain.mjpeg, sunny.mjpeg, etc.)
+
 ## 1.7.31
 
 ### Fixed
