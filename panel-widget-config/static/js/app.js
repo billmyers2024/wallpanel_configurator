@@ -1256,6 +1256,24 @@ const app = {
             return;
         }
         
+        // Phase 1: Special handling for weather widget - only one allowed
+        if (type === 'weather') {
+            if (this.currentDevice.widgets.weather) {
+                this.showToast('Only one Weather widget allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.weather = {
+                weather_entity: 'weather.home',
+                room_temp_entity: 'sensor.room_temperature',
+                video_server_ip: '192.168.1.100',
+                video_server_port: 8090,
+                fps: 30
+            };
+            this.renderWeatherWidget();
+            this.showToast('Weather widget added', 'success');
+            return;
+        }
+        
         if (!this.currentDevice.widgets[type]) {
             this.currentDevice.widgets[type] = [];
         } // end if
@@ -1878,6 +1896,9 @@ const app = {
         // Phase 1: Render Network Test widget (single instance)
         this.renderNetworkTestWidget();
         
+        // Phase 1: Render Weather widget (single instance)
+        this.renderWeatherWidget();
+        
         // Phase 1: Render ART3 widget (single instance)
         this.renderArt3Widget();
         
@@ -2321,6 +2342,76 @@ const app = {
         
         list.appendChild(clone);
         this.updateWidgetCount('network_test', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: WEATHER WIDGET
+    // =============================================================================
+    
+    // Render Weather widget (single instance)
+    renderWeatherWidget() {
+        const list = document.getElementById('weather-list');
+        const addBtn = document.getElementById('add-weather-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const weather = this.currentDevice.widgets?.weather;
+        
+        if (addBtn) {
+            addBtn.style.display = weather ? 'none' : 'inline-flex';
+        }
+        
+        if (!weather) {
+            this.updateWidgetCount('weather', 0);
+            return;
+        }
+        
+        const template = document.getElementById('weather-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        // Show green checkmark since widget is enabled
+        const validIcon = card.querySelector('.valid');
+        if (validIcon) validIcon.style.display = 'inline';
+        
+        // Populate fields with saved values or defaults
+        card.querySelector('.weather-entity-input').value = weather.weather_entity || 'weather.home';
+        card.querySelector('.room-temp-entity-input').value = weather.room_temp_entity || 'sensor.room_temperature';
+        card.querySelector('.server-ip-input').value = weather.video_server_ip || '192.168.1.100';
+        card.querySelector('.server-port-input').value = weather.video_server_port || 8090;
+        card.querySelector('.fps-input').value = weather.fps || 30;
+        
+        // Add change listeners to update config
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWeatherWidgetConfig();
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('weather', 1);
+    },
+    
+    // Update Weather widget config from form fields
+    updateWeatherWidgetConfig() {
+        if (!this.currentDevice) return;
+        
+        const list = document.getElementById('weather-list');
+        if (!list) return;
+        
+        const card = list.querySelector('.widget-card');
+        if (!card) return;
+        
+        this.currentDevice.widgets.weather = {
+            weather_entity: card.querySelector('.weather-entity-input')?.value || 'weather.home',
+            room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature',
+            video_server_ip: card.querySelector('.server-ip-input')?.value || '192.168.1.100',
+            video_server_port: parseInt(card.querySelector('.server-port-input')?.value) || 8090,
+            fps: parseInt(card.querySelector('.fps-input')?.value) || 30
+        };
     },
     
     // =============================================================================

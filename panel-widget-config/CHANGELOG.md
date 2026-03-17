@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.33
+
+### Fixed
+- Added missing Weather Widget UI components to configurator
+  - HTML template and section
+  - JavaScript render functions
+  - Add widget handling
+
 ## 1.7.32
 
 ### Added
