@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.31
+
+### Fixed
+- Slideshow video duration now correctly persists as 0 seconds when loopcnt > 0
+- Fixed bug where duration was being reset to 10 seconds when loading/saving slideshow configuration
+- Videos with loopcnt > 0 now properly use duration=0 (infinite loop mode) by default
+
 ## 1.6.5
 
 ### Fixed

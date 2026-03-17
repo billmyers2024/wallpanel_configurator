@@ -2519,12 +2519,19 @@ const app = {
                 // Map slides and handle field name differences ("file" vs "filename")
                 // Also map "effect": "ken_burns" to "ken_burns": true
                 this.slideshowPlaylist = (slideshow.slides || []).map(slide => {
+                    // For videos with loopcnt > 0, duration should be 0 (loopcnt controls playback)
+                    // For videos with loopcnt = 0, use duration or default to 10
+                    // For images, use duration or default to 10
+                    const isImage = slide.type === 'image';
+                    const hasExplicitDuration = slide.duration !== undefined && slide.duration !== null;
+                    const defaultDuration = isImage ? 10 : ((slide.loopcnt || 0) > 0 ? 0 : 10);
+                    
                     const mappedSlide = {
                         type: slide.type,
                         filename: slide.file || slide.filename,  // Map "file" to "filename"
                         scale: slide.scale || 'crop_center',
                         use_default_duration: slide.use_default_duration || false,
-                        duration: slide.duration || 10
+                        duration: hasExplicitDuration ? slide.duration : defaultDuration
                     };
                     
                     if (slide.type === 'image') {
