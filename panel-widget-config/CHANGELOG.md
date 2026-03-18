@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.34
+
+### Changed
+- **Weather Widget** improvements:
+  - Moved MJPEG server settings and filename configuration to Site Services (global)
+  - Weather widgets now reference the global site configuration
+  - Added entity picker with HA search for Weather Entity and Room Temperature Entity
+  - Site Services Weather section allows configuration of all MJPEG filenames:
+    - sunny, cloudy, rainy, drizzle, stormy, windy, hot
+
 ## 1.7.33
 
 ### Fixed

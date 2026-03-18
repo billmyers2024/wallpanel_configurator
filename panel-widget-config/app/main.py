@@ -249,6 +249,44 @@ CAMERA_SERVICE_SCHEMA = {
     }
 }
 
+# Global Services - Weather MJPEG configuration (site-wide)
+WEATHER_SERVICE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "server_ip": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "MJPEG server IP address"
+        },
+        "server_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 8090,
+            "description": "MJPEG server port"
+        },
+        "fps": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 60,
+            "default": 30,
+            "description": "MJPEG playback FPS"
+        },
+        "mjpeg_files": {
+            "type": "object",
+            "properties": {
+                "sunny": {"type": "string", "default": "sunny.mjpeg", "description": "Sunny weather MJPEG file"},
+                "cloudy": {"type": "string", "default": "cloudy.mjpeg", "description": "Cloudy weather MJPEG file"},
+                "rainy": {"type": "string", "default": "rainy.mjpeg", "description": "Rainy weather MJPEG file"},
+                "drizzle": {"type": "string", "default": "drizzle.mjpeg", "description": "Drizzle weather MJPEG file"},
+                "stormy": {"type": "string", "default": "stormy.mjpeg", "description": "Stormy weather MJPEG file"},
+                "windy": {"type": "string", "default": "windy.mjpeg", "description": "Windy weather MJPEG file"},
+                "hot": {"type": "string", "default": "hot.mjpeg", "description": "Hot weather MJPEG file"}
+            }
+        }
+    }
+}
+
 # CCTV Widget - References cameras from services
 CCTV_SCHEMA = {
     "type": "array",
@@ -946,6 +984,7 @@ def get_schema(widget_type):
         'cctv': CCTV_SCHEMA,
         'alarm_panel': ALARM_PANEL_SCHEMA,
         'camera_service': CAMERA_SERVICE_SCHEMA,
+        'weather_service': WEATHER_SERVICE_SCHEMA,
         'slideshow': SLIDESHOW_SCHEMA,
         'video_test': VIDEO_TEST_SCHEMA,
         'plasma': PLASMA_SCHEMA,

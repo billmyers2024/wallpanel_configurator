@@ -160,6 +160,64 @@
                             <div id="cameras-list" class="widget-list">
                                 <!-- Camera entries populated by JS -->
                             </div>
+                            
+                            <!-- Weather Service Configuration -->
+                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                                Weather Service
+                            </h4>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Configure MJPEG files for weather backgrounds. Used by all Weather widgets.
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>MJPEG Server IP</label>
+                                    <input type="text" id="weather-server-ip" class="input" value="192.168.1.100" placeholder="192.168.1.100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Port</label>
+                                    <input type="number" id="weather-server-port" class="input" value="8090" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label>FPS</label>
+                                    <input type="number" id="weather-fps" class="input" value="30" min="1" max="60">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Sunny</label>
+                                    <input type="text" id="weather-file-sunny" class="input" value="sunny.mjpeg" placeholder="sunny.mjpeg">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cloudy</label>
+                                    <input type="text" id="weather-file-cloudy" class="input" value="cloudy.mjpeg" placeholder="cloudy.mjpeg">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Rainy</label>
+                                    <input type="text" id="weather-file-rainy" class="input" value="rainy.mjpeg" placeholder="rainy.mjpeg">
+                                </div>
+                                <div class="form-group">
+                                    <label>Drizzle</label>
+                                    <input type="text" id="weather-file-drizzle" class="input" value="drizzle.mjpeg" placeholder="drizzle.mjpeg">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Stormy</label>
+                                    <input type="text" id="weather-file-stormy" class="input" value="stormy.mjpeg" placeholder="stormy.mjpeg">
+                                </div>
+                                <div class="form-group">
+                                    <label>Windy</label>
+                                    <input type="text" id="weather-file-windy" class="input" value="windy.mjpeg" placeholder="windy.mjpeg">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Hot</label>
+                                    <input type="text" id="weather-file-hot" class="input" value="hot.mjpeg" placeholder="hot.mjpeg">
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1468,31 +1526,27 @@
                 </div>
             </div>
             <div class="widget-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Weather Entity</label>
-                        <input type="text" class="input weather-entity-input" value="weather.home" placeholder="weather.home">
+                <div class="form-group">
+                    <label>Weather Entity</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input weather-entity-input" placeholder="weather.home" value="weather.home">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'weather')">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>Room Temp Entity</label>
-                        <input type="text" class="input room-temp-entity-input" value="sensor.room_temperature" placeholder="sensor.room_temperature">
-                    </div>
+                    <span class="validation-message"></span>
+                    <small style="color: var(--text-muted);">Home Assistant weather entity</small>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>MJPEG Server IP</label>
-                        <input type="text" class="input server-ip-input" value="192.168.1.100" placeholder="192.168.1.100">
+                <div class="form-group">
+                    <label>Room Temperature Entity</label>
+                    <div class="input-with-action">
+                        <input type="text" class="input room-temp-entity-input" placeholder="sensor.room_temperature" value="sensor.room_temperature">
+                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(this, 'sensor')">
+                            <i class="fas fa-search"></i>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label>MJPEG Server Port</label>
-                        <input type="number" class="input server-port-input" value="8090" min="1" max="65535">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>FPS</label>
-                        <input type="number" class="input fps-input" value="30" min="1" max="60">
-                    </div>
+                    <span class="validation-message"></span>
+                    <small style="color: var(--text-muted);">Room temperature sensor</small>
                 </div>
             </div>
             <div class="widget-footer">

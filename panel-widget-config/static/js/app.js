@@ -523,6 +523,7 @@ const app = {
         
         // Phase 1: Update cameras and new widgets
         this.updateCamerasFromForm();
+        this.updateWeatherServiceFromForm();
         this.updateCCTVFromForm();
         this.updateAlarmPanelFromForm();
         this.updatePlasmaFromForm();
@@ -1264,10 +1265,7 @@ const app = {
             }
             this.currentDevice.widgets.weather = {
                 weather_entity: 'weather.home',
-                room_temp_entity: 'sensor.room_temperature',
-                video_server_ip: '192.168.1.100',
-                video_server_port: 8090,
-                fps: 30
+                room_temp_entity: 'sensor.room_temperature'
             };
             this.renderWeatherWidget();
             this.showToast('Weather widget added', 'success');
@@ -1881,6 +1879,9 @@ const app = {
         // Phase 1: Render cameras in Site Services panel
         this.renderCameras();
         
+        // Phase 1: Load Weather Service config
+        this.loadWeatherServiceToForm();
+        
         // Phase 1: Render CCTV widgets
         this.renderCCTVWidgets();
         
@@ -2109,6 +2110,65 @@ const app = {
     // Get available cameras for CCTV dropdown
     getAvailableCameras() {
         return this.config.services?.cameras || [];
+    },
+    
+    // Save weather service config from form
+    updateWeatherServiceFromForm() {
+        const serverIp = document.getElementById('weather-server-ip');
+        const serverPort = document.getElementById('weather-server-port');
+        const fps = document.getElementById('weather-fps');
+        
+        if (!serverIp || !serverPort || !fps) return;
+        
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        
+        this.config.services.weather = {
+            server_ip: serverIp.value || '192.168.1.100',
+            server_port: parseInt(serverPort.value) || 8090,
+            fps: parseInt(fps.value) || 30,
+            mjpeg_files: {
+                sunny: document.getElementById('weather-file-sunny')?.value || 'sunny.mjpeg',
+                cloudy: document.getElementById('weather-file-cloudy')?.value || 'cloudy.mjpeg',
+                rainy: document.getElementById('weather-file-rainy')?.value || 'rainy.mjpeg',
+                drizzle: document.getElementById('weather-file-drizzle')?.value || 'drizzle.mjpeg',
+                stormy: document.getElementById('weather-file-stormy')?.value || 'stormy.mjpeg',
+                windy: document.getElementById('weather-file-windy')?.value || 'windy.mjpeg',
+                hot: document.getElementById('weather-file-hot')?.value || 'hot.mjpeg'
+            }
+        };
+    },
+    
+    // Load weather service config to form
+    loadWeatherServiceToForm() {
+        const weather = this.config.services?.weather;
+        if (!weather) return;
+        
+        const serverIp = document.getElementById('weather-server-ip');
+        const serverPort = document.getElementById('weather-server-port');
+        const fps = document.getElementById('weather-fps');
+        
+        if (serverIp) serverIp.value = weather.server_ip || '192.168.1.100';
+        if (serverPort) serverPort.value = weather.server_port || 8090;
+        if (fps) fps.value = weather.fps || 30;
+        
+        const files = weather.mjpeg_files || {};
+        const sunny = document.getElementById('weather-file-sunny');
+        const cloudy = document.getElementById('weather-file-cloudy');
+        const rainy = document.getElementById('weather-file-rainy');
+        const drizzle = document.getElementById('weather-file-drizzle');
+        const stormy = document.getElementById('weather-file-stormy');
+        const windy = document.getElementById('weather-file-windy');
+        const hot = document.getElementById('weather-file-hot');
+        
+        if (sunny) sunny.value = files.sunny || 'sunny.mjpeg';
+        if (cloudy) cloudy.value = files.cloudy || 'cloudy.mjpeg';
+        if (rainy) rainy.value = files.rainy || 'rainy.mjpeg';
+        if (drizzle) drizzle.value = files.drizzle || 'drizzle.mjpeg';
+        if (stormy) stormy.value = files.stormy || 'stormy.mjpeg';
+        if (windy) windy.value = files.windy || 'windy.mjpeg';
+        if (hot) hot.value = files.hot || 'hot.mjpeg';
     },
     
     // =============================================================================
@@ -2377,18 +2437,23 @@ const app = {
         if (validIcon) validIcon.style.display = 'inline';
         
         // Populate fields with saved values or defaults
-        card.querySelector('.weather-entity-input').value = weather.weather_entity || 'weather.home';
-        card.querySelector('.room-temp-entity-input').value = weather.room_temp_entity || 'sensor.room_temperature';
-        card.querySelector('.server-ip-input').value = weather.video_server_ip || '192.168.1.100';
-        card.querySelector('.server-port-input').value = weather.video_server_port || 8090;
-        card.querySelector('.fps-input').value = weather.fps || 30;
+        const weatherEntityInput = card.querySelector('.weather-entity-input');
+        const roomTempEntityInput = card.querySelector('.room-temp-entity-input');
         
-        // Add change listeners to update config
-        const inputs = card.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                this.updateWeatherWidgetConfig();
-            });
+        weatherEntityInput.value = weather.weather_entity || 'weather.home';
+        roomTempEntityInput.value = weather.room_temp_entity || 'sensor.room_temperature';
+        
+        // Validate entities
+        this.validateEntity(weatherEntityInput.value, card);
+        
+        // Add change listeners for entity validation
+        weatherEntityInput.addEventListener('change', () => {
+            this.validateEntity(weatherEntityInput.value, card);
+            this.updateWeatherWidgetConfig();
+        });
+        
+        roomTempEntityInput.addEventListener('change', () => {
+            this.updateWeatherWidgetConfig();
         });
         
         list.appendChild(clone);
@@ -2407,10 +2472,7 @@ const app = {
         
         this.currentDevice.widgets.weather = {
             weather_entity: card.querySelector('.weather-entity-input')?.value || 'weather.home',
-            room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature',
-            video_server_ip: card.querySelector('.server-ip-input')?.value || '192.168.1.100',
-            video_server_port: parseInt(card.querySelector('.server-port-input')?.value) || 8090,
-            fps: parseInt(card.querySelector('.fps-input')?.value) || 30
+            room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature'
         };
     },
     
@@ -3251,6 +3313,23 @@ const app = {
         if (siteSettingsHeader) {
             siteSettingsHeader.style.cursor = 'pointer';
         }
+        
+        // Weather Service inputs - auto-save on change
+        const weatherInputs = [
+            'weather-server-ip', 'weather-server-port', 'weather-fps',
+            'weather-file-sunny', 'weather-file-cloudy', 'weather-file-rainy',
+            'weather-file-drizzle', 'weather-file-stormy', 'weather-file-windy',
+            'weather-file-hot'
+        ];
+        
+        weatherInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('change', () => {
+                    this.updateWeatherServiceFromForm();
+                });
+            }
+        });
     }
 };
 
