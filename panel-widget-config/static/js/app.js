@@ -1574,7 +1574,7 @@ const app = {
     // Select entity from picker
     selectEntity(entityId) {
         if (this.currentEntityButton) {
-            const input = this.currentEntityButton.closest('.input-with-action').querySelector('.entity-input');
+            const input = this.currentEntityButton.closest('.input-with-action').querySelector('input');
             input.value = entityId;
             
             // Trigger validation
