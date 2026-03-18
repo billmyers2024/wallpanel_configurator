@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.36
+
+### Fixed
+- **Video Test Widget**: Fixed widget type naming consistency
+  - Changed `video_test` to `test_video` throughout configurator
+  - Now matches the widget registration name in firmware
+  - Prevents duplicate/conflicting widget entries in site_settings.json
+
 ## 1.7.35
 
 ### Fixed

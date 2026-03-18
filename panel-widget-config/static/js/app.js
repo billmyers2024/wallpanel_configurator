@@ -1182,13 +1182,13 @@ const app = {
             return;
         }
         
-        // Phase 1: Special handling for video_test widget - multi-instance streams array
-        if (type === 'video_test') {
-            if (!this.currentDevice.widgets.video_test) {
-                this.currentDevice.widgets.video_test = { streams: [] };
+        // Phase 1: Special handling for test_video widget - multi-instance streams array
+        if (type === 'test_video') {
+            if (!this.currentDevice.widgets.test_video) {
+                this.currentDevice.widgets.test_video = { streams: [] };
             }
             
-            this.currentDevice.widgets.video_test.streams.push({
+            this.currentDevice.widgets.test_video.streams.push({
                 name: 'Test Stream',
                 video_server_ip: '192.168.1.100',
                 video_server_port: 8090,
@@ -1288,7 +1288,7 @@ const app = {
         else if (type === 'art') templateId = 'art-widget-template';
         else if (type === 'cctv') templateId = 'cctv-widget-template';
         else if (type === 'alarm_panel') templateId = 'alarm-panel-widget-template';
-        else if (type === 'video_test') templateId = 'video-test-widget-template';
+        else if (type === 'test_video') templateId = 'video-test-widget-template';
         else if (type === 'plasma') templateId = 'plasma-widget-template';
         else if (type === 'network_test') templateId = 'network-test-widget-template';
         else if (type === 'art3') templateId = 'art3-widget-template';
@@ -1432,9 +1432,9 @@ const app = {
             } else if (baseType === 'alarm_panel' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3') {
                 // Single-instance widgets - 1 if exists, 0 if not
                 count = widgets[baseType] ? 1 : 0;
-            } else if (baseType === 'video_test') {
+            } else if (baseType === 'test_video') {
                 // Video test - object with streams array
-                count = widgets.video_test?.streams?.length || 0;
+                count = widgets.test_video?.streams?.length || 0;
             } else {
                 // Default: count from DOM for other types
                 let listId;
@@ -1458,7 +1458,7 @@ const app = {
             'art': 'art-count',
             'cctv': 'cctv-count',
             'alarm_panel': 'alarm-panel-count',
-            'video_test': 'video-test-count',
+            'test_video': 'video-test-count',
             'plasma': 'plasma-count',
             'network_test': 'network-test-count',
             'art3': 'art3-count'
@@ -1759,7 +1759,7 @@ const app = {
         // Lights, Covers, Climate, Climate2, CCTV, Alarm Panel, Art Display, Art Slideshow, Plasma Effect, Tester, Video Test, Network Test, Music, Intercom, Public Address, Voice Assistant, Weather
         const sortOrder = [
             'lights', 'covers', 'climate', 'climate2', 'cctv', 'alarm_panel',
-            'art', 'art3', 'plasma', 'tester', 'video_test', 'network_test',
+            'art', 'art3', 'plasma', 'tester', 'test_video', 'network_test',
             'music', 'intercom', 'pa', 'assistant', 'weather'
         ];
         
@@ -2277,7 +2277,7 @@ const app = {
         if (!list) return;
         list.innerHTML = '';
         
-        const videoTest = this.currentDevice.widgets?.video_test;
+        const videoTest = this.currentDevice.widgets?.test_video;
         const streams = videoTest?.streams || [];
         
         const template = document.getElementById('video-test-widget-template');
@@ -2303,14 +2303,14 @@ const app = {
             const inputs = card.querySelectorAll('input, select');
             inputs.forEach(input => {
                 input.addEventListener('change', () => {
-                    this.updateWidgetCount('video_test');
+                    this.updateWidgetCount('test_video');
                 });
             });
             
             list.appendChild(card);
         });
         
-        this.updateWidgetCount('video_test', streams.length);
+        this.updateWidgetCount('test_video', streams.length);
     },
     
     // =============================================================================
