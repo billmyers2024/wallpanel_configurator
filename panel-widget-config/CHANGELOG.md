@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.37
+
+### Added
+- **Weather Widget**: Added night mode variants for weather conditions
+  - New conditions: Clear_Night, Rainy_Night, Cloudy_Night, Windy_Night
+  - Web configurator updated with file inputs for night mode MJPEG files
+  - ESP32 panel code supports all 4 new night modes
+  - Night variants can use same MJPEG files as day or separate night-themed videos
+
 ## 1.7.36
 
 ### Fixed

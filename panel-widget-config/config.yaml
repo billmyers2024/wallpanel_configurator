@@ -1,5 +1,5 @@
 name: "Panel Widget Configurator"
-version: "1.7.36"
+version: "1.7.37"
 slug: "panel-widget-config"
 description: "Configure ESPHome panel widgets including lights, covers, climate, CCTV cameras, alarm panel, and art display with HA entity validation"
 url: "https://github.com/billmyers2024/wallpanel_configurator"

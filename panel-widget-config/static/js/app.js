@@ -2135,7 +2135,11 @@ const app = {
                 drizzle: document.getElementById('weather-file-drizzle')?.value || 'drizzle.mjpeg',
                 stormy: document.getElementById('weather-file-stormy')?.value || 'stormy.mjpeg',
                 windy: document.getElementById('weather-file-windy')?.value || 'windy.mjpeg',
-                hot: document.getElementById('weather-file-hot')?.value || 'hot.mjpeg'
+                hot: document.getElementById('weather-file-hot')?.value || 'hot.mjpeg',
+                clear_night: document.getElementById('weather-file-clear-night')?.value || 'clear_night.mjpeg',
+                rainy_night: document.getElementById('weather-file-rainy-night')?.value || 'rainy_night.mjpeg',
+                cloudy_night: document.getElementById('weather-file-cloudy-night')?.value || 'cloudy_night.mjpeg',
+                windy_night: document.getElementById('weather-file-windy-night')?.value || 'windy_night.mjpeg'
             }
         };
     },
@@ -2169,6 +2173,16 @@ const app = {
         if (stormy) stormy.value = files.stormy || 'stormy.mjpeg';
         if (windy) windy.value = files.windy || 'windy.mjpeg';
         if (hot) hot.value = files.hot || 'hot.mjpeg';
+        
+        const clearNight = document.getElementById('weather-file-clear-night');
+        const rainyNight = document.getElementById('weather-file-rainy-night');
+        const cloudyNight = document.getElementById('weather-file-cloudy-night');
+        const windyNight = document.getElementById('weather-file-windy-night');
+        
+        if (clearNight) clearNight.value = files.clear_night || 'clear_night.mjpeg';
+        if (rainyNight) rainyNight.value = files.rainy_night || 'rainy_night.mjpeg';
+        if (cloudyNight) cloudyNight.value = files.cloudy_night || 'cloudy_night.mjpeg';
+        if (windyNight) windyNight.value = files.windy_night || 'windy_night.mjpeg';
     },
     
     // =============================================================================
