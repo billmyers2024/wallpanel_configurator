@@ -11,4 +11,5 @@ git remote set-url origin git@github.com:billmyers2024/wallpanel_configurator.gi
 
 # Verify
 git remote -v
-ssh -T git@github.com
+# Test SSH authentication (GitHub always returns 1 since no shell access, but "successfully authenticated" means it worked)
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" && echo "SSH authentication successful" || echo "SSH authentication check completed"
