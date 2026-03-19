@@ -2135,8 +2135,7 @@ const app = {
                 drizzle: document.getElementById('weather-file-drizzle')?.value || 'drizzle.mjpeg',
                 stormy: document.getElementById('weather-file-stormy')?.value || 'stormy.mjpeg',
                 windy: document.getElementById('weather-file-windy')?.value || 'windy.mjpeg',
-                hot: document.getElementById('weather-file-hot',
-            'weather-file-freezing')?.value || 'hot.mjpeg',
+                hot: document.getElementById('weather-file-hot')?.value || 'hot.mjpeg',
                 freezing: document.getElementById('weather-file-freezing')?.value || 'freezing.mjpeg',
                 clear_night: document.getElementById('weather-file-clear-night')?.value || 'clear_night.mjpeg',
                 rainy_night: document.getElementById('weather-file-rainy-night')?.value || 'rainy_night.mjpeg',
@@ -2166,8 +2165,7 @@ const app = {
         const drizzle = document.getElementById('weather-file-drizzle');
         const stormy = document.getElementById('weather-file-stormy');
         const windy = document.getElementById('weather-file-windy');
-        const hot = document.getElementById('weather-file-hot',
-            'weather-file-freezing');
+        const hot = document.getElementById('weather-file-hot');
         const freezing = document.getElementById('weather-file-freezing');
         
         if (sunny) sunny.value = files.sunny || 'sunny.mjpeg';
