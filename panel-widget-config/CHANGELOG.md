@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.38
+
+### Changed
+- **Weather Widget**: Updated weather condition labels in configurator
+  - Renamed: Sunny → Sunny Day, Cloudy → Cloudy Day, Rainy → Rainy Day
+  - Renamed: Drizzle → Drizzle Day, Windy → Windy Day, Hot → Scorching
+  - Added night variants: Clear Night, Rainy Night, Cloudy Night, Windy Night
+  - JSON keys remain unchanged for ESP32 compatibility
+
 ## 1.7.37
 
 ### Added
