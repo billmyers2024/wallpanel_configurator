@@ -521,6 +521,11 @@ WEATHER_SCHEMA = {
             "maximum": 60,
             "default": 30,
             "description": "MJPEG playback frames per second"
+        },
+        "forecast_entity": {
+            "type": "string",
+            "default": "",
+            "description": "Daily forecast sensor entity (e.g., sensor.xxx_daily_forecast)"
         }
     }
 }

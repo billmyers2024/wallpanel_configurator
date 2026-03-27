@@ -1265,7 +1265,9 @@ const app = {
             }
             this.currentDevice.widgets.weather = {
                 weather_entity: 'weather.home',
-                room_temp_entity: 'sensor.room_temperature'
+                room_temp_entity: 'sensor.room_temperature',
+                external_temp_entity: '',
+                forecast_entity: ''
             };
             this.renderWeatherWidget();
             this.showToast('Weather widget added', 'success');
@@ -2135,12 +2137,18 @@ const app = {
                 drizzle: document.getElementById('weather-file-drizzle')?.value || 'drizzle.mjpeg',
                 stormy: document.getElementById('weather-file-stormy')?.value || 'stormy.mjpeg',
                 windy: document.getElementById('weather-file-windy')?.value || 'windy.mjpeg',
-                hot: document.getElementById('weather-file-hot')?.value || 'hot.mjpeg',
+                scorching: document.getElementById('weather-file-scorching')?.value || 'scorching_day.mjpeg',
                 freezing: document.getElementById('weather-file-freezing')?.value || 'freezing.mjpeg',
+                freezing_night: document.getElementById('weather-file-freezing-night')?.value || 'freezing_night.mjpeg',
+                partly_cloudy_day: document.getElementById('weather-file-partly-cloudy-day')?.value || 'cloudy_day.mjpeg',
+                partly_cloudy_night: document.getElementById('weather-file-partly-cloudy-night')?.value || 'cloudy_night.mjpeg',
+                heavy_rain_day: document.getElementById('weather-file-heavy-rain-day')?.value || 'rainy_day.mjpeg',
+                heavy_rain_night: document.getElementById('weather-file-heavy-rain-night')?.value || 'rainy_night.mjpeg',
                 clear_night: document.getElementById('weather-file-clear-night')?.value || 'clear_night.mjpeg',
                 rainy_night: document.getElementById('weather-file-rainy-night')?.value || 'rainy_night.mjpeg',
                 cloudy_night: document.getElementById('weather-file-cloudy-night')?.value || 'cloudy_night.mjpeg',
-                windy_night: document.getElementById('weather-file-windy-night')?.value || 'windy_night.mjpeg'
+                windy_night: document.getElementById('weather-file-windy-night')?.value || 'windy_night.mjpeg',
+                exceptional: document.getElementById('weather-file-exceptional')?.value || 'stormy.mjpeg'
             }
         };
     },
@@ -2159,14 +2167,18 @@ const app = {
         if (fps) fps.value = weather.fps || 30;
         
         const files = weather.mjpeg_files || {};
+        
+        // Day files
         const sunny = document.getElementById('weather-file-sunny');
         const cloudy = document.getElementById('weather-file-cloudy');
         const rainy = document.getElementById('weather-file-rainy');
         const drizzle = document.getElementById('weather-file-drizzle');
         const stormy = document.getElementById('weather-file-stormy');
         const windy = document.getElementById('weather-file-windy');
-        const hot = document.getElementById('weather-file-hot');
+        const scorching = document.getElementById('weather-file-scorching');
         const freezing = document.getElementById('weather-file-freezing');
+        const partlyCloudyDay = document.getElementById('weather-file-partly-cloudy-day');
+        const heavyRainDay = document.getElementById('weather-file-heavy-rain-day');
         
         if (sunny) sunny.value = files.sunny || 'sunny.mjpeg';
         if (cloudy) cloudy.value = files.cloudy || 'cloudy.mjpeg';
@@ -2174,18 +2186,31 @@ const app = {
         if (drizzle) drizzle.value = files.drizzle || 'drizzle.mjpeg';
         if (stormy) stormy.value = files.stormy || 'stormy.mjpeg';
         if (windy) windy.value = files.windy || 'windy.mjpeg';
-        if (hot) hot.value = files.hot || 'hot.mjpeg';
+        if (scorching) scorching.value = files.scorching || 'scorching_day.mjpeg';
         if (freezing) freezing.value = files.freezing || 'freezing.mjpeg';
+        if (partlyCloudyDay) partlyCloudyDay.value = files.partly_cloudy_day || 'cloudy_day.mjpeg';
+        if (heavyRainDay) heavyRainDay.value = files.heavy_rain_day || 'rainy_day.mjpeg';
         
+        // Night files
         const clearNight = document.getElementById('weather-file-clear-night');
         const rainyNight = document.getElementById('weather-file-rainy-night');
         const cloudyNight = document.getElementById('weather-file-cloudy-night');
         const windyNight = document.getElementById('weather-file-windy-night');
+        const freezingNight = document.getElementById('weather-file-freezing-night');
+        const partlyCloudyNight = document.getElementById('weather-file-partly-cloudy-night');
+        const heavyRainNight = document.getElementById('weather-file-heavy-rain-night');
         
         if (clearNight) clearNight.value = files.clear_night || 'clear_night.mjpeg';
         if (rainyNight) rainyNight.value = files.rainy_night || 'rainy_night.mjpeg';
         if (cloudyNight) cloudyNight.value = files.cloudy_night || 'cloudy_night.mjpeg';
         if (windyNight) windyNight.value = files.windy_night || 'windy_night.mjpeg';
+        if (freezingNight) freezingNight.value = files.freezing_night || 'freezing_night.mjpeg';
+        if (partlyCloudyNight) partlyCloudyNight.value = files.partly_cloudy_night || 'cloudy_night.mjpeg';
+        if (heavyRainNight) heavyRainNight.value = files.heavy_rain_night || 'rainy_night.mjpeg';
+        
+        // Exceptional
+        const exceptional = document.getElementById('weather-file-exceptional');
+        if (exceptional) exceptional.value = files.exceptional || 'stormy.mjpeg';
     },
     
     // =============================================================================
@@ -2456,9 +2481,13 @@ const app = {
         // Populate fields with saved values or defaults
         const weatherEntityInput = card.querySelector('.weather-entity-input');
         const roomTempEntityInput = card.querySelector('.room-temp-entity-input');
+        const externalTempEntityInput = card.querySelector('.external-temp-entity-input');
         
         weatherEntityInput.value = weather.weather_entity || 'weather.home';
         roomTempEntityInput.value = weather.room_temp_entity || 'sensor.room_temperature';
+        externalTempEntityInput.value = weather.external_temp_entity || '';
+        const forecastEntityInput = card.querySelector('.forecast-entity-input');
+        if (forecastEntityInput) forecastEntityInput.value = weather.forecast_entity || '';
         
         // Validate entities
         this.validateEntity(weatherEntityInput.value, card);
@@ -2472,6 +2501,16 @@ const app = {
         roomTempEntityInput.addEventListener('change', () => {
             this.updateWeatherWidgetConfig();
         });
+        
+        externalTempEntityInput.addEventListener('change', () => {
+            this.updateWeatherWidgetConfig();
+        });
+        
+        if (forecastEntityInput) {
+            forecastEntityInput.addEventListener('change', () => {
+                this.updateWeatherWidgetConfig();
+            });
+        }
         
         list.appendChild(clone);
         this.updateWidgetCount('weather', 1);
@@ -2489,7 +2528,9 @@ const app = {
         
         this.currentDevice.widgets.weather = {
             weather_entity: card.querySelector('.weather-entity-input')?.value || 'weather.home',
-            room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature'
+            room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature',
+            external_temp_entity: card.querySelector('.external-temp-entity-input')?.value || '',
+            forecast_entity: card.querySelector('.forecast-entity-input')?.value || ''
         };
     },
     
@@ -3336,8 +3377,11 @@ const app = {
             'weather-server-ip', 'weather-server-port', 'weather-fps',
             'weather-file-sunny', 'weather-file-cloudy', 'weather-file-rainy',
             'weather-file-drizzle', 'weather-file-stormy', 'weather-file-windy',
-            'weather-file-hot',
-            'weather-file-freezing'
+            'weather-file-scorching', 'weather-file-freezing', 'weather-file-freezing-night',
+            'weather-file-partly-cloudy-day', 'weather-file-partly-cloudy-night',
+            'weather-file-heavy-rain-day', 'weather-file-heavy-rain-night',
+            'weather-file-clear-night', 'weather-file-rainy-night', 'weather-file-cloudy-night',
+            'weather-file-windy-night', 'weather-file-exceptional'
         ];
         
         weatherInputs.forEach(id => {

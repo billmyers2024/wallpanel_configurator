@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.41
+
+### Added
+- **Weather Widget**: Added Daily Forecast Entity field
+  - New configuration field for daily forecast sensor entity
+  - Supports sensors like `sensor.xxx_daily_forecast` from HA
+  - Enables 4-day weather forecast display on panel
+
 ## 1.7.38
 
 ### Changed
