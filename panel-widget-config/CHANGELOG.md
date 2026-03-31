@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.42
+
+### Changed
+- **Weather Widget**: Moved weather_entity and external_temp_entity to global site services
+  - These settings are now configured once in Site Services > Weather section
+  - Applies to all devices (panels) in the site
+  - Device-specific widget config now only contains room_temp_entity and forecast_entity
+  - Simplifies configuration when multiple panels share the same weather source
+
 ## 1.7.41
 
 ### Added

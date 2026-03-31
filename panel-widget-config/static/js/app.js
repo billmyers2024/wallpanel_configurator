@@ -1263,10 +1263,10 @@ const app = {
                 this.showToast('Only one Weather widget allowed per room', 'warning');
                 return;
             }
+            // Note: weather_entity and external_temp_entity are global (in services.weather)
+            // Only room_temp_entity and forecast_entity are device-specific
             this.currentDevice.widgets.weather = {
-                weather_entity: 'weather.home',
                 room_temp_entity: 'sensor.room_temperature',
-                external_temp_entity: '',
                 forecast_entity: ''
             };
             this.renderWeatherWidget();
@@ -2119,6 +2119,8 @@ const app = {
         const serverIp = document.getElementById('weather-server-ip');
         const serverPort = document.getElementById('weather-server-port');
         const fps = document.getElementById('weather-fps');
+        const weatherEntity = document.getElementById('weather-entity');
+        const externalTemp = document.getElementById('weather-external-temp');
         
         if (!serverIp || !serverPort || !fps) return;
         
@@ -2130,6 +2132,8 @@ const app = {
             server_ip: serverIp.value || '192.168.1.100',
             server_port: parseInt(serverPort.value) || 8090,
             fps: parseInt(fps.value) || 30,
+            weather_entity: weatherEntity?.value || 'weather.home',
+            external_temp_entity: externalTemp?.value || '',
             mjpeg_files: {
                 sunny: document.getElementById('weather-file-sunny')?.value || 'sunny.mjpeg',
                 cloudy: document.getElementById('weather-file-cloudy')?.value || 'cloudy.mjpeg',
@@ -2161,10 +2165,14 @@ const app = {
         const serverIp = document.getElementById('weather-server-ip');
         const serverPort = document.getElementById('weather-server-port');
         const fps = document.getElementById('weather-fps');
+        const weatherEntity = document.getElementById('weather-entity');
+        const externalTemp = document.getElementById('weather-external-temp');
         
         if (serverIp) serverIp.value = weather.server_ip || '192.168.1.100';
         if (serverPort) serverPort.value = weather.server_port || 8090;
         if (fps) fps.value = weather.fps || 30;
+        if (weatherEntity) weatherEntity.value = weather.weather_entity || 'weather.home';
+        if (externalTemp) externalTemp.value = weather.external_temp_entity || '';
         
         const files = weather.mjpeg_files || {};
         
@@ -2479,30 +2487,16 @@ const app = {
         if (validIcon) validIcon.style.display = 'inline';
         
         // Populate fields with saved values or defaults
-        const weatherEntityInput = card.querySelector('.weather-entity-input');
+        // Note: weather_entity and external_temp_entity are now global (in services.weather)
+        // Only room_temp_entity and forecast_entity are device-specific
         const roomTempEntityInput = card.querySelector('.room-temp-entity-input');
-        const externalTempEntityInput = card.querySelector('.external-temp-entity-input');
-        
-        weatherEntityInput.value = weather.weather_entity || 'weather.home';
-        roomTempEntityInput.value = weather.room_temp_entity || 'sensor.room_temperature';
-        externalTempEntityInput.value = weather.external_temp_entity || '';
         const forecastEntityInput = card.querySelector('.forecast-entity-input');
+        
+        roomTempEntityInput.value = weather.room_temp_entity || 'sensor.room_temperature';
         if (forecastEntityInput) forecastEntityInput.value = weather.forecast_entity || '';
         
-        // Validate entities
-        this.validateEntity(weatherEntityInput.value, card);
-        
         // Add change listeners for entity validation
-        weatherEntityInput.addEventListener('change', () => {
-            this.validateEntity(weatherEntityInput.value, card);
-            this.updateWeatherWidgetConfig();
-        });
-        
         roomTempEntityInput.addEventListener('change', () => {
-            this.updateWeatherWidgetConfig();
-        });
-        
-        externalTempEntityInput.addEventListener('change', () => {
             this.updateWeatherWidgetConfig();
         });
         
@@ -2512,7 +2506,7 @@ const app = {
             });
         }
         
-        list.appendChild(clone);
+        list.appendChild(clone)
         this.updateWidgetCount('weather', 1);
     },
     
@@ -2526,10 +2520,10 @@ const app = {
         const card = list.querySelector('.widget-card');
         if (!card) return;
         
+        // Only room_temp_entity and forecast_entity are device-specific
+        // weather_entity and external_temp_entity are now global (in services.weather)
         this.currentDevice.widgets.weather = {
-            weather_entity: card.querySelector('.weather-entity-input')?.value || 'weather.home',
             room_temp_entity: card.querySelector('.room-temp-entity-input')?.value || 'sensor.room_temperature',
-            external_temp_entity: card.querySelector('.external-temp-entity-input')?.value || '',
             forecast_entity: card.querySelector('.forecast-entity-input')?.value || ''
         };
     },
