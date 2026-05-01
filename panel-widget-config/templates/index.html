@@ -628,6 +628,25 @@
                             <div id="video-test-list" class="widget-list"></div>
                         </section>
 
+                        <!-- Audio Test Section -->
+                        <section class="widget-section" data-widget="audio_test">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <!-- MDI Speaker Icon -->
+                                    <svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 4L9.19 7.45 5 8.27l2.91 2.84L7.14 15 12 12.77 16.86 15l-.77-3.89L19 8.27l-4.19-.82L12 4m0-2l3.09 4.72L20 7.5l-3.08 3 .72 4.28L12 12.23 6.36 15.78l.72-4.28L4 7.5l4.91-.78L12 2z"/></svg>
+                                    <h3>Audio Test</h3>
+                                    <span class="badge" id="audio-test-count">0</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary" onclick="app.addWidget('audio_test')" id="add-audio-test-btn">
+                                    <i class="fas fa-plus"></i> Add Audio Test
+                                </button>
+                            </div>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(34,197,94,0.1);border-left:3px solid var(--success);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Test speaker playback, codec gain, EQ, and network audio streaming from MJPEG sender.
+                            </div>
+                            <div id="audio-test-list" class="widget-list"></div>
+                        </section>
+
                         <!-- Plasma Effect Section -->
                         <section class="widget-section" data-widget="plasma">
                             <div class="section-header">
@@ -1459,6 +1478,36 @@
                     <div class="form-group">
                         <label>Duration Seconds (0=no limit)</label>
                         <input type="number" class="input mjpeg-duration-input" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="widget-footer">
+                <button class="btn btn-sm btn-danger" onclick="app.removeWidget(this)">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Audio Test Widget Template -->
+    <template id="audio-test-widget-template">
+        <div class="widget-card" data-type="audio_test" data-index="">
+            <div class="widget-header">
+                <span class="widget-number"></span>
+                <div class="widget-validation">
+                    <i class="fas fa-check-circle valid" style="display: none;"></i>
+                    <i class="fas fa-times-circle invalid" style="display: none;"></i>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Audio Server IP</label>
+                        <input type="text" class="input server-ip-input" value="192.168.1.100" placeholder="192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label>Audio Server Port</label>
+                        <input type="number" class="input server-port-input" value="8090" min="1" max="65535">
                     </div>
                 </div>
             </div>

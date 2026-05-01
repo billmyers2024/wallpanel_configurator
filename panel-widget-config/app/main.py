@@ -530,6 +530,36 @@ WEATHER_SCHEMA = {
     }
 }
 
+AUDIO_TEST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "server_ip": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "MJPEG/audio sender server IP address"
+        },
+        "server_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "default": 8090,
+            "description": "MJPEG/audio sender server port"
+        },
+        "sounds": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "Display name for the sound"},
+                    "id": {"type": "string", "description": "Sound identifier / filename base"}
+                },
+                "required": ["name", "id"]
+            },
+            "description": "Optional list of custom sounds for local/network playback"
+        }
+    }
+}
+
 ART3_SCHEMA = {
     "type": "object",
     "properties": {
@@ -995,7 +1025,8 @@ def get_schema(widget_type):
         'plasma': PLASMA_SCHEMA,
         'network_test': NETWORK_TEST_SCHEMA,
         'weather': WEATHER_SCHEMA,
-        'art3': ART3_SCHEMA
+        'art3': ART3_SCHEMA,
+        'audio_test': AUDIO_TEST_SCHEMA
     }
     
     if widget_type not in schemas:
@@ -1165,6 +1196,16 @@ def widget_types():
                 "capabilities": ["display", "artwork", "rotation", "brightness"],
                 "status": "beta",
                 "note": "Digital art with brightness and rotation controls"
+            },
+            {
+                "id": "audio_test",
+                "name": "Audio Test",
+                "description": "Test speaker, codec gain, EQ, and network audio streaming",
+                "icon": "mdi:speaker",
+                "icon_code": "F4C3",
+                "capabilities": ["audio", "streaming", "test"],
+                "status": "stable",
+                "note": "Configure audio server IP/port. Sounds array optional for custom playback."
             }
         ]
     })

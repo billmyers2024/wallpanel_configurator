@@ -528,6 +528,7 @@ const app = {
         this.updateAlarmPanelFromForm();
         this.updatePlasmaFromForm();
         this.updateNetworkTestFromForm();
+        this.updateAudioTestFromForm();
         this.updateArt3FromForm();
         
         // Save slideshow settings from form to config
@@ -1236,6 +1237,21 @@ const app = {
             return;
         }
         
+        // Phase 1: Special handling for audio_test widget - only one allowed
+        if (type === 'audio_test') {
+            if (this.currentDevice.widgets.audio_test) {
+                this.showToast('Only one Audio Test allowed per room', 'warning');
+                return;
+            }
+            this.currentDevice.widgets.audio_test = {
+                server_ip: '192.168.1.100',
+                server_port: 8090
+            };
+            this.renderAudioTestWidget();
+            this.showToast('Audio Test added', 'success');
+            return;
+        }
+        
         // Phase 1: Special handling for art3 widget - only one allowed
         if (type === 'art3') {
             if (this.currentDevice.widgets.art3) {
@@ -1431,7 +1447,7 @@ const app = {
             } else if (baseType === 'art') {
                 // Art widget - single object with images array
                 count = widgets.art?.images?.length || 0;
-            } else if (baseType === 'alarm_panel' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3') {
+            } else if (baseType === 'alarm_panel' || baseType === 'plasma' || baseType === 'network_test' || baseType === 'art3' || baseType === 'audio_test') {
                 // Single-instance widgets - 1 if exists, 0 if not
                 count = widgets[baseType] ? 1 : 0;
             } else if (baseType === 'test_video') {
@@ -1463,7 +1479,8 @@ const app = {
             'test_video': 'video-test-count',
             'plasma': 'plasma-count',
             'network_test': 'network-test-count',
-            'art3': 'art3-count'
+            'art3': 'art3-count',
+            'audio_test': 'audio-test-count'
         };
         
         const badgeId = badgeIdMap[baseType] || `${baseType}s-count`;
@@ -1898,6 +1915,9 @@ const app = {
         
         // Phase 1: Render Network Test widget (single instance)
         this.renderNetworkTestWidget();
+        
+        // Phase 1: Render Audio Test widget (single instance)
+        this.renderAudioTestWidget();
         
         // Phase 1: Render Weather widget (single instance)
         this.renderWeatherWidget();
@@ -2452,6 +2472,73 @@ const app = {
         
         list.appendChild(clone);
         this.updateWidgetCount('network_test', 1);
+    },
+    
+    // =============================================================================
+    // PHASE 1: AUDIO TEST WIDGET
+    // =============================================================================
+    
+    // Update Audio Test widget from form (single instance)
+    updateAudioTestFromForm() {
+        if (!this.currentDevice) return;
+        
+        const container = document.getElementById('audio-test-list');
+        if (!container) return;
+        
+        const card = container.querySelector('.widget-card');
+        if (!card) {
+            delete this.currentDevice.widgets.audio_test;
+            return;
+        }
+        
+        this.currentDevice.widgets.audio_test = {
+            server_ip: card.querySelector('.server-ip-input')?.value || '192.168.1.100',
+            server_port: parseInt(card.querySelector('.server-port-input')?.value) || 8090
+        };
+        
+        this.updateWidgetCount('audio_test');
+    },
+    
+    // Render Audio Test widget (single instance)
+    renderAudioTestWidget() {
+        const list = document.getElementById('audio-test-list');
+        const addBtn = document.getElementById('add-audio-test-btn');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const audioTest = this.currentDevice.widgets?.audio_test;
+        
+        if (addBtn) {
+            addBtn.style.display = audioTest ? 'none' : 'inline-flex';
+        }
+        
+        if (!audioTest) {
+            this.updateWidgetCount('audio_test', 0);
+            return;
+        }
+        
+        const template = document.getElementById('audio-test-widget-template');
+        if (!template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        
+        // Show green checkmark since widget is enabled
+        const validIcon = card.querySelector('.valid');
+        if (validIcon) validIcon.style.display = 'inline';
+        
+        card.querySelector('.server-ip-input').value = audioTest.server_ip || '192.168.1.100';
+        card.querySelector('.server-port-input').value = audioTest.server_port || 8090;
+        
+        const inputs = card.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                this.updateWidgetCount('audio_test');
+            });
+        });
+        
+        list.appendChild(clone);
+        this.updateWidgetCount('audio_test', 1);
     },
     
     // =============================================================================

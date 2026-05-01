@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.43
+
+### Added
+- **Audio Test Widget**: New widget for testing speaker playback, codec gain, EQ, and network audio streaming
+  - Configure audio server IP and port for network WAV streaming
+  - Optional `sounds` array for custom playback entries
+  - Widget appears in device configurator alongside other test widgets
+  - Supports MJPEG sender protocol for streaming 48kHz/16-bit/mono WAV files
+
 ## 1.7.42
 
 ### Changed
