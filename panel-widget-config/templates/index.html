@@ -133,44 +133,6 @@
                                     <input type="time" id="cover-closing-time" class="input" value="19:00">
                                 </div>
                             </div>
-                            
-                            <!-- Audio Service Configuration -->
-                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
-                                Audio Service
-                            </h4>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(34,197,94,0.1);border-left:3px solid var(--success);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Configure audio dictionary for streaming and test playback.
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Media Player Entity</label>
-                                    <div class="input-with-action">
-                                        <input type="text" id="audio-media-service" class="input" value="media_player.living_room" placeholder="media_player.living_room">
-                                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(document.getElementById('audio-media-service'), 'media_player')">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                    <small style="color: var(--text-muted);">Home Assistant media player for music playback</small>
-                                </div>
-                            </div>
-                            <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
-                                Audio Dictionary
-                                <button class="btn btn-sm btn-primary" onclick="app.addAudioDictionaryEntry()" style="margin-left: 10px;"><i class="fas fa-plus"></i> Add Entry</button>
-                            </h5>
-                            <div id="audio-dictionary-list" class="widget-list">
-                                <!-- Audio dictionary entries populated by JS -->
-                            </div>
-
-                            <!-- EQ Configuration -->
-                            <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
-                                Parametric EQ (6 Bands)
-                            </h5>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Configure up to 6 parametric EQ bands. Applied to all audio playback.
-                            </div>
-                            <div id="audio-eq-list" class="widget-list">
-                                <!-- EQ bands populated by JS -->
-                            </div>
                         </div>
                     </div>
 
@@ -332,27 +294,52 @@
                                     <input type="text" id="weather-file-exceptional" class="input" value="stormy.mjpeg" placeholder="stormy.mjpeg">
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Spacer -->
-                    <div class="site-settings-spacer"></div>
-
-                    <!-- Slideshow Service (Site-Wide) -->
-                    <div class="slideshow-panel">
-                        <div class="section-header" onclick="app.toggleSection('slideshow')">
-                            <div class="section-title">
-                                <i class="fas fa-images"></i>
-                                <h3>Slideshow Service</h3>
-                                <i class="fas fa-chevron-down toggle-icon" id="slideshow-icon"></i>
+                            
+                            <!-- Audio Service Configuration -->
+                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                                Audio Service
+                            </h4>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(34,197,94,0.1);border-left:3px solid var(--success);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Configure audio dictionary for streaming and test playback.
                             </div>
-                        </div>
-                        <div id="slideshow-content" class="section-content" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Media Player Entity</label>
+                                    <div class="input-with-action">
+                                        <input type="text" id="audio-media-service" class="input" value="media_player.living_room" placeholder="media_player.living_room">
+                                        <button class="btn btn-sm btn-secondary" onclick="app.pickEntity(document.getElementById('audio-media-service'), 'media_player')">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <small style="color: var(--text-muted);">Home Assistant media player for music playback</small>
+                                </div>
+                            </div>
+                            <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
+                                Audio Dictionary
+                                <button class="btn btn-sm btn-primary" onclick="app.addAudioDictionaryEntry()" style="margin-left: 10px;"><i class="fas fa-plus"></i> Add Entry</button>
+                            </h5>
+                            <div id="audio-dictionary-list" class="widget-list">
+                                <!-- Audio dictionary entries populated by JS -->
+                            </div>
+
+                            <!-- EQ Configuration -->
+                            <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
+                                Parametric EQ (6 Bands)
+                            </h5>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Configure up to 6 parametric EQ bands. Applied to all audio playback.
+                            </div>
+                            <div id="audio-eq-list" class="widget-list">
+                                <!-- EQ bands populated by JS -->
+                            </div>
+                            
+                            <!-- Slideshow Service Configuration -->
+                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                                Slideshow Service
+                            </h4>
                             <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
                                 <i class="fas fa-info-circle"></i> Site-wide synchronized slideshow. Configure server and manage playlist.
                             </div>
-                            
-                            <!-- Server Configuration -->
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Slideshow Server IP</label>
@@ -373,8 +360,6 @@
                                     <input type="number" id="slideshow-default-duration" class="input" value="10" min="1" max="300">
                                 </div>
                             </div>
-                            
-                            <!-- Media Management Button -->
                             <div class="form-group" style="margin-top: 16px;">
                                 <button class="btn btn-primary" onclick="app.openSlideshowManager()">
                                     <i class="fas fa-film"></i> Manage Slideshow Media & Playlist
