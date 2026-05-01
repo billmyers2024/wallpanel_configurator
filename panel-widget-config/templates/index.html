@@ -311,8 +311,12 @@
                                     <input type="text" id="audio-server-ip" class="input" value="192.168.1.100" placeholder="192.168.1.100">
                                 </div>
                                 <div class="form-group">
-                                    <label>Audio Server Port</label>
+                                    <label>Stream Port</label>
                                     <input type="number" id="audio-server-port" class="input" value="8090" min="1" max="65535">
+                                </div>
+                                <div class="form-group">
+                                    <label>HTTP Port (File Management)</label>
+                                    <input type="number" id="audio-http-port" class="input" value="8050" min="1" max="65535">
                                 </div>
                             </div>
                             <div class="form-row">
@@ -992,28 +996,41 @@
             </div>
         </div>
 
-        <!-- Audio File Browser Modal -->
-        <div id="audio-file-modal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
+        <!-- Audio File Manager Modal -->
+        <div id="audio-file-manager-modal" class="modal">
+            <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
                 <div class="modal-header">
-                    <h3><i class="fas fa-folder-open"></i> Select Audio File</h3>
-                    <button class="btn-close" onclick="app.closeAudioFileModal()">&times;</button>
+                    <h3><i class="fas fa-music"></i> Manage Audio Files</h3>
+                    <button class="btn-close" onclick="app.closeAudioFileManager()">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group" style="margin-bottom: 16px;">
-                        <label>Directory</label>
-                        <select id="audio-file-directory" class="input" onchange="app.refreshAudioFiles()">
-                            <option value="/local/audio">/local/audio</option>
-                            <option value="/local/www/audio">/local/www/audio</option>
-                            <option value="/config/www/audio">/config/www/audio</option>
-                        </select>
+                <div class="modal-body" style="overflow-y: auto;">
+                    <!-- Server Status -->
+                    <div id="audio-server-status" class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:16px;font-size:12px;color:var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin"></i> Connecting to audio server...
                     </div>
-                    <div id="audio-file-list" class="staging-files-list">
-                        <p class="text-muted">Loading audio files...</p>
+
+                    <!-- Upload Section -->
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label><i class="fas fa-upload"></i> Upload Audio Files</label>
+                        <div id="audio-drop-zone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; background: var(--dark); cursor: pointer; transition: all 0.2s;">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: var(--text-muted); margin-bottom: 12px;"></i>
+                            <p style="color: var(--text-muted); margin: 0;">Drag & drop WAV files here</p>
+                            <p style="color: var(--text-muted); font-size: 12px; margin: 4px 0 0 0;">or click to browse</p>
+                            <input type="file" id="audio-file-input" style="display: none;" accept=".wav" multiple>
+                        </div>
+                    </div>
+
+                    <!-- Audio Files List -->
+                    <h4 style="margin: 20px 0 12px 0; color: var(--text-muted); font-size: 14px;">
+                        <i class="fas fa-file-audio"></i> Available Audio Files
+                        <small style="font-size: 11px; font-weight: normal;">(48kHz / 16-bit / mono)</small>
+                    </h4>
+                    <div id="audio-files-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                        <p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 20px;"><i class="fas fa-folder-open"></i> No audio files found</p>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="app.closeAudioFileModal()">Cancel</button>
+                    <button class="btn btn-secondary" onclick="app.closeAudioFileManager()">Close</button>
                 </div>
             </div>
         </div>
@@ -1773,11 +1790,11 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Filename</label>
+                        <label>Audio File</label>
                         <div class="input-with-action">
-                            <input type="text" class="input audio-filename-input" placeholder="fire_alarm.wav">
-                            <button class="btn btn-sm btn-secondary" onclick="app.openAudioFileBrowser(this)">
-                                <i class="fas fa-search"></i>
+                            <input type="text" class="input audio-filename-input" placeholder="Click browse to select file..." readonly style="background: var(--dark);">
+                            <button class="btn btn-sm btn-secondary" onclick="app.openAudioFileManager(this)">
+                                <i class="fas fa-search"></i> Browse
                             </button>
                         </div>
                     </div>

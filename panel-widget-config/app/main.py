@@ -613,6 +613,13 @@ AUDIO_SERVICE_SCHEMA = {
             "maximum": 65535,
             "description": "Audio streaming server port"
         },
+        "http_port": {
+            "type": "integer",
+            "default": 8050,
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "HTTP port for audio file management"
+        },
         "media_service": {
             "type": "string",
             "default": "media_player.living_room",

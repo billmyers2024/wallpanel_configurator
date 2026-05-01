@@ -2266,6 +2266,9 @@ const app = {
         const serverPort = document.getElementById('audio-server-port');
         if (serverPort) serverPort.value = audio.stream_server_port || 8090;
         
+        const httpPort = document.getElementById('audio-http-port');
+        if (httpPort) httpPort.value = audio.http_port || 8050;
+        
         const mediaService = document.getElementById('audio-media-service');
         if (mediaService) mediaService.value = audio.media_service || 'media_player.living_room';
         
@@ -2284,6 +2287,7 @@ const app = {
         
         const serverIp = document.getElementById('audio-server-ip');
         const serverPort = document.getElementById('audio-server-port');
+        const httpPort = document.getElementById('audio-http-port');
         const mediaService = document.getElementById('audio-media-service');
         const eqEnabled = document.getElementById('audio-eq-enabled');
         const entries = [];
@@ -2328,6 +2332,7 @@ const app = {
         this.config.services.audio = {
             stream_server_ip: serverIp ? serverIp.value : '192.168.1.100',
             stream_server_port: serverPort ? parseInt(serverPort.value) : 8090,
+            http_port: httpPort ? parseInt(httpPort.value) : 8050,
             media_service: mediaService ? mediaService.value : 'media_player.living_room',
             pa_zones: this.config.services.audio?.pa_zones || [],
             eq_enabled: eqEnabled ? eqEnabled.checked : false,
@@ -2451,63 +2456,195 @@ const app = {
         }
     },
     
-    // Audio file browser
+    // =============================================================================
+    // AUDIO FILE MANAGER
+    // =============================================================================
+    
     _audioFileTargetInput: null,
     
-    openAudioFileBrowser(button) {
+    openAudioFileManager(button) {
         const card = button.closest('.widget-card');
         if (!card) return;
         this._audioFileTargetInput = card.querySelector('.audio-filename-input');
-        document.getElementById('audio-file-modal').style.display = 'flex';
-        this.refreshAudioFiles();
+        document.getElementById('audio-file-manager-modal').style.display = 'flex';
+        this.loadAudioFiles();
+        this.setupAudioFileUpload();
     },
     
-    closeAudioFileModal() {
-        document.getElementById('audio-file-modal').style.display = 'none';
+    closeAudioFileManager() {
+        document.getElementById('audio-file-manager-modal').style.display = 'none';
         this._audioFileTargetInput = null;
     },
     
-    async refreshAudioFiles() {
-        const list = document.getElementById('audio-file-list');
-        const directory = document.getElementById('audio-file-directory')?.value || '/local/audio';
-        if (!list) return;
-        list.innerHTML = '<p class="text-muted">Loading audio files...</p>';
+    // Setup drag and drop upload for audio files
+    setupAudioFileUpload() {
+        const dropZone = document.getElementById('audio-drop-zone');
+        const fileInput = document.getElementById('audio-file-input');
+        if (!dropZone || !fileInput) return;
         
-        try {
-            const response = await fetch(`/api/audio/files?directory=${encodeURIComponent(directory)}`);
-            const data = await response.json();
-            
-            if (!data.success || !data.files || data.files.length === 0) {
-                list.innerHTML = '<p class="text-muted">No audio files found</p>';
-                return;
+        dropZone.onclick = () => fileInput.click();
+        
+        fileInput.onchange = (e) => {
+            if (e.target.files.length > 0) {
+                this.uploadAudioFiles(e.target.files);
             }
+        };
+        
+        dropZone.ondragover = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.background = 'rgba(59,130,246,0.1)';
+        };
+        
+        dropZone.ondragleave = () => {
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'var(--dark)';
+        };
+        
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border)';
+            dropZone.style.background = 'var(--dark)';
+            if (e.dataTransfer.files.length > 0) {
+                this.uploadAudioFiles(e.dataTransfer.files);
+            }
+        };
+    },
+    
+    // Upload audio files to server
+    async uploadAudioFiles(files) {
+        const serverIp = document.getElementById('audio-server-ip')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('audio-http-port')?.value || '8050';
+        const dropZone = document.getElementById('audio-drop-zone');
+        const originalContent = dropZone.innerHTML;
+        
+        dropZone.innerHTML = `<i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i><p>Uploading ${files.length} file(s)...</p>`;
+        
+        let uploaded = 0;
+        let failed = 0;
+        
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', 'audio');
             
-            list.innerHTML = '';
-            data.files.forEach(file => {
-                const item = document.createElement('div');
-                item.className = 'staging-file-item';
-                item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; margin-bottom: 8px;';
-                item.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-music" style="color: var(--info);"></i>
-                        <span>${file}</span>
-                    </div>
-                    <button class="btn btn-sm btn-primary">Select</button>
-                `;
-                item.addEventListener('click', () => this.selectAudioFile(file));
-                list.appendChild(item);
-            });
-        } catch (err) {
-            console.error('Failed to load audio files:', err);
-            list.innerHTML = '<p class="text-muted">Error loading audio files</p>';
+            try {
+                const response = await fetch(`http://${serverIp}:${httpPort}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    uploaded++;
+                } else {
+                    failed++;
+                }
+            } catch (error) {
+                console.error('Audio upload failed:', error);
+                failed++;
+            }
+        }
+        
+        dropZone.innerHTML = originalContent;
+        this.setupAudioFileUpload();
+        
+        if (uploaded > 0) {
+            this.showToast(`Uploaded ${uploaded} file(s)${failed > 0 ? `, ${failed} failed` : ''}`, failed > 0 ? 'warning' : 'success');
+            this.loadAudioFiles();
+        } else if (failed > 0) {
+            this.showToast('Upload failed. Check server connection.', 'error');
         }
     },
     
+    // Load audio files from server
+    async loadAudioFiles() {
+        const serverIp = document.getElementById('audio-server-ip')?.value || '192.168.1.100';
+        const httpPort = document.getElementById('audio-http-port')?.value || '8050';
+        const statusEl = document.getElementById('audio-server-status');
+        
+        if (statusEl) {
+            statusEl.style.background = 'rgba(59,130,246,0.1)';
+            statusEl.style.borderLeftColor = 'var(--primary)';
+            statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Connecting to ${serverIp}:${httpPort}...`;
+        }
+        
+        try {
+            const response = await fetch(`http://${serverIp}:${httpPort}/api/audio/files`);
+            if (response.ok) {
+                const data = await response.json();
+                this.audioFiles = data.files || [];
+                if (statusEl) {
+                    const count = this.audioFiles.length;
+                    statusEl.style.background = 'rgba(16,185,129,0.1)';
+                    statusEl.style.borderLeftColor = '#10b981';
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Connected to ${serverIp}:${httpPort} (${count} audio files)`;
+                }
+                this.renderAudioFiles(serverIp, httpPort);
+            } else {
+                this.showAudioFileError('Server returned error: ' + response.status);
+            }
+        } catch (error) {
+            console.error('Failed to load audio files:', error);
+            this.showAudioFileError(`Cannot connect to ${serverIp}:${httpPort}. Check server is running.`);
+        }
+    },
+    
+    // Show error in audio file manager
+    showAudioFileError(message) {
+        const statusEl = document.getElementById('audio-server-status');
+        if (statusEl) {
+            statusEl.style.background = 'rgba(239,68,68,0.1)';
+            statusEl.style.borderLeftColor = '#ef4444';
+            statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        }
+        const container = document.getElementById('audio-files-list');
+        if (container) {
+            container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); grid-column: 1 / -1;"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+        }
+    },
+    
+    // Render audio files grid
+    renderAudioFiles(serverIp, httpPort) {
+        const container = document.getElementById('audio-files-list');
+        if (!container) return;
+        
+        if (!this.audioFiles || this.audioFiles.length === 0) {
+            container.innerHTML = `<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 20px;"><i class="fas fa-folder-open"></i> No audio files found</p>`;
+            return;
+        }
+        
+        let html = '';
+        this.audioFiles.forEach(file => {
+            const isValid = file.sample_rate === 48000 && file.bits === 16 && file.channels === 1;
+            const validBadge = isValid 
+                ? '<span style="background: rgba(16,185,129,0.2); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 10px;"><i class="fas fa-check"></i> Valid</span>'
+                : '<span style="background: rgba(239,68,68,0.2); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 10px;"><i class="fas fa-times"></i> Invalid</span>';
+            
+            const specs = `${file.sample_rate || '?'}Hz · ${file.bits || '?'}bit · ${file.channels || '?'}ch`;
+            
+            html += `
+                <div class="file-item" onclick="app.selectAudioFile('${file.filename}')" style="cursor: pointer; border-radius: var(--radius); overflow: hidden; background: var(--card); border: 2px solid transparent; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'">
+                    <div style="aspect-ratio: 1; background: var(--dark); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        <i class="fas fa-file-audio" style="font-size: 32px; color: var(--info);"></i>
+                    </div>
+                    <div style="padding: 10px;">
+                        <div style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;">${file.filename}</div>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 6px;">${specs} · ${this.formatFileSize(file.size)}</div>
+                        <div>${validBadge}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    },
+    
+    // Select an audio file from the manager
     selectAudioFile(filename) {
         if (this._audioFileTargetInput) {
             this._audioFileTargetInput.value = filename;
         }
-        this.closeAudioFileModal();
+        this.closeAudioFileManager();
     },
     
     // =============================================================================
