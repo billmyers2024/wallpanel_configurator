@@ -242,6 +242,9 @@ const app = {
         }
         
         this.config.site_meta.last_updated = new Date().toISOString().split('T')[0];
+        
+        // Update audio service config (site-level)
+        this.updateAudioServiceFromForm();
     },
     
     // Show load file modal - loads staging files list
@@ -524,6 +527,7 @@ const app = {
         // Phase 1: Update cameras and new widgets
         this.updateCamerasFromForm();
         this.updateWeatherServiceFromForm();
+        this.updateAudioServiceFromForm();
         this.updateCCTVFromForm();
         this.updateAlarmPanelFromForm();
         this.updatePlasmaFromForm();
@@ -542,14 +546,17 @@ const app = {
         const httpPortInput = document.getElementById('slideshow-http-port');
         const durationInput = document.getElementById('slideshow-default-duration');
         
-        if (!this.config.slideshow) {
-            this.config.slideshow = {};
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        if (!this.config.services.slideshow) {
+            this.config.services.slideshow = {};
         }
         
-        if (serverInput) this.config.slideshow.server = serverInput.value || '192.168.1.100';
-        if (streamPortInput) this.config.slideshow.stream_port = parseInt(streamPortInput.value) || 8090;
-        if (httpPortInput) this.config.slideshow.http_port = parseInt(httpPortInput.value) || 8050;
-        if (durationInput) this.config.slideshow.default_duration = parseInt(durationInput.value) || 10;
+        if (serverInput) this.config.services.slideshow.server = serverInput.value || '192.168.1.100';
+        if (streamPortInput) this.config.services.slideshow.stream_port = parseInt(streamPortInput.value) || 8090;
+        if (httpPortInput) this.config.services.slideshow.http_port = parseInt(httpPortInput.value) || 8050;
+        if (durationInput) this.config.services.slideshow.default_duration = parseInt(durationInput.value) || 10;
     },
     
     // Update widget array from card forms
@@ -1244,8 +1251,7 @@ const app = {
                 return;
             }
             this.currentDevice.widgets.audio_test = {
-                server_ip: '192.168.1.100',
-                server_port: 8090
+                enabled: 'Y'
             };
             this.renderAudioTestWidget();
             this.showToast('Audio Test added', 'success');
@@ -1902,6 +1908,9 @@ const app = {
         // Phase 1: Load Weather Service config
         this.loadWeatherServiceToForm();
         
+        // Phase 1: Load Audio Service config
+        this.loadAudioServiceToForm();
+        
         // Phase 1: Render CCTV widgets
         this.renderCCTVWidgets();
         
@@ -1932,7 +1941,7 @@ const app = {
     
     // Load slideshow settings from config into form fields
     loadSlideshowSettings() {
-        const slideshow = this.config?.slideshow;
+        const slideshow = this.config?.services?.slideshow;
         if (!slideshow) return;
         
         const serverInput = document.getElementById('slideshow-server');
@@ -2243,6 +2252,156 @@ const app = {
     },
     
     // =============================================================================
+    // PHASE 1: AUDIO SERVICE
+    // =============================================================================
+    
+    // Load audio service config to form
+    loadAudioServiceToForm() {
+        const audio = this.config.services?.audio;
+        if (!audio) return;
+        
+        const mediaService = document.getElementById('audio-media-service');
+        if (mediaService) mediaService.value = audio.media_service || 'media_player.living_room';
+        
+        this.renderAudioDictionary(audio.audio_dictionary || []);
+        this.renderAudioEQ(audio.eq || []);
+    },
+    
+    // Update audio service config from form
+    updateAudioServiceFromForm() {
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        
+        const mediaService = document.getElementById('audio-media-service');
+        const entries = [];
+        
+        const container = document.getElementById('audio-dictionary-list');
+        if (container) {
+            const cards = container.querySelectorAll('.widget-card');
+            cards.forEach(card => {
+                const code = card.querySelector('.audio-code-input')?.value?.trim();
+                const filename = card.querySelector('.audio-filename-input')?.value?.trim();
+                if (!code || !filename) return;
+                
+                entries.push({
+                    audio_code: code,
+                    filename: filename,
+                    test_audio_button_number: parseInt(card.querySelector('.audio-button-number-input')?.value) || 1,
+                    test_audio_button_label: card.querySelector('.audio-button-label-input')?.value?.trim() || code
+                });
+            });
+        }
+        
+        // Collect EQ bands
+        const eqBands = [];
+        const eqContainer = document.getElementById('audio-eq-list');
+        if (eqContainer) {
+            const cards = eqContainer.querySelectorAll('.widget-card');
+            cards.forEach(card => {
+                eqBands.push({
+                    enabled: card.querySelector('.eq-enabled-input')?.checked || false,
+                    type: card.querySelector('.eq-type-input')?.value || 'PEAK',
+                    freq: parseInt(card.querySelector('.eq-freq-input')?.value) || 1000,
+                    q: parseFloat(card.querySelector('.eq-q-input')?.value) || 1.0,
+                    gain_db: parseFloat(card.querySelector('.eq-gain-input')?.value) || 0.0
+                });
+            });
+        }
+        
+        this.config.services.audio = {
+            media_service: mediaService ? mediaService.value : 'media_player.living_room',
+            pa_zones: this.config.services.audio?.pa_zones || [],
+            audio_dictionary: entries,
+            eq: eqBands
+        };
+    },
+    
+    // Render audio dictionary entries
+    renderAudioDictionary(entries) {
+        const list = document.getElementById('audio-dictionary-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const template = document.getElementById('audio-dictionary-entry-template');
+        if (!template) return;
+        
+        entries.forEach((entry, index) => {
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            
+            card.dataset.index = index;
+            card.querySelector('.widget-number').textContent = `#${index + 1}`;
+            card.querySelector('.audio-code-input').value = entry.audio_code || '';
+            card.querySelector('.audio-filename-input').value = entry.filename || '';
+            card.querySelector('.audio-button-number-input').value = entry.test_audio_button_number || 1;
+            card.querySelector('.audio-button-label-input').value = entry.test_audio_button_label || '';
+            
+            list.appendChild(card);
+        });
+    },
+    
+    // Render EQ bands
+    renderAudioEQ(bands) {
+        const list = document.getElementById('audio-eq-list');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        const template = document.getElementById('audio-eq-band-template');
+        if (!template) return;
+        
+        // Always render 6 bands
+        for (let i = 0; i < 6; i++) {
+            const band = bands[i] || {};
+            const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.widget-card');
+            
+            card.dataset.index = i;
+            card.querySelector('.widget-number').textContent = `Band ${i + 1}`;
+            card.querySelector('.eq-enabled-input').checked = band.enabled || false;
+            card.querySelector('.eq-type-input').value = band.type || 'PEAK';
+            card.querySelector('.eq-freq-input').value = band.freq || 1000;
+            card.querySelector('.eq-q-input').value = band.q || 1.0;
+            card.querySelector('.eq-gain-input').value = band.gain_db || 0.0;
+            
+            list.appendChild(card);
+        }
+    },
+    
+    // Add a new audio dictionary entry
+    addAudioDictionaryEntry() {
+        const list = document.getElementById('audio-dictionary-list');
+        const template = document.getElementById('audio-dictionary-entry-template');
+        if (!list || !template) return;
+        
+        const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.widget-card');
+        const currentCount = list.querySelectorAll('.widget-card').length;
+        
+        card.dataset.index = currentCount;
+        card.querySelector('.widget-number').textContent = `#${currentCount + 1}`;
+        
+        list.appendChild(card);
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    },
+    
+    // Remove an audio dictionary entry
+    removeAudioDictionaryEntry(button) {
+        const card = button.closest('.widget-card');
+        if (card) {
+            card.remove();
+            // Re-number remaining entries
+            const list = document.getElementById('audio-dictionary-list');
+            if (list) {
+                list.querySelectorAll('.widget-card').forEach((c, i) => {
+                    c.dataset.index = i;
+                    c.querySelector('.widget-number').textContent = `#${i + 1}`;
+                });
+            }
+        }
+    },
+    
+    // =============================================================================
     // PHASE 1: CCTV WIDGET
     // =============================================================================
     
@@ -2493,8 +2652,7 @@ const app = {
         }
         
         this.currentDevice.widgets.audio_test = {
-            server_ip: card.querySelector('.server-ip-input')?.value || '192.168.1.100',
-            server_port: parseInt(card.querySelector('.server-port-input')?.value) || 8090
+            enabled: 'Y'
         };
         
         this.updateWidgetCount('audio_test');
@@ -2527,16 +2685,6 @@ const app = {
         // Show green checkmark since widget is enabled
         const validIcon = card.querySelector('.valid');
         if (validIcon) validIcon.style.display = 'inline';
-        
-        card.querySelector('.server-ip-input').value = audioTest.server_ip || '192.168.1.100';
-        card.querySelector('.server-port-input').value = audioTest.server_port || 8090;
-        
-        const inputs = card.querySelectorAll('input');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                this.updateWidgetCount('audio_test');
-            });
-        });
         
         list.appendChild(clone);
         this.updateWidgetCount('audio_test', 1);
@@ -2797,7 +2945,7 @@ const app = {
             
             // Load server settings from config ONLY if form fields are empty
             // This preserves user-entered values when re-opening the manager
-            const slideshow = this.config?.slideshow;
+            const slideshow = this.config?.services?.slideshow;
             if (slideshow) {
                 const serverInput = document.getElementById('slideshow-server');
                 const streamPortInput = document.getElementById('slideshow-stream-port');
@@ -3408,8 +3556,11 @@ const app = {
     
     // Save slideshow playlist to config
     saveSlideshowPlaylist() {
-        // Save to ROOT level slideshow object, not in services
-        this.config.slideshow = this.getSlideshowFromForm();
+        // Save slideshow under services
+        if (!this.config.services) {
+            this.config.services = {};
+        }
+        this.config.services.slideshow = this.getSlideshowFromForm();
         
         this.closeSlideshowManager();
         this.showToast('Slideshow playlist saved', 'success');

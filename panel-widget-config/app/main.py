@@ -533,29 +533,11 @@ WEATHER_SCHEMA = {
 AUDIO_TEST_SCHEMA = {
     "type": "object",
     "properties": {
-        "server_ip": {
+        "enabled": {
             "type": "string",
-            "default": "192.168.1.100",
-            "description": "MJPEG/audio sender server IP address"
-        },
-        "server_port": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 65535,
-            "default": 8090,
-            "description": "MJPEG/audio sender server port"
-        },
-        "sounds": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "description": "Display name for the sound"},
-                    "id": {"type": "string", "description": "Sound identifier / filename base"}
-                },
-                "required": ["name", "id"]
-            },
-            "description": "Optional list of custom sounds for local/network playback"
+            "enum": ["Y", "N"],
+            "default": "Y",
+            "description": "Enable audio test widget on this device"
         }
     }
 }
@@ -614,6 +596,66 @@ ART3_SCHEMA = {
         }
     },
     "required": ["enabled"]
+}
+
+AUDIO_SERVICE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "media_service": {
+            "type": "string",
+            "default": "media_player.living_room",
+            "description": "Home Assistant media player entity for music playback"
+        },
+        "pa_zones": {
+            "type": "array",
+            "items": {"type": "string"},
+            "default": [],
+            "description": "Public address zone names"
+        },
+        "audio_dictionary": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "audio_code": {
+                        "type": "string",
+                        "description": "Code identifier: fire_alarm_audio, intruder_alarm, person_at_door, intercom_paging_tone"
+                    },
+                    "filename": {
+                        "type": "string",
+                        "description": "WAV filename for the audio segment"
+                    },
+                    "test_audio_button_number": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 6,
+                        "description": "Button number (1-6) to assign in the test app"
+                    },
+                    "test_audio_button_label": {
+                        "type": "string",
+                        "description": "Label displayed on the test app button"
+                    }
+                },
+                "required": ["audio_code", "filename"]
+            },
+            "description": "Mapped audio files for streaming and test playback"
+        },
+        "eq": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "enabled": {"type": "boolean", "default": False, "description": "Enable this EQ band"},
+                    "type": {"type": "string", "enum": ["LOW_SHELF", "HIGH_SHELF", "PEAK", "LOW_PASS", "HIGH_PASS"], "default": "PEAK", "description": "Filter type"},
+                    "freq": {"type": "integer", "minimum": 20, "maximum": 20000, "default": 1000, "description": "Center/corner frequency in Hz"},
+                    "q": {"type": "number", "minimum": 0.1, "maximum": 10.0, "default": 1.0, "description": "Q factor"},
+                    "gain_db": {"type": "number", "minimum": -20.0, "maximum": 20.0, "default": 0.0, "description": "Gain in dB"}
+                }
+            },
+            "maxItems": 6,
+            "description": "Parametric EQ bands (up to 6)"
+        }
+    }
 }
 
 
@@ -1026,7 +1068,8 @@ def get_schema(widget_type):
         'network_test': NETWORK_TEST_SCHEMA,
         'weather': WEATHER_SCHEMA,
         'art3': ART3_SCHEMA,
-        'audio_test': AUDIO_TEST_SCHEMA
+        'audio_test': AUDIO_TEST_SCHEMA,
+        'audio_service': AUDIO_SERVICE_SCHEMA
     }
     
     if widget_type not in schemas:

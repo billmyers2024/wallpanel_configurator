@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.7.45
+
+### Added
+- **Audio Service**: New site-level service for audio configuration
+  - Audio Dictionary: map audio codes to WAV filenames with test button assignments (1-6)
+  - Parametric EQ: configure up to 6 bands (type, frequency, Q, gain) from configurator
+  - Media player entity and PA zones (future use)
+- **Audio Test Widget**: Simplified to enable/disable only. Server config moved to Audio Service.
+  - Buttons 1-6: configurable from audio dictionary
+  - Buttons 7-9: fixed internal tones (1kHz sine, pink noise loop, sweep)
+  - Button colors: configurable buttons use dark blue, fixed tones use brown/orange
+
+### Changed
+- **Slideshow Service**: Moved from root-level `slideshow` to `services.slideshow` in JSON
+- **Audio Test Widget**: Removed per-device server IP/port fields (now in Audio Service)
+
 ## 1.7.44
 
 ### Fixed
