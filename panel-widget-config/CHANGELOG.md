@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.44
+
+### Fixed
+- **Audio Test Widget**: Added missing `mdi:speaker` icon to Available Widgets panel
+- **Audio Test Widget**: Added to widget sort order so it appears in correct position
+
 ## 1.7.43
 
 ### Added

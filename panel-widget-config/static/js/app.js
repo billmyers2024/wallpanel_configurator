@@ -1771,7 +1771,8 @@ const app = {
             'mdi:palette': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 22A10 10 0 0 1 2 12 10 10 0 0 1 12 2c5.5 0 10 4.5 10 10 0 1.5-.5 2.5-1 3.5-.5 1-1 2-1 3.5 0 1.5-1.5 3-3 3H15v-2h2c.5 0 1-.5 1-1 0-1.5.5-2.5 1-3.5.5-1 1-2 1-3.5A8 8 0 0 0 12 4 8 8 0 0 0 4 12a8 8 0 0 0 8 8v2m-3-8a3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3z"/></svg>',
             'mdi:check': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M21 7L9 19L3.5 13.5L4.91 12.09L9 16.17L19.59 5.59L21 7Z"/></svg>',
             'mdi:ethernet': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2m0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8m-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
-            'mdi:television-guide': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M3 5h18v12h-5v2h3v2H5v-2h3v-2H3V5m2 2v8h14V7H5m2 2h10v4H7V9z"/></svg>'
+            'mdi:television-guide': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M3 5h18v12h-5v2h3v2H5v-2h3v-2H3V5m2 2v8h14V7H5m2 2h10v4H7V9z"/></svg>',
+            'mdi:speaker': '<svg class="mdi-icon" viewBox="0 0 24 24"><path d="M12 4L9.19 7.45 5 8.27l2.91 2.84L7.14 15 12 12.77 16.86 15l-.77-3.89L19 8.27l-4.19-.82L12 4m0-2l3.09 4.72L20 7.5l-3.08 3 .72 4.28L12 12.23 6.36 15.78l.72-4.28L4 7.5l4.91-.78L12 2z"/></svg>'
         };
         
         // Define sort order by function: Core -> Security -> Media -> Test -> Future
@@ -1779,7 +1780,7 @@ const app = {
         const sortOrder = [
             'lights', 'covers', 'climate', 'climate2', 'cctv', 'alarm_panel',
             'art', 'art3', 'plasma', 'tester', 'test_video', 'network_test',
-            'music', 'intercom', 'pa', 'assistant', 'weather'
+            'audio_test', 'music', 'intercom', 'pa', 'assistant', 'weather'
         ];
         
         // Sort widget types by the defined order
