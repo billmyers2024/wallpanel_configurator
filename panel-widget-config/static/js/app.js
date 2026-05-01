@@ -2260,8 +2260,17 @@ const app = {
         const audio = this.config.services?.audio;
         if (!audio) return;
         
+        const serverIp = document.getElementById('audio-server-ip');
+        if (serverIp) serverIp.value = audio.stream_server_ip || '192.168.1.100';
+        
+        const serverPort = document.getElementById('audio-server-port');
+        if (serverPort) serverPort.value = audio.stream_server_port || 8090;
+        
         const mediaService = document.getElementById('audio-media-service');
         if (mediaService) mediaService.value = audio.media_service || 'media_player.living_room';
+        
+        const eqEnabled = document.getElementById('audio-eq-enabled');
+        if (eqEnabled) eqEnabled.checked = audio.eq_enabled || false;
         
         this.renderAudioDictionary(audio.audio_dictionary || []);
         this.renderAudioEQ(audio.eq || []);
@@ -2273,7 +2282,10 @@ const app = {
             this.config.services = {};
         }
         
+        const serverIp = document.getElementById('audio-server-ip');
+        const serverPort = document.getElementById('audio-server-port');
         const mediaService = document.getElementById('audio-media-service');
+        const eqEnabled = document.getElementById('audio-eq-enabled');
         const entries = [];
         
         const container = document.getElementById('audio-dictionary-list');
@@ -2284,11 +2296,15 @@ const app = {
                 const filename = card.querySelector('.audio-filename-input')?.value?.trim();
                 if (!code || !filename) return;
                 
+                const assignTest = card.querySelector('.audio-assign-test-input')?.checked || false;
+                
                 entries.push({
                     audio_code: code,
                     filename: filename,
-                    test_audio_button_number: parseInt(card.querySelector('.audio-button-number-input')?.value) || 1,
-                    test_audio_button_label: card.querySelector('.audio-button-label-input')?.value?.trim() || code
+                    store_local: card.querySelector('.audio-store-local-input')?.checked || false,
+                    assign_test_button: assignTest,
+                    test_audio_button_number: assignTest ? (parseInt(card.querySelector('.audio-button-number-input')?.value) || 1) : null,
+                    test_audio_button_label: assignTest ? (card.querySelector('.audio-button-label-input')?.value?.trim() || code) : null
                 });
             });
         }
@@ -2310,8 +2326,11 @@ const app = {
         }
         
         this.config.services.audio = {
+            stream_server_ip: serverIp ? serverIp.value : '192.168.1.100',
+            stream_server_port: serverPort ? parseInt(serverPort.value) : 8090,
             media_service: mediaService ? mediaService.value : 'media_player.living_room',
             pa_zones: this.config.services.audio?.pa_zones || [],
+            eq_enabled: eqEnabled ? eqEnabled.checked : false,
             audio_dictionary: entries,
             eq: eqBands
         };
@@ -2334,8 +2353,24 @@ const app = {
             card.querySelector('.widget-number').textContent = `#${index + 1}`;
             card.querySelector('.audio-code-input').value = entry.audio_code || '';
             card.querySelector('.audio-filename-input').value = entry.filename || '';
+            card.querySelector('.audio-store-local-input').checked = entry.store_local || false;
+            
+            const assignTest = entry.assign_test_button || false;
+            card.querySelector('.audio-assign-test-input').checked = assignTest;
             card.querySelector('.audio-button-number-input').value = entry.test_audio_button_number || 1;
             card.querySelector('.audio-button-label-input').value = entry.test_audio_button_label || '';
+            
+            // Set test button row state
+            const testRow = card.querySelector('.audio-test-button-row');
+            if (testRow) {
+                if (assignTest) {
+                    testRow.style.opacity = '1';
+                    testRow.style.pointerEvents = 'auto';
+                } else {
+                    testRow.style.opacity = '0.5';
+                    testRow.style.pointerEvents = 'none';
+                }
+            }
             
             list.appendChild(card);
         });
@@ -2399,6 +2434,80 @@ const app = {
                 });
             }
         }
+    },
+    
+    // Toggle test button fields based on checkbox
+    toggleTestButtonFields(checkbox) {
+        const card = checkbox.closest('.widget-card');
+        if (!card) return;
+        const testRow = card.querySelector('.audio-test-button-row');
+        if (!testRow) return;
+        if (checkbox.checked) {
+            testRow.style.opacity = '1';
+            testRow.style.pointerEvents = 'auto';
+        } else {
+            testRow.style.opacity = '0.5';
+            testRow.style.pointerEvents = 'none';
+        }
+    },
+    
+    // Audio file browser
+    _audioFileTargetInput: null,
+    
+    openAudioFileBrowser(button) {
+        const card = button.closest('.widget-card');
+        if (!card) return;
+        this._audioFileTargetInput = card.querySelector('.audio-filename-input');
+        document.getElementById('audio-file-modal').style.display = 'flex';
+        this.refreshAudioFiles();
+    },
+    
+    closeAudioFileModal() {
+        document.getElementById('audio-file-modal').style.display = 'none';
+        this._audioFileTargetInput = null;
+    },
+    
+    async refreshAudioFiles() {
+        const list = document.getElementById('audio-file-list');
+        const directory = document.getElementById('audio-file-directory')?.value || '/local/audio';
+        if (!list) return;
+        list.innerHTML = '<p class="text-muted">Loading audio files...</p>';
+        
+        try {
+            const response = await fetch(`/api/audio/files?directory=${encodeURIComponent(directory)}`);
+            const data = await response.json();
+            
+            if (!data.success || !data.files || data.files.length === 0) {
+                list.innerHTML = '<p class="text-muted">No audio files found</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            data.files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'staging-file-item';
+                item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); cursor: pointer; margin-bottom: 8px;';
+                item.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-music" style="color: var(--info);"></i>
+                        <span>${file}</span>
+                    </div>
+                    <button class="btn btn-sm btn-primary">Select</button>
+                `;
+                item.addEventListener('click', () => this.selectAudioFile(file));
+                list.appendChild(item);
+            });
+        } catch (err) {
+            console.error('Failed to load audio files:', err);
+            list.innerHTML = '<p class="text-muted">Error loading audio files</p>';
+        }
+    },
+    
+    selectAudioFile(filename) {
+        if (this._audioFileTargetInput) {
+            this._audioFileTargetInput.value = filename;
+        }
+        this.closeAudioFileModal();
     },
     
     // =============================================================================

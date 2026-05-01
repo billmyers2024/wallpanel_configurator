@@ -601,6 +601,18 @@ ART3_SCHEMA = {
 AUDIO_SERVICE_SCHEMA = {
     "type": "object",
     "properties": {
+        "stream_server_ip": {
+            "type": "string",
+            "default": "192.168.1.100",
+            "description": "Audio streaming server IP address"
+        },
+        "stream_server_port": {
+            "type": "integer",
+            "default": 8090,
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Audio streaming server port"
+        },
         "media_service": {
             "type": "string",
             "default": "media_player.living_room",
@@ -612,6 +624,11 @@ AUDIO_SERVICE_SCHEMA = {
             "default": [],
             "description": "Public address zone names"
         },
+        "eq_enabled": {
+            "type": "boolean",
+            "default": False,
+            "description": "Enable parametric EQ globally"
+        },
         "audio_dictionary": {
             "type": "array",
             "items": {
@@ -619,11 +636,22 @@ AUDIO_SERVICE_SCHEMA = {
                 "properties": {
                     "audio_code": {
                         "type": "string",
-                        "description": "Code identifier: fire_alarm_audio, intruder_alarm, person_at_door, intercom_paging_tone"
+                        "enum": ["", "Intruder", "Doorbell_1", "Doorbell_2", "Alarm_1", "Alarm_2", "Alarm_3", "Visitor", "Fire", "Page_tone", "PA_tone", "VA_tone", "Reminder_1", "Reminder_2"],
+                        "description": "Audio code identifier"
                     },
                     "filename": {
                         "type": "string",
                         "description": "WAV filename for the audio segment"
+                    },
+                    "store_local": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Store file in PSRAM instead of streaming"
+                    },
+                    "assign_test_button": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "Assign this entry to a test button"
                     },
                     "test_audio_button_number": {
                         "type": "integer",
@@ -1297,6 +1325,48 @@ def list_art_images():
         })
     except Exception as e:
         logger.error(f"Failed to list images: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/audio/files', methods=['GET'])
+def list_audio_files():
+    """List audio files in the specified directory"""
+    directory = request.args.get('directory', '/local/audio')
+    
+    # Convert /local/audio to /config/www/audio path
+    if directory.startswith('/local/'):
+        dir_name = directory[7:]  # Remove '/local/'
+        audio_path = Path('/config/www') / dir_name
+    else:
+        audio_path = Path('/config/www') / directory.strip('/')
+    
+    # Security: Ensure path is within /config/www
+    try:
+        audio_path = audio_path.resolve()
+        www_path = Path('/config/www').resolve()
+        if not str(audio_path).startswith(str(www_path)):
+            return jsonify({"error": "Invalid directory path"}), 403
+    except Exception as e:
+        return jsonify({"error": f"Invalid path: {str(e)}"}), 400
+    
+    # Create directory if it doesn't exist
+    audio_path.mkdir(parents=True, exist_ok=True)
+    
+    # List audio files
+    try:
+        files = []
+        for ext in ['*.wav', '*.mp3', '*.ogg', '*.flac']:
+            files.extend([f.name for f in audio_path.glob(ext)])
+        files.sort()
+        
+        return jsonify({
+            "success": True,
+            "directory": directory,
+            "path": str(audio_path),
+            "files": files
+        })
+    except Exception as e:
+        logger.error(f"Failed to list audio files: {e}")
         return jsonify({"error": str(e)}), 500
 
 

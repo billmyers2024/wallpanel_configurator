@@ -154,7 +154,8 @@
                                 <i class="fas fa-info-circle"></i> Configure cameras here, then reference them in device CCTV widgets
                             </div>
                             
-                            <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                            <div class="service-divider"></div>
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
                                 Cameras <button class="btn btn-sm btn-primary" onclick="app.addCamera()" style="margin-left: 10px;"><i class="fas fa-plus"></i> Add Camera</button>
                             </h4>
                             <div id="cameras-list" class="widget-list">
@@ -162,7 +163,8 @@
                             </div>
                             
                             <!-- Weather Service Configuration -->
-                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                            <div class="service-divider"></div>
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
                                 Weather Service
                             </h4>
                             <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
@@ -296,11 +298,22 @@
                             </div>
                             
                             <!-- Audio Service Configuration -->
-                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                            <div class="service-divider"></div>
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
                                 Audio Service
                             </h4>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(34,197,94,0.1);border-left:3px solid var(--success);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
                                 <i class="fas fa-info-circle"></i> Configure audio dictionary for streaming and test playback.
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Audio Server IP</label>
+                                    <input type="text" id="audio-server-ip" class="input" value="192.168.1.100" placeholder="192.168.1.100">
+                                </div>
+                                <div class="form-group">
+                                    <label>Audio Server Port</label>
+                                    <input type="number" id="audio-server-port" class="input" value="8090" min="1" max="65535">
+                                </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -326,18 +339,24 @@
                             <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
                                 Parametric EQ (6 Bands)
                             </h5>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
-                                <i class="fas fa-info-circle"></i> Configure up to 6 parametric EQ bands. Applied to all audio playback.
+                            <div class="form-row checkbox-row-left">
+                                <div class="form-group checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="audio-eq-enabled">
+                                        <span>Enable Parametric EQ</span>
+                                    </label>
+                                </div>
                             </div>
                             <div id="audio-eq-list" class="widget-list">
                                 <!-- EQ bands populated by JS -->
                             </div>
                             
                             <!-- Slideshow Service Configuration -->
-                            <h4 style="margin-top: 30px; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
+                            <div class="service-divider"></div>
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-muted); font-size: 14px;">
                                 Slideshow Service
                             </h4>
-                            <div class="widget-info" style="padding:8px 12px;background:rgba(168,85,247,0.1);border-left:3px solid var(--secondary);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
                                 <i class="fas fa-info-circle"></i> Site-wide synchronized slideshow. Configure server and manage playlist.
                             </div>
                             <div class="form-row">
@@ -973,6 +992,31 @@
             </div>
         </div>
 
+        <!-- Audio File Browser Modal -->
+        <div id="audio-file-modal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-folder-open"></i> Select Audio File</h3>
+                    <button class="btn-close" onclick="app.closeAudioFileModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label>Directory</label>
+                        <select id="audio-file-directory" class="input" onchange="app.refreshAudioFiles()">
+                            <option value="/local/audio">/local/audio</option>
+                            <option value="/local/www/audio">/local/www/audio</option>
+                            <option value="/config/www/audio">/config/www/audio</option>
+                        </select>
+                    </div>
+                    <div id="audio-file-list" class="staging-files-list">
+                        <p class="text-muted">Loading audio files...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="app.closeAudioFileModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
 
     </div>
 
@@ -1711,17 +1755,58 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Audio Code</label>
-                        <input type="text" class="input audio-code-input" placeholder="fire_alarm_audio">
+                        <select class="input audio-code-input">
+                            <option value="">None</option>
+                            <option value="Intruder">Intruder</option>
+                            <option value="Doorbell_1">Doorbell_1</option>
+                            <option value="Doorbell_2">Doorbell_2</option>
+                            <option value="Alarm_1">Alarm_1</option>
+                            <option value="Alarm_2">Alarm_2</option>
+                            <option value="Alarm_3">Alarm_3</option>
+                            <option value="Visitor">Visitor</option>
+                            <option value="Fire">Fire</option>
+                            <option value="Page_tone">Page_tone</option>
+                            <option value="PA_tone">PA_tone</option>
+                            <option value="VA_tone">VA_tone</option>
+                            <option value="Reminder_1">Reminder_1</option>
+                            <option value="Reminder_2">Reminder_2</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Filename</label>
-                        <input type="text" class="input audio-filename-input" placeholder="fire_alarm.wav">
+                        <div class="input-with-action">
+                            <input type="text" class="input audio-filename-input" placeholder="fire_alarm.wav">
+                            <button class="btn btn-sm btn-secondary" onclick="app.openAudioFileBrowser(this)">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
+                <div class="form-row checkbox-row-left">
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="audio-store-local-input">
+                            <span>Store Local (PSRAM)</span>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="audio-assign-test-input" onchange="app.toggleTestButtonFields(this)">
+                            <span>Assign to Test Button</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row audio-test-button-row" style="opacity: 0.5; pointer-events: none;">
                     <div class="form-group">
-                        <label>Test Button Number (1-6)</label>
-                        <input type="number" class="input audio-button-number-input" value="1" min="1" max="6">
+                        <label>Test Button</label>
+                        <select class="input audio-button-number-input">
+                            <option value="1">Button 1</option>
+                            <option value="2">Button 2</option>
+                            <option value="3">Button 3</option>
+                            <option value="4">Button 4</option>
+                            <option value="5">Button 5</option>
+                            <option value="6">Button 6</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Test Button Label</label>
