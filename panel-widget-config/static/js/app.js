@@ -2296,9 +2296,9 @@ const app = {
         if (container) {
             const cards = container.querySelectorAll('.widget-card');
             cards.forEach(card => {
-                const code = card.querySelector('.audio-code-input')?.value?.trim();
+                const code = card.querySelector('.audio-code-input')?.value?.trim() || '';
                 const filename = card.querySelector('.audio-filename-input')?.value?.trim();
-                if (!code || !filename) return;
+                if (!filename) return;
                 
                 const assignTest = card.querySelector('.audio-assign-test-input')?.checked || false;
                 
