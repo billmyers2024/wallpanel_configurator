@@ -1756,6 +1756,7 @@ const app = {
     // Render widget types sidebar
     renderWidgetTypes() {
         const container = document.getElementById('widget-types');
+        if (!container) return;
         container.innerHTML = '';
         
         // MDI Icon SVG paths
