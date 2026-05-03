@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.60
+
+### Fixed
+- **HA State Length Limit**: Bands JSON (~400 chars) exceeded HA's 255-character state limit, causing 400 Bad Request on "Send to Panel"
+  - Bands are now written to a sensor **attribute** (`bands`) instead of the state value
+  - State value is the profile name (short, always under 255 chars)
+  - Firmware reads from the `bands` attribute via `subscribe_home_assistant_state(entity, "bands", callback)`
+  - Controller reads `attributes.bands` from the HA state API response
+- **Debug Logging**: Added backend logging for each sensor write to help diagnose future issues
+
 ## 1.7.59
 
 ### Added

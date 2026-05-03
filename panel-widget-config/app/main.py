@@ -1494,6 +1494,8 @@ def send_eq_to_device(device_id):
     ]
 
     # Write to HA sensors
+    # Note: bands JSON is stored as a sensor attribute (unlimited size),
+    # not as the state value (255 char limit)
     errors = []
 
     success, err = call_ha_state_write(
@@ -1502,6 +1504,7 @@ def send_eq_to_device(device_id):
     )
     if not success:
         errors.append(f"active_profile: {err}")
+        logger.warning(f"EQ write failed for {device_id} active_profile: {err}")
 
     success, err = call_ha_state_write(
         f"binary_sensor.{entity_base}_eq_enabled",
@@ -1509,17 +1512,22 @@ def send_eq_to_device(device_id):
     )
     if not success:
         errors.append(f"enabled: {err}")
+        logger.warning(f"EQ write failed for {device_id} enabled: {err}")
 
+    bands_json = json.dumps(bands_clean)
     success, err = call_ha_state_write(
         f"sensor.{entity_base}_eq_bands",
-        json.dumps(bands_clean)
+        profile,  # state = profile name (short)
+        {"bands": bands_json}  # attribute = full JSON (unlimited)
     )
     if not success:
         errors.append(f"bands: {err}")
+        logger.warning(f"EQ write failed for {device_id} bands: {err}")
 
     if errors:
         return jsonify({"error": "; ".join(errors)}), 503
 
+    logger.info(f"EQ sent to {device_id} — profile={profile}, enabled={eq_enabled}, bands={len(bands)}")
     return jsonify({
         "success": True,
         "message": f"EQ sent to {device_id} — profile: {profile}, enabled: {eq_enabled}, {len(bands)} bands"

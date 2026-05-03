@@ -198,12 +198,13 @@ const controller = {
                 document.getElementById('eq-master-enable').checked = this.eqEnabled;
             }
 
-            // Read bands for the active profile
+            // Read bands for the active profile (from 'bands' attribute)
             const bandsResp = await fetch(`./api/ha_state/sensor.${base}_eq_bands`);
             const bandsData = await bandsResp.json();
-            if (bandsData.success && bandsData.state) {
+            const bandsAttr = bandsData.attributes?.bands;
+            if (bandsData.success && bandsAttr) {
                 try {
-                    const bands = JSON.parse(bandsData.state);
+                    const bands = JSON.parse(bandsAttr);
                     if (Array.isArray(bands) && bands.length > 0) {
                         this.profiles[this.activeProfile].bands = bands.map((b, i) => ({
                             band: i,
@@ -215,7 +216,7 @@ const controller = {
                         }));
                     }
                 } catch (e) {
-                    console.warn('Failed to parse HA bands state:', e);
+                    console.warn('Failed to parse HA bands attribute:', e);
                 }
             }
 
