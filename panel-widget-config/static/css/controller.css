@@ -29,7 +29,7 @@ body {
 }
 
 .app-container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -115,6 +115,141 @@ body {
 
 .btn-secondary:hover {
     background: var(--border-color);
+}
+
+/* Controller Layout: Sidebar + Content */
+.controller-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Facility Sidebar */
+.facility-sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 16px 0;
+}
+
+.facility-header {
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+.facility-header h3 {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+}
+
+.facility-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.facility-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.facility-item:hover {
+    background: rgba(68, 136, 255, 0.08);
+}
+
+.facility-item.active {
+    background: rgba(68, 136, 255, 0.12);
+    border-left-color: var(--accent-blue);
+    color: var(--accent-cyan);
+}
+
+.facility-item.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.facility-item.disabled:hover {
+    background: transparent;
+}
+
+.facility-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Facility Content */
+.facility-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.facility-panel {
+    display: none;
+}
+
+.facility-panel.active {
+    display: block;
+}
+
+/* Placeholder panels */
+.placeholder-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 40px;
+    text-align: center;
+}
+
+.placeholder-panel i {
+    font-size: 48px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.placeholder-panel h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.placeholder-panel p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    max-width: 400px;
+}
+
+.coming-soon {
+    display: inline-block;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
 }
 
 /* Device Section */
@@ -433,6 +568,35 @@ body {
         flex-direction: column;
         gap: 12px;
         text-align: center;
+    }
+
+    .controller-layout {
+        flex-direction: column;
+    }
+
+    .facility-sidebar {
+        width: 100%;
+    }
+
+    .facility-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0 8px;
+    }
+
+    .facility-item {
+        flex: 1;
+        min-width: 120px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 6px;
+        justify-content: center;
+    }
+
+    .facility-item.active {
+        border-left-color: transparent;
+        border-bottom-color: var(--accent-blue);
     }
 
     .bands-container {

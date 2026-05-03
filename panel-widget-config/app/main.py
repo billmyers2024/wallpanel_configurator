@@ -695,6 +695,12 @@ AUDIO_SERVICE_SCHEMA = {
 
 
 @app.route('/')
+def landing():
+    """Landing page - choose Configurator or Controller"""
+    return render_template('landing.html', version=ADDON_VERSION)
+
+
+@app.route('/configurator')
 def index():
     """Main configuration page"""
     return render_template('index.html', version=ADDON_VERSION)

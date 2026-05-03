@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.7.54
+
+### Added
+- **Landing Page**: New root `/` page with two navigation cards: Configurator and Controller
+- **Controller Facility Sidebar**: Extensible sidebar with 7 facilities:
+  - Audio Equalizer (active)
+  - Music Control, Messages, HVAC Control, Access Control, Slideshow Control, System Status (coming soon)
+
+### Changed
+- **Add-on Metadata**: Sidebar title changed to "Smartpanel", description to "Smartpanel Management Interface"
+- **Configurator Route**: Moved from `/` to `/configurator` (landing page now at `/`)
+- **Navigation**: Added Home links on Configurator and Controller headers
+- **Ingress Compatibility**: Controller fetch URLs now use relative paths (`./api/...`)
+
 ## 1.7.52
 
 ### Added

@@ -1,7 +1,7 @@
 name: "Panel Widget Configurator"
-version: "1.7.52"
+version: "1.7.54"
 slug: "panel-widget-config"
-description: "Configure ESPHome panel widgets and control devices in real-time including parametric EQ, audio testing, and device management"
+description: "Smartpanel Management Interface"
 url: "https://github.com/billmyers2024/wallpanel_configurator"
 arch:
   - amd64
@@ -11,7 +11,7 @@ arch:
 init: false
 startup: system
 panel_icon: mdi:view-dashboard
-panel_title: "Widget Config"
+panel_title: "Smartpanel"
 ingress: true
 ingress_port: 8099
 ports:

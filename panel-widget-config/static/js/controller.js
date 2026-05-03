@@ -23,8 +23,35 @@ const controller = {
         this.initBands();
         this.loadDevices();
         this.setupEventListeners();
+        this.setupFacilitySwitching();
         this.renderBands();
         this.drawCanvas();
+    },
+
+    setupFacilitySwitching() {
+        const items = document.querySelectorAll('.facility-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.classList.contains('disabled')) return;
+                const facilityId = item.dataset.facility;
+                this.switchFacility(facilityId);
+            });
+        });
+    },
+
+    switchFacility(facilityId) {
+        // Update sidebar
+        document.querySelectorAll('.facility-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.facility === facilityId);
+        });
+        // Update panels
+        document.querySelectorAll('.facility-panel').forEach(el => {
+            el.classList.toggle('active', el.dataset.facility === facilityId);
+        });
+        // Redraw canvas if switching to EQ
+        if (facilityId === 'eq') {
+            this.drawCanvas();
+        }
     },
 
     initBands() {
@@ -41,7 +68,7 @@ const controller = {
 
     async loadDevices() {
         try {
-            const response = await fetch('/api/devices');
+            const response = await fetch('./api/devices');
             const data = await response.json();
             this.devices = data.devices || [];
             this.renderDeviceSelector();
@@ -463,7 +490,7 @@ const controller = {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
             const deviceId = this.selectedDevice.id;
-            const response = await fetch(`/api/device/${deviceId}/eq`, {
+            const response = await fetch(`./api/device/${deviceId}/eq`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
