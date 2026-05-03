@@ -700,6 +700,12 @@ def index():
     return render_template('index.html', version=ADDON_VERSION)
 
 
+@app.route('/controller')
+def controller():
+    """Smartpanel Controller - real-time device control"""
+    return render_template('controller.html', version=ADDON_VERSION)
+
+
 @app.route('/api/config', methods=['GET'])
 def get_config():
     """Get current configuration - loads LIVE config on startup"""
@@ -1287,6 +1293,77 @@ def widget_types():
             }
         ]
     })
+
+
+# =============================================================================
+# SMARTPANEL CONTROLLER - Device Communication Endpoints (via Home Assistant)
+# =============================================================================
+
+
+def call_ha_service(service_domain, service_name, service_data):
+    """Call a Home Assistant service via REST API"""
+    if not RUNNING_IN_HA or not HA_TOKEN:
+        return False, "Not running in Home Assistant mode"
+    try:
+        response = requests.post(
+            f'{HA_API}/services/{service_domain}/{service_name}',
+            headers=get_headers(),
+            json=service_data,
+            timeout=10
+        )
+        if response.status_code in (200, 201):
+            return True, None
+        else:
+            return False, f"HA returned {response.status_code}: {response.text}"
+    except requests.exceptions.RequestException as e:
+        return False, str(e)
+
+
+@app.route('/api/devices', methods=['GET'])
+def get_devices():
+    """Get list of configured devices from live config"""
+    if LIVE_CONFIG.exists():
+        try:
+            with open(LIVE_CONFIG, 'r') as f:
+                config = json.load(f)
+            devices = config.get('devices', [])
+            return jsonify({
+                "devices": [
+                    {
+                        "name": d.get('name', 'Unknown'),
+                        "id": d.get('id', ''),
+                        "ip": d.get('ip', ''),
+                        "room": d.get('room', '')
+                    }
+                    for d in devices
+                ]
+            })
+        except Exception as e:
+            logger.error(f"Failed to load devices: {e}")
+    return jsonify({"devices": []})
+
+
+@app.route('/api/device/<device_id>/eq', methods=['POST'])
+def send_eq_to_device(device_id):
+    """Send EQ settings to a panel via Home Assistant service call.
+    Payload: {eq_enabled: bool, bands: [{band, type, freq, q, gain_db}]}
+    """
+    data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid payload"}), 400
+
+    eq_payload = {
+        "eq_enabled": data.get('eq_enabled', False),
+        "bands": data.get('bands', [])
+    }
+
+    service_name = f"{device_id}_set_eq"
+    success, err = call_ha_service("esphome", service_name, {"eq_json": json.dumps(eq_payload)})
+
+    if not success:
+        return jsonify({"error": f"Failed to call HA service: {err}"}), 503
+
+    return jsonify({"success": True, "message": f"EQ sent to {device_id}"})
 
 
 # =============================================================================

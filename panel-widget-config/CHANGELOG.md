@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.7.52
+
+### Added
+- **Smartpanel Controller**: New real-time control interface at `/controller`
+  - Parametric EQ designer with 6 bands (Peaking, Low/High Shelf, Low/High Pass)
+  - Real-time canvas visualization of EQ curve, reference response, and net response
+  - REW reference curve import (auto-normalizes absolute SPL exports)
+  - Device selector populated from live config
+  - "Send to Panel" pushes EQ settings via Home Assistant service calls
+  - Clean separation from Configurator via distinct UI and navigation
+- **Audio Test Widget (Firmware)**:
+  - Explicit 0 dB codec gain initialization on boot (with post-init retry) and page load
+  - Replaced gain slider with ±1 dB step buttons for precise adjustment
+  - Clean EOF detection for network audio streams (distinguishes from underrun)
+  - New HA API service `set_eq` for real-time EQ updates from Controller
+
+### Changed
+- **Backend**: Added `/controller` route, `/api/devices`, and `/api/device/<id>/eq` endpoints
+- **Frontend**: New `controller.html`, `controller.js`, and `controller.css` for EQ management
+
 ## 1.7.45
 
 ### Added
