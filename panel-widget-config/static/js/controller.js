@@ -781,6 +781,7 @@ const controller = {
             eq_enabled: this.eqEnabled,
             bands: this.bands.map(b => ({
                 band: b.band,
+                enabled: b.enabled,
                 type: b.type,
                 freq: b.freq,
                 q: b.q,
