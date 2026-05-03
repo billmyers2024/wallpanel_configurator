@@ -504,6 +504,8 @@ const app = {
                 this.currentDevice.ip = ip;
             }
         }
+        const esphomeName = document.getElementById('esphome-name');
+        if (esphomeName) this.currentDevice.esphome_name = esphomeName.value.trim();
         
         // Update new room config fields
         const presenceEntity = document.getElementById('presence-entity');
@@ -1863,6 +1865,8 @@ const app = {
         document.getElementById('device-name').value = this.currentDevice.name;
         document.getElementById('device-id').value = this.currentDevice.id;
         document.getElementById('device-ip').value = this.currentDevice.ip || '';
+        const esphomeName = document.getElementById('esphome-name');
+        if (esphomeName) esphomeName.value = this.currentDevice.esphome_name || '';
         
         // Set new room config fields
         const presenceEntity = document.getElementById('presence-entity');

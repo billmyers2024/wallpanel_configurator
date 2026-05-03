@@ -179,7 +179,8 @@ const controller = {
     async loadDeviceHaState() {
         if (!this.selectedDevice) return;
         const deviceId = this.selectedDevice.id;
-        const base = deviceId.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+        const esphomeName = this.selectedDevice.esphome_name;
+        const base = (esphomeName || deviceId).toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
 
         try {
             // Read active profile

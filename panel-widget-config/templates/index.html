@@ -444,6 +444,13 @@
                                     <input type="text" id="device-ip" class="input" placeholder="10.0.0.1">
                                 </div>
                             </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>ESPHome Device Name</label>
+                                    <input type="text" id="esphome-name" class="input" placeholder="esp32-p4-waveshare-1">
+                                    <small style="color: var(--text-muted);">Must match the ESPHome 'name:' in YAML. Used for live sensor subscriptions (EQ, etc.). Defaults to Device ID if empty.</small>
+                                </div>
+                            </div>
                             
                             <div class="form-row">
                                 <div class="form-group">
@@ -1991,7 +1998,7 @@
         </div>
     </div>
 
-    <script src="./static/js/app.js?v=3"></script>
+    <script src="./static/js/app.js?v=4"></script>
     <script>
         setTimeout(() => {
             const list = document.getElementById('alarm-panel-list');

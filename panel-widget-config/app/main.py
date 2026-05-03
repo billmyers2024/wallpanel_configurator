@@ -1386,7 +1386,8 @@ def get_devices():
                         "name": d.get('name', 'Unknown'),
                         "id": d.get('id', ''),
                         "ip": d.get('ip', ''),
-                        "room": d.get('room', '')
+                        "room": d.get('room', ''),
+                        "esphome_name": d.get('esphome_name', '')
                     }
                     for d in devices
                 ]
@@ -1476,7 +1477,17 @@ def send_eq_to_device(device_id):
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid payload"}), 400
 
+    # Look up device in config to get esphome_name if set
     entity_base = device_to_entity_base(device_id)
+    try:
+        config = load_config()
+        for d in config.get('devices', []):
+            if d.get('id', '') == device_id and d.get('esphome_name', '').strip():
+                entity_base = device_to_entity_base(d['esphome_name'].strip())
+                break
+    except Exception:
+        pass
+
     profile = data.get('profile', 'music')
     eq_enabled = data.get('eq_enabled', False)
     bands = data.get('bands', [])
