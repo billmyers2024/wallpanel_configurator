@@ -1372,6 +1372,62 @@ def send_eq_to_device(device_id):
     return jsonify({"success": True, "message": f"EQ sent to {device_id}"})
 
 
+@app.route('/api/config/eq', methods=['POST'])
+def save_eq_to_config():
+    """Save EQ settings to the live configuration file.
+    Payload: {eq_enabled: bool, bands: [{band, type, freq, q, gain_db}]}
+    Writes to services.audio.eq and services.audio.eq_enabled in site_settings.json
+    """
+    data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid payload"}), 400
+
+    if not LIVE_CONFIG.exists():
+        return jsonify({"error": "Live config not found"}), 404
+
+    try:
+        with open(LIVE_CONFIG, 'r') as f:
+            config = json.load(f)
+
+        # Ensure services.audio exists
+        if 'services' not in config:
+            config['services'] = {}
+        if 'audio' not in config['services']:
+            config['services']['audio'] = {}
+
+        # Update EQ settings (strip band index since config uses array order)
+        bands = data.get('bands', [])
+        config['services']['audio']['eq_enabled'] = data.get('eq_enabled', False)
+        config['services']['audio']['eq'] = [
+            {
+                'enabled': b.get('enabled', False),
+                'type': b.get('type', 'PEAK'),
+                'freq': b.get('freq', 1000),
+                'q': b.get('q', 1.0),
+                'gain_db': b.get('gain_db', 0.0)
+            }
+            for b in bands
+        ]
+
+        # Write back to live config
+        with open(LIVE_CONFIG, 'w') as f:
+            json.dump(config, f, indent=2)
+
+        logger.info(f"Saved EQ config to {LIVE_CONFIG}: {len(bands)} bands")
+        return jsonify({
+            "success": True,
+            "message": f"EQ saved to config ({len(bands)} bands)",
+            "live_path": str(LIVE_CONFIG)
+        })
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse live config: {e}")
+        return jsonify({"error": "Config file is corrupt"}), 500
+    except Exception as e:
+        logger.error(f"Failed to save EQ config: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 # =============================================================================
 # ART WIDGET - Image Management Endpoints
 # =============================================================================

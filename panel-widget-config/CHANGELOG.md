@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.58
+
+### Added
+- **Save to Config**: Controller EQ settings can now be saved back to `site_settings.json`
+  - New backend endpoint `POST /api/config/eq` updates `services.audio.eq` and `services.audio.eq_enabled`
+  - "Save to Config" button in the controller now persists EQ bands to the live configuration
+
 ## 1.7.57
 
 ### Added

@@ -695,8 +695,43 @@ const controller = {
 
     async saveEqToConfig() {
         this.updateBandFromUI();
-        this.showToast('Save to Config: not yet implemented', 'warning');
-        // Future: POST to /api/config/save with updated services.audio.eq
+
+        const payload = {
+            eq_enabled: this.eqEnabled,
+            bands: this.bands.map(b => ({
+                band: b.band,
+                type: b.type,
+                freq: b.freq,
+                q: b.q,
+                gain_db: b.gain_db
+            }))
+        };
+
+        try {
+            const btn = document.getElementById('btn-save-eq');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const response = await fetch('./api/config/eq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                this.showToast(data.message || 'EQ saved to config', 'success');
+            } else {
+                this.showToast(data.error || 'Failed to save EQ config', 'error');
+            }
+        } catch (error) {
+            this.showToast(`Network error: ${error.message}`, 'error');
+        } finally {
+            const btn = document.getElementById('btn-save-eq');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Save to Config';
+        }
     },
 
     // ========================================================================
