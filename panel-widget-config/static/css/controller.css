@@ -329,6 +329,28 @@ body {
     color: var(--text-primary);
 }
 
+.eq-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.eq-profile-select {
+    padding: 8px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.eq-profile-select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
 /* Toggle Switch */
 .toggle-switch {
     display: flex;

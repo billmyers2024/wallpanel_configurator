@@ -2277,7 +2277,10 @@ const app = {
         if (eqEnabled) eqEnabled.checked = audio.eq_enabled || false;
         
         this.renderAudioDictionary(audio.audio_dictionary || []);
-        this.renderAudioEQ(audio.eq || []);
+        
+        // Backward-compatible: read from eq_profiles.music if available, else legacy eq
+        const eqBands = audio.eq_profiles?.music?.bands || audio.eq || [];
+        this.renderAudioEQ(eqBands);
     },
     
     // Update audio service config from form
@@ -2330,15 +2333,27 @@ const app = {
             });
         }
         
+        // Preserve existing audio fields (audio_dictionary, eq_profiles, etc.)
+        const existingAudio = this.config.services.audio || {};
         this.config.services.audio = {
+            ...existingAudio,
             stream_server_ip: serverIp ? serverIp.value : '192.168.1.100',
             stream_server_port: serverPort ? parseInt(serverPort.value) : 8090,
             http_port: httpPort ? parseInt(httpPort.value) : 8050,
             media_service: mediaService ? mediaService.value : 'media_player.living_room',
-            pa_zones: this.config.services.audio?.pa_zones || [],
+            pa_zones: existingAudio.pa_zones || [],
             eq_enabled: eqEnabled ? eqEnabled.checked : false,
             audio_dictionary: entries,
             eq: eqBands
+        };
+        
+        // Also update eq_profiles.music for profile compatibility
+        if (!this.config.services.audio.eq_profiles) {
+            this.config.services.audio.eq_profiles = {};
+        }
+        this.config.services.audio.eq_profiles.music = {
+            enabled: eqEnabled ? eqEnabled.checked : false,
+            bands: eqBands
         };
     },
     

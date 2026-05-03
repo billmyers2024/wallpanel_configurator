@@ -81,11 +81,18 @@
                     <section class="eq-section">
                         <div class="eq-header">
                             <h2><i class="fas fa-wave-square"></i> Parametric EQ</h2>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="eq-master-enable">
-                                <span class="slider-toggle"></span>
-                                <span class="toggle-label">EQ On</span>
-                            </label>
+                            <div class="eq-header-controls">
+                                <select id="eq-profile-select" class="eq-profile-select">
+                                    <option value="music">Music</option>
+                                    <option value="intercom">Intercom</option>
+                                    <option value="pa">PA</option>
+                                </select>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="eq-master-enable">
+                                    <span class="slider-toggle"></span>
+                                    <span class="toggle-label">EQ On</span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- EQ Bands -->

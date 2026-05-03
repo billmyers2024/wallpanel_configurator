@@ -6,6 +6,12 @@ const controller = {
     devices: [],
     selectedDevice: null,
     eqEnabled: false,
+    activeProfile: 'music',
+    profiles: {
+        music:    { enabled: true, bands: [] },
+        intercom: { enabled: true, bands: [] },
+        pa:       { enabled: true, bands: [] }
+    },
     bands: [],
     referenceCurve: [],
     sampleRate: 48000,
@@ -21,11 +27,74 @@ const controller = {
         { id: 'HIGH_PASS', name: 'High Pass' }
     ],
 
-    init() {
-        this.initBands();
+    async init() {
+        await this.loadProfiles();
         this.loadDevices();
         this.setupEventListeners();
         this.setupFacilitySwitching();
+        this.applyProfileToUI();
+        this.renderBands();
+        this.drawCanvas();
+    },
+
+    async loadProfiles() {
+        try {
+            const response = await fetch('./api/eq_profiles');
+            const data = await response.json();
+            if (data.success) {
+                this.profiles = data.eq_profiles || this.profiles;
+                this.activeProfile = data.eq_active_profile || 'music';
+                this.eqEnabled = data.eq_enabled || false;
+                // Update profile select
+                const select = document.getElementById('eq-profile-select');
+                if (select) select.value = this.activeProfile;
+                // Update master enable
+                const enableCb = document.getElementById('eq-master-enable');
+                if (enableCb) enableCb.checked = this.eqEnabled;
+            }
+        } catch (error) {
+            console.error('Failed to load EQ profiles:', error);
+            // Fallback: init default bands for music profile
+            this.initDefaultBands();
+        }
+    },
+
+    initDefaultBands() {
+        const defaults = [
+            { band: 0, type: 'PEAK', freq: 505, q: 1.0, gain_db: -3.4, enabled: true },
+            { band: 1, type: 'PEAK', freq: 730, q: 1.0, gain_db: -9.5, enabled: true },
+            { band: 2, type: 'HIGH_SHELF', freq: 3000, q: 0.7, gain_db: -4.0, enabled: true },
+            { band: 3, type: 'PEAK', freq: 5000, q: 1.0, gain_db: -2.0, enabled: true },
+            { band: 4, type: 'PEAK', freq: 7000, q: 1.0, gain_db: -3.0, enabled: true },
+            { band: 5, type: 'LOW_SHELF', freq: 570, q: 0.5, gain_db: 8.9, enabled: true }
+        ];
+        this.profiles.music.bands = JSON.parse(JSON.stringify(defaults));
+        this.profiles.intercom.bands = JSON.parse(JSON.stringify(defaults));
+        this.profiles.pa.bands = JSON.parse(JSON.stringify(defaults));
+    },
+
+    applyProfileToUI() {
+        const profile = this.profiles[this.activeProfile];
+        if (profile && profile.bands) {
+            this.bands = JSON.parse(JSON.stringify(profile.bands));
+            this.eqEnabled = profile.enabled;
+        } else {
+            this.initDefaultBands();
+            this.bands = JSON.parse(JSON.stringify(this.profiles[this.activeProfile].bands));
+        }
+        const enableCb = document.getElementById('eq-master-enable');
+        if (enableCb) enableCb.checked = this.eqEnabled;
+    },
+
+    switchProfile(profileName) {
+        // Save current bands back to the outgoing profile
+        this.updateBandFromUI();
+        this.profiles[this.activeProfile].bands = JSON.parse(JSON.stringify(this.bands));
+        this.profiles[this.activeProfile].enabled = this.eqEnabled;
+
+        // Switch to new profile
+        this.activeProfile = profileName;
+        this.applyProfileToUI();
         this.renderBands();
         this.drawCanvas();
     },
@@ -56,18 +125,6 @@ const controller = {
         }
     },
 
-    initBands() {
-        // Default 6 bands matching the device's biquad chain
-        this.bands = [
-            { band: 0, type: 'PEAK', freq: 505, q: 1.0, gain_db: -3.4, enabled: true },
-            { band: 1, type: 'PEAK', freq: 730, q: 1.0, gain_db: -9.5, enabled: true },
-            { band: 2, type: 'HIGH_SHELF', freq: 3000, q: 0.7, gain_db: -4.0, enabled: true },
-            { band: 3, type: 'PEAK', freq: 5000, q: 1.0, gain_db: -2.0, enabled: true },
-            { band: 4, type: 'PEAK', freq: 7000, q: 1.0, gain_db: -3.0, enabled: true },
-            { band: 5, type: 'LOW_SHELF', freq: 570, q: 0.5, gain_db: 8.9, enabled: true }
-        ];
-    },
-
     async loadDevices() {
         try {
             const response = await fetch('./api/devices');
@@ -92,9 +149,16 @@ const controller = {
     },
 
     setupEventListeners() {
-        document.getElementById('device-select').addEventListener('change', (e) => {
+        document.getElementById('device-select').addEventListener('change', async (e) => {
             this.selectedDevice = this.devices.find(d => d.ip === e.target.value) || null;
             this.updateDeviceStatus();
+            if (this.selectedDevice) {
+                await this.loadDeviceHaState();
+            }
+        });
+
+        document.getElementById('eq-profile-select').addEventListener('change', (e) => {
+            this.switchProfile(e.target.value);
         });
 
         document.getElementById('eq-master-enable').addEventListener('change', (e) => {
@@ -110,6 +174,59 @@ const controller = {
         document.getElementById('ref-file-input').addEventListener('change', (e) => this.loadReferenceCurve(e));
 
         this.setupCanvasTooltip();
+    },
+
+    async loadDeviceHaState() {
+        if (!this.selectedDevice) return;
+        const deviceId = this.selectedDevice.id;
+        const base = deviceId.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+
+        try {
+            // Read active profile
+            const profileResp = await fetch(`./api/ha_state/sensor.${base}_eq_active_profile`);
+            const profileData = await profileResp.json();
+            if (profileData.success && ['music', 'intercom', 'pa'].includes(profileData.state)) {
+                this.activeProfile = profileData.state;
+                document.getElementById('eq-profile-select').value = this.activeProfile;
+            }
+
+            // Read enabled state
+            const enabledResp = await fetch(`./api/ha_state/binary_sensor.${base}_eq_enabled`);
+            const enabledData = await enabledResp.json();
+            if (enabledData.success) {
+                this.eqEnabled = enabledData.state === 'on';
+                document.getElementById('eq-master-enable').checked = this.eqEnabled;
+            }
+
+            // Read bands for the active profile
+            const bandsResp = await fetch(`./api/ha_state/sensor.${base}_eq_bands`);
+            const bandsData = await bandsResp.json();
+            if (bandsData.success && bandsData.state) {
+                try {
+                    const bands = JSON.parse(bandsData.state);
+                    if (Array.isArray(bands) && bands.length > 0) {
+                        this.profiles[this.activeProfile].bands = bands.map((b, i) => ({
+                            band: i,
+                            type: b.type || 'PEAK',
+                            freq: b.freq || 1000,
+                            q: b.q || 1.0,
+                            gain_db: b.gain_db || 0.0,
+                            enabled: b.enabled !== false
+                        }));
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse HA bands state:', e);
+                }
+            }
+
+            this.applyProfileToUI();
+            this.renderBands();
+            this.drawCanvas();
+            this.showToast('Loaded live EQ state from HA', 'info');
+        } catch (error) {
+            console.warn('Failed to load HA state:', error);
+            // Keep config defaults, don't show error toast
+        }
     },
 
     setupCanvasTooltip() {
@@ -654,8 +771,12 @@ const controller = {
         }
 
         this.updateBandFromUI();
+        // Save current bands back to active profile before sending
+        this.profiles[this.activeProfile].bands = JSON.parse(JSON.stringify(this.bands));
+        this.profiles[this.activeProfile].enabled = this.eqEnabled;
 
         const payload = {
+            profile: this.activeProfile,
             eq_enabled: this.eqEnabled,
             bands: this.bands.map(b => ({
                 band: b.band,
@@ -680,7 +801,7 @@ const controller = {
 
             const data = await response.json();
             if (response.ok && data.success) {
-                this.showToast(`EQ sent to ${this.selectedDevice.name}`, 'success');
+                this.showToast(`EQ sent to ${this.selectedDevice.name} — ${this.activeProfile}`, 'success');
             } else {
                 this.showToast(data.error || 'Failed to send EQ', 'error');
             }
@@ -695,16 +816,29 @@ const controller = {
 
     async saveEqToConfig() {
         this.updateBandFromUI();
+        // Save current bands back to active profile
+        this.profiles[this.activeProfile].bands = JSON.parse(JSON.stringify(this.bands));
+        this.profiles[this.activeProfile].enabled = this.eqEnabled;
+
+        // Build clean profile payload (strip band index)
+        const cleanProfiles = {};
+        for (const [name, prof] of Object.entries(this.profiles)) {
+            cleanProfiles[name] = {
+                enabled: prof.enabled,
+                bands: (prof.bands || []).map(b => ({
+                    enabled: b.enabled,
+                    type: b.type,
+                    freq: b.freq,
+                    q: b.q,
+                    gain_db: b.gain_db
+                }))
+            };
+        }
 
         const payload = {
             eq_enabled: this.eqEnabled,
-            bands: this.bands.map(b => ({
-                band: b.band,
-                type: b.type,
-                freq: b.freq,
-                q: b.q,
-                gain_db: b.gain_db
-            }))
+            eq_active_profile: this.activeProfile,
+            eq_profiles: cleanProfiles
         };
 
         try {
@@ -721,7 +855,7 @@ const controller = {
 
             const data = await response.json();
             if (response.ok && data.success) {
-                this.showToast(data.message || 'EQ saved to config', 'success');
+                this.showToast(data.message || 'EQ profiles saved to config', 'success');
             } else {
                 this.showToast(data.error || 'Failed to save EQ config', 'error');
             }

@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.7.59
+
+### Added
+- **EQ Profiles**: 3 profiles per panel — Music, Intercom, PA
+  - Controller: profile dropdown, each profile has its own 6-band EQ
+  - Backend: `GET /api/eq_profiles` loads profiles from config; `POST /api/device/<id>/eq` writes to HA sensors
+  - Configurator: preserves `eq_profiles` when saving audio service config
+- **HA Sensor-Based EQ Control**: Replaced ESPHome service calls with HA sensor writes
+  - `sensor.{device_id}_eq_active_profile` — current active profile
+  - `binary_sensor.{device_id}_eq_enabled` — EQ on/off
+  - `sensor.{device_id}_eq_bands` — JSON array of 6 bands
+  - Controller reads live HA state on device selection
+  - Panel firmware subscribes to sensors and updates biquads in real-time
+- **Firmware**: `subscribe_eq_sensors()` in `audio_test_widget.h`, profile storage, boot load from `site_settings.json`
+
+### Fixed
+- **Send to Panel 400 Error**: No longer depends on ESPHome service name matching; uses HA REST API sensor writes
+- **Audio Dictionary Preservation**: Configurator and controller saves merge EQ data instead of replacing entire `services.audio` object
+
 ## 1.7.58
 
 ### Added

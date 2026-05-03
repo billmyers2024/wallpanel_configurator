@@ -1325,6 +1325,53 @@ def call_ha_service(service_domain, service_name, service_data):
         return False, str(e)
 
 
+def call_ha_state_read(entity_id):
+    """Read a Home Assistant entity state via REST API"""
+    if not RUNNING_IN_HA or not HA_TOKEN:
+        return None, "Not running in Home Assistant mode"
+    try:
+        response = requests.get(
+            f'{HA_API}/states/{entity_id}',
+            headers=get_headers(),
+            timeout=10
+        )
+        if response.status_code == 200:
+            return response.json(), None
+        elif response.status_code == 404:
+            return None, f"Entity {entity_id} not found"
+        else:
+            return None, f"HA returned {response.status_code}: {response.text}"
+    except requests.exceptions.RequestException as e:
+        return None, str(e)
+
+
+def call_ha_state_write(entity_id, state, attributes=None):
+    """Write a Home Assistant entity state via REST API"""
+    if not RUNNING_IN_HA or not HA_TOKEN:
+        return False, "Not running in Home Assistant mode"
+    payload = {"state": state}
+    if attributes:
+        payload["attributes"] = attributes
+    try:
+        response = requests.post(
+            f'{HA_API}/states/{entity_id}',
+            headers=get_headers(),
+            json=payload,
+            timeout=10
+        )
+        if response.status_code in (200, 201):
+            return True, None
+        else:
+            return False, f"HA returned {response.status_code}: {response.text}"
+    except requests.exceptions.RequestException as e:
+        return False, str(e)
+
+
+def device_to_entity_base(device_id):
+    """Normalize device ID for use in HA entity IDs"""
+    return device_id.lower().replace(' ', '_').replace('-', '_')
+
+
 @app.route('/api/devices', methods=['GET'])
 def get_devices():
     """Get list of configured devices from live config"""
@@ -1349,34 +1396,141 @@ def get_devices():
     return jsonify({"devices": []})
 
 
+@app.route('/api/ha_state/<path:entity_id>', methods=['GET'])
+def get_ha_state(entity_id):
+    """Read current state of a Home Assistant entity"""
+    state_data, err = call_ha_state_read(entity_id)
+    if state_data is None:
+        return jsonify({"error": err or "Unknown error"}), 503 if err else 404
+    return jsonify({
+        "success": True,
+        "entity_id": state_data.get("entity_id"),
+        "state": state_data.get("state"),
+        "attributes": state_data.get("attributes", {})
+    })
+
+
+@app.route('/api/eq_profiles', methods=['GET'])
+def get_eq_profiles():
+    """Get EQ profiles from live config.
+    Returns: {eq_enabled, eq_active_profile, eq_profiles: {music, intercom, pa}}
+    Backward-compatible: migrates legacy 'eq' array to eq_profiles.music if needed.
+    """
+    if not LIVE_CONFIG.exists():
+        return jsonify({"error": "Live config not found"}), 404
+
+    try:
+        with open(LIVE_CONFIG, 'r') as f:
+            config = json.load(f)
+
+        audio = config.get('services', {}).get('audio', {})
+
+        # Backward compatibility: migrate legacy 'eq' to eq_profiles.music
+        if 'eq_profiles' not in audio and 'eq' in audio:
+            audio['eq_profiles'] = {
+                'music': {
+                    'enabled': audio.get('eq_enabled', False),
+                    'bands': audio.get('eq', [])
+                },
+                'intercom': {
+                    'enabled': True,
+                    'bands': []
+                },
+                'pa': {
+                    'enabled': True,
+                    'bands': []
+                }
+            }
+            audio['eq_active_profile'] = 'music'
+            # Save the migrated structure back
+            config['services']['audio'] = audio
+            with open(LIVE_CONFIG, 'w') as f:
+                json.dump(config, f, indent=2)
+
+        eq_profiles = audio.get('eq_profiles', {
+            'music': {'enabled': True, 'bands': []},
+            'intercom': {'enabled': True, 'bands': []},
+            'pa': {'enabled': True, 'bands': []}
+        })
+
+        return jsonify({
+            "success": True,
+            "eq_enabled": audio.get('eq_enabled', False),
+            "eq_active_profile": audio.get('eq_active_profile', 'music'),
+            "eq_profiles": eq_profiles
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to load EQ profiles: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/api/device/<device_id>/eq', methods=['POST'])
 def send_eq_to_device(device_id):
-    """Send EQ settings to a panel via Home Assistant service call.
-    Payload: {eq_enabled: bool, bands: [{band, type, freq, q, gain_db}]}
+    """Send EQ settings to a panel by writing HA sensors.
+    Payload: {profile: str, eq_enabled: bool, bands: [{enabled, type, freq, q, gain_db}]}
+    Writes to sensor.{device_id}_eq_bands, binary_sensor.{device_id}_eq_enabled,
+    and sensor.{device_id}_eq_active_profile.
     """
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid payload"}), 400
 
-    eq_payload = {
-        "eq_enabled": data.get('eq_enabled', False),
-        "bands": data.get('bands', [])
-    }
+    entity_base = device_to_entity_base(device_id)
+    profile = data.get('profile', 'music')
+    eq_enabled = data.get('eq_enabled', False)
+    bands = data.get('bands', [])
 
-    service_name = f"{device_id}_set_eq"
-    success, err = call_ha_service("esphome", service_name, {"eq_json": json.dumps(eq_payload)})
+    # Strip band index for sensor state
+    bands_clean = [
+        {
+            'enabled': b.get('enabled', False),
+            'type': b.get('type', 'PEAK'),
+            'freq': b.get('freq', 1000),
+            'q': b.get('q', 1.0),
+            'gain_db': b.get('gain_db', 0.0)
+        }
+        for b in bands
+    ]
 
+    # Write to HA sensors
+    errors = []
+
+    success, err = call_ha_state_write(
+        f"sensor.{entity_base}_eq_active_profile",
+        profile
+    )
     if not success:
-        return jsonify({"error": f"Failed to call HA service: {err}"}), 503
+        errors.append(f"active_profile: {err}")
 
-    return jsonify({"success": True, "message": f"EQ sent to {device_id}"})
+    success, err = call_ha_state_write(
+        f"binary_sensor.{entity_base}_eq_enabled",
+        "on" if eq_enabled else "off"
+    )
+    if not success:
+        errors.append(f"enabled: {err}")
+
+    success, err = call_ha_state_write(
+        f"sensor.{entity_base}_eq_bands",
+        json.dumps(bands_clean)
+    )
+    if not success:
+        errors.append(f"bands: {err}")
+
+    if errors:
+        return jsonify({"error": "; ".join(errors)}), 503
+
+    return jsonify({
+        "success": True,
+        "message": f"EQ sent to {device_id} — profile: {profile}, enabled: {eq_enabled}, {len(bands)} bands"
+    })
 
 
 @app.route('/api/config/eq', methods=['POST'])
 def save_eq_to_config():
-    """Save EQ settings to the live configuration file.
-    Payload: {eq_enabled: bool, bands: [{band, type, freq, q, gain_db}]}
-    Writes to services.audio.eq and services.audio.eq_enabled in site_settings.json
+    """Save EQ profile settings to the live configuration file.
+    Payload: {eq_enabled: bool, eq_active_profile: str, eq_profiles: {music: {enabled, bands}, ...}}
+    Merges EQ data into services.audio without destroying other audio fields.
     """
     data = request.get_json()
     if not isinstance(data, dict):
@@ -1395,28 +1549,25 @@ def save_eq_to_config():
         if 'audio' not in config['services']:
             config['services']['audio'] = {}
 
-        # Update EQ settings (strip band index since config uses array order)
-        bands = data.get('bands', [])
-        config['services']['audio']['eq_enabled'] = data.get('eq_enabled', False)
-        config['services']['audio']['eq'] = [
-            {
-                'enabled': b.get('enabled', False),
-                'type': b.get('type', 'PEAK'),
-                'freq': b.get('freq', 1000),
-                'q': b.get('q', 1.0),
-                'gain_db': b.get('gain_db', 0.0)
-            }
-            for b in bands
-        ]
+        audio = config['services']['audio']
+
+        # Merge EQ profile data (preserve all other audio fields)
+        if 'eq_enabled' in data:
+            audio['eq_enabled'] = data['eq_enabled']
+        if 'eq_active_profile' in data:
+            audio['eq_active_profile'] = data['eq_active_profile']
+        if 'eq_profiles' in data:
+            audio['eq_profiles'] = data['eq_profiles']
 
         # Write back to live config
         with open(LIVE_CONFIG, 'w') as f:
             json.dump(config, f, indent=2)
 
-        logger.info(f"Saved EQ config to {LIVE_CONFIG}: {len(bands)} bands")
+        profile_count = len(data.get('eq_profiles', {}))
+        logger.info(f"Saved EQ profiles to {LIVE_CONFIG}: {profile_count} profiles")
         return jsonify({
             "success": True,
-            "message": f"EQ saved to config ({len(bands)} bands)",
+            "message": f"EQ profiles saved ({profile_count} profiles)",
             "live_path": str(LIVE_CONFIG)
         })
 
