@@ -108,6 +108,129 @@ const controller = {
             document.getElementById('ref-file-input').click();
         });
         document.getElementById('ref-file-input').addEventListener('change', (e) => this.loadReferenceCurve(e));
+
+        this.setupCanvasTooltip();
+    },
+
+    setupCanvasTooltip() {
+        const canvas = document.getElementById('eq-canvas');
+        const tooltip = document.getElementById('eq-tooltip');
+        let savedImageData = null;
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+
+            // Only active inside the plot area (x >= 50, x <= width-10)
+            if (mouseX < 50 || mouseX > canvas.width - 10) {
+                tooltip.style.display = 'none';
+                if (savedImageData) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.putImageData(savedImageData, 0, 0);
+                    savedImageData = null;
+                }
+                return;
+            }
+
+            const freq = this.xToFreq(mouseX, canvas.width, 20, 20000);
+            if (freq < 20 || freq > 20000) {
+                tooltip.style.display = 'none';
+                return;
+            }
+
+            // Compute exact dB values at this frequency
+            const eqDb = this.evaluateEqAtFreq(freq);
+            const refDb = this.referenceCurve.length > 0 ? this.interpolateReference([freq])[0] : null;
+            const netDb = refDb !== null ? eqDb + refDb : eqDb;
+
+            // Build tooltip HTML
+            let html = `<div class="tt-freq">${freq >= 1000 ? (freq / 1000).toFixed(2) + ' kHz' : freq.toFixed(0) + ' Hz'}</div>`;
+            html += `<div class="tt-row"><span class="tt-label">EQ:</span><span class="tt-val tt-eq">${(eqDb > 0 ? '+' : '') + eqDb.toFixed(1)} dB</span></div>`;
+            if (refDb !== null) {
+                html += `<div class="tt-row"><span class="tt-label">Ref:</span><span class="tt-val tt-ref">${(refDb > 0 ? '+' : '') + refDb.toFixed(1)} dB</span></div>`;
+                html += `<div class="tt-row"><span class="tt-label">Net:</span><span class="tt-val tt-net">${(netDb > 0 ? '+' : '') + netDb.toFixed(1)} dB</span></div>`;
+            }
+            tooltip.innerHTML = html;
+
+            // Position tooltip near mouse but keep inside viewport
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let left = e.clientX + 16;
+            let top = e.clientY - 10;
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = e.clientX - tooltipRect.width - 16;
+            }
+            if (top + tooltipRect.height > window.innerHeight - 10) {
+                top = e.clientY - tooltipRect.height - 10;
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.style.display = 'block';
+
+            // Draw crosshair
+            const ctx = canvas.getContext('2d');
+            if (!savedImageData) {
+                savedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.putImageData(savedImageData, 0, 0);
+            }
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(mouseX, 0);
+            ctx.lineTo(mouseX, canvas.height - 30);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw dot on each active curve at this frequency
+            const plotYeq = this.dbToY(eqDb, canvas.height, this.dbMin, this.dbMax);
+            this.drawTooltipDot(ctx, mouseX, plotYeq, '#4488ff');
+            if (refDb !== null) {
+                const plotYref = this.dbToY(refDb, canvas.height, this.dbMin, this.dbMax);
+                const plotYnet = this.dbToY(netDb, canvas.height, this.dbMin, this.dbMax);
+                this.drawTooltipDot(ctx, mouseX, plotYref, '#888888');
+                this.drawTooltipDot(ctx, mouseX, plotYnet, '#00ff88');
+            }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+            if (savedImageData) {
+                const ctx = canvas.getContext('2d');
+                ctx.putImageData(savedImageData, 0, 0);
+                savedImageData = null;
+            }
+        });
+    },
+
+    drawTooltipDot(ctx, x, y, color) {
+        if (y < 0 || y > ctx.canvas.height) return;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    },
+
+    xToFreq(x, w, fMin, fMax) {
+        const t = (x - 50) / (w - 60);
+        return fMin * Math.pow(fMax / fMin, t);
+    },
+
+    evaluateEqAtFreq(freq) {
+        if (!this.eqEnabled) return 0;
+        let totalDb = 0;
+        this.bands.forEach(band => {
+            if (!band.enabled) return;
+            const coeffs = this.computeBiquadCoefficients(band.type, band.freq, band.q, band.gain_db);
+            totalDb += this.evaluateMagnitude(coeffs, freq, this.sampleRate);
+        });
+        return totalDb;
     },
 
     updateDeviceStatus() {

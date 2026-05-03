@@ -520,7 +520,52 @@ body {
     border-radius: 8px;
     background: #0f0f1a;
     border: 1px solid var(--border-color);
+    cursor: crosshair;
 }
+
+.eq-tooltip {
+    position: absolute;
+    display: none;
+    background: rgba(26, 26, 46, 0.95);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--text-primary);
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+    line-height: 1.6;
+}
+
+.eq-tooltip .tt-freq {
+    font-weight: 600;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+}
+
+.eq-tooltip .tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.eq-tooltip .tt-label {
+    color: var(--text-secondary);
+}
+
+.eq-tooltip .tt-val {
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.eq-tooltip .tt-eq { color: var(--accent-blue); }
+.eq-tooltip .tt-ref { color: #888888; }
+.eq-tooltip .tt-net { color: var(--accent-green); }
 
 /* Toast */
 #toast-container {

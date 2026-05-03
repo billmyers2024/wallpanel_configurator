@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.57
+
+### Added
+- **Canvas Tooltip**: Hover over the frequency response graph to see live readouts:
+  - Frequency (Hz / kHz)
+  - EQ dB at that frequency
+  - Reference dB and Net dB (when a reference curve is loaded)
+  - Vertical crosshair with coloured dots marking each curve intersection
+
 ## 1.7.56
 
 ### Changed
