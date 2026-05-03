@@ -1280,3 +1280,32 @@ select.input {
 .widget-card[data-type="art3"] .art3-checkbox-row .checkbox-label {
     margin-left: 0;
 }
+
+/* EQ Profile Tabs */
+.eq-profile-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.eq-profile-tab {
+    background: var(--card);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.eq-profile-tab:hover {
+    background: var(--card-hover);
+    color: var(--text);
+}
+
+.eq-profile-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}

@@ -340,13 +340,35 @@
 
                             <!-- EQ Configuration -->
                             <h5 style="margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px;">
-                                Parametric EQ (6 Bands)
+                                Parametric EQ Profiles
                             </h5>
+                            <div class="widget-info" style="padding:8px 12px;background:rgba(59,130,246,0.1);border-left:3px solid var(--info);margin-bottom:12px;font-size:12px;color:var(--text-muted);">
+                                <i class="fas fa-info-circle"></i> Configure 3 EQ profiles. The active profile is selected at boot. Switch profiles in real-time via the Controller.
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Boot Active Profile</label>
+                                    <select id="audio-eq-active-profile" class="input">
+                                        <option value="music">Music</option>
+                                        <option value="intercom">Intercom</option>
+                                        <option value="pa">PA</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin-bottom: 12px;">
+                                <div class="form-group" style="flex: 1;">
+                                    <div class="eq-profile-tabs" style="display: flex; gap: 4px;">
+                                        <button type="button" class="btn btn-sm eq-profile-tab active" data-profile="music" onclick="app.switchEqProfile('music')">Music</button>
+                                        <button type="button" class="btn btn-sm eq-profile-tab" data-profile="intercom" onclick="app.switchEqProfile('intercom')">Intercom</button>
+                                        <button type="button" class="btn btn-sm eq-profile-tab" data-profile="pa" onclick="app.switchEqProfile('pa')">PA</button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-row checkbox-row-left" style="display: flex; justify-content: flex-start;">
                                 <div class="form-group checkbox-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="audio-eq-enabled">
-                                        <span>Enable Parametric EQ</span>
+                                        <span>Enable EQ for this profile</span>
                                     </label>
                                 </div>
                             </div>
@@ -1969,7 +1991,7 @@
         </div>
     </div>
 
-    <script src="./static/js/app.js?v=2"></script>
+    <script src="./static/js/app.js?v=3"></script>
     <script>
         setTimeout(() => {
             const list = document.getElementById('alarm-panel-list');

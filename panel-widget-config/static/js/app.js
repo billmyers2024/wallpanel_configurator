@@ -9,6 +9,14 @@ const app = {
     currentDeviceIndex: -1,
     widgetTypes: [],
     
+    // EQ Profile state (in-memory while editing)
+    currentEqProfile: 'music',
+    eqProfiles: {
+        music: { enabled: false, bands: [] },
+        intercom: { enabled: false, bands: [] },
+        pa: { enabled: false, bands: [] }
+    },
+    
     // Initialize
     init() {
         this.loadWidgetTypes();
@@ -2273,14 +2281,65 @@ const app = {
         const mediaService = document.getElementById('audio-media-service');
         if (mediaService) mediaService.value = audio.media_service || 'media_player.living_room';
         
-        const eqEnabled = document.getElementById('audio-eq-enabled');
-        if (eqEnabled) eqEnabled.checked = audio.eq_enabled || false;
-        
         this.renderAudioDictionary(audio.audio_dictionary || []);
         
-        // Backward-compatible: read from eq_profiles.music if available, else legacy eq
-        const eqBands = audio.eq_profiles?.music?.bands || audio.eq || [];
-        this.renderAudioEQ(eqBands);
+        // Load EQ profiles with backward compatibility
+        const defaultBands = Array(6).fill(null).map((_, i) => ({
+            enabled: i === 0,
+            type: 'PEAK',
+            freq: 1000,
+            q: 1.0,
+            gain_db: 0.0
+        }));
+        
+        if (audio.eq_profiles) {
+            // New format: load all 3 profiles
+            this.eqProfiles = {
+                music: {
+                    enabled: audio.eq_profiles.music?.enabled ?? audio.eq_enabled ?? false,
+                    bands: audio.eq_profiles.music?.bands?.length ? audio.eq_profiles.music.bands : (audio.eq?.length ? [...audio.eq] : JSON.parse(JSON.stringify(defaultBands)))
+                },
+                intercom: {
+                    enabled: audio.eq_profiles.intercom?.enabled ?? false,
+                    bands: audio.eq_profiles.intercom?.bands?.length ? audio.eq_profiles.intercom.bands : JSON.parse(JSON.stringify(defaultBands))
+                },
+                pa: {
+                    enabled: audio.eq_profiles.pa?.enabled ?? false,
+                    bands: audio.eq_profiles.pa?.bands?.length ? audio.eq_profiles.pa.bands : JSON.parse(JSON.stringify(defaultBands))
+                }
+            };
+        } else if (audio.eq?.length) {
+            // Legacy format: legacy eq -> music profile, others default
+            this.eqProfiles = {
+                music: {
+                    enabled: audio.eq_enabled ?? false,
+                    bands: [...audio.eq]
+                },
+                intercom: { enabled: false, bands: JSON.parse(JSON.stringify(defaultBands)) },
+                pa: { enabled: false, bands: JSON.parse(JSON.stringify(defaultBands)) }
+            };
+        } else {
+            // No EQ config at all
+            this.eqProfiles = {
+                music: { enabled: false, bands: JSON.parse(JSON.stringify(defaultBands)) },
+                intercom: { enabled: false, bands: JSON.parse(JSON.stringify(defaultBands)) },
+                pa: { enabled: false, bands: JSON.parse(JSON.stringify(defaultBands)) }
+            };
+        }
+        
+        // Set active profile dropdown
+        const activeProfileSelect = document.getElementById('audio-eq-active-profile');
+        if (activeProfileSelect) {
+            activeProfileSelect.value = audio.eq_active_profile || 'music';
+        }
+        
+        // Start editing music profile by default
+        this.currentEqProfile = 'music';
+        this.updateEqProfileTabs();
+        this.renderAudioEQ(this.eqProfiles.music.bands);
+        
+        const eqEnabled = document.getElementById('audio-eq-enabled');
+        if (eqEnabled) eqEnabled.checked = this.eqProfiles.music.enabled;
     },
     
     // Update audio service config from form
@@ -2293,7 +2352,7 @@ const app = {
         const serverPort = document.getElementById('audio-server-port');
         const httpPort = document.getElementById('audio-http-port');
         const mediaService = document.getElementById('audio-media-service');
-        const eqEnabled = document.getElementById('audio-eq-enabled');
+        const activeProfile = document.getElementById('audio-eq-active-profile');
         const entries = [];
         
         const container = document.getElementById('audio-dictionary-list');
@@ -2317,21 +2376,12 @@ const app = {
             });
         }
         
-        // Collect EQ bands
-        const eqBands = [];
-        const eqContainer = document.getElementById('audio-eq-list');
-        if (eqContainer) {
-            const cards = eqContainer.querySelectorAll('.widget-card');
-            cards.forEach(card => {
-                eqBands.push({
-                    enabled: card.querySelector('.eq-enabled-input')?.checked || false,
-                    type: card.querySelector('.eq-type-input')?.value || 'PEAK',
-                    freq: parseInt(card.querySelector('.eq-freq-input')?.value) || 1000,
-                    q: parseFloat(card.querySelector('.eq-q-input')?.value) || 1.0,
-                    gain_db: parseFloat(card.querySelector('.eq-gain-input')?.value) || 0.0
-                });
-            });
-        }
+        // Save current profile bands from form into memory
+        this.saveCurrentEqProfileFromForm();
+        
+        // Get the active profile's enabled state for legacy compatibility
+        const activeProfileName = activeProfile ? activeProfile.value : 'music';
+        const activeEnabled = this.eqProfiles[activeProfileName]?.enabled ?? false;
         
         // Preserve existing audio fields (audio_dictionary, eq_profiles, etc.)
         const existingAudio = this.config.services.audio || {};
@@ -2342,18 +2392,15 @@ const app = {
             http_port: httpPort ? parseInt(httpPort.value) : 8050,
             media_service: mediaService ? mediaService.value : 'media_player.living_room',
             pa_zones: existingAudio.pa_zones || [],
-            eq_enabled: eqEnabled ? eqEnabled.checked : false,
+            eq_active_profile: activeProfileName,
+            eq_enabled: activeEnabled,
             audio_dictionary: entries,
-            eq: eqBands
-        };
-        
-        // Also update eq_profiles.music for profile compatibility
-        if (!this.config.services.audio.eq_profiles) {
-            this.config.services.audio.eq_profiles = {};
-        }
-        this.config.services.audio.eq_profiles.music = {
-            enabled: eqEnabled ? eqEnabled.checked : false,
-            bands: eqBands
+            eq: this.eqProfiles.music.bands,  // Legacy compatibility
+            eq_profiles: {
+                music: { ...this.eqProfiles.music },
+                intercom: { ...this.eqProfiles.intercom },
+                pa: { ...this.eqProfiles.pa }
+            }
         };
     },
     
@@ -2394,6 +2441,61 @@ const app = {
             }
             
             list.appendChild(card);
+        });
+    },
+    
+    // Save current profile's bands from the form into memory
+    saveCurrentEqProfileFromForm() {
+        const eqEnabled = document.getElementById('audio-eq-enabled');
+        const eqContainer = document.getElementById('audio-eq-list');
+        const bands = [];
+        
+        if (eqContainer) {
+            const cards = eqContainer.querySelectorAll('.widget-card');
+            cards.forEach(card => {
+                bands.push({
+                    enabled: card.querySelector('.eq-enabled-input')?.checked || false,
+                    type: card.querySelector('.eq-type-input')?.value || 'PEAK',
+                    freq: parseInt(card.querySelector('.eq-freq-input')?.value) || 1000,
+                    q: parseFloat(card.querySelector('.eq-q-input')?.value) || 1.0,
+                    gain_db: parseFloat(card.querySelector('.eq-gain-input')?.value) || 0.0
+                });
+            });
+        }
+        
+        if (!this.eqProfiles[this.currentEqProfile]) {
+            this.eqProfiles[this.currentEqProfile] = { enabled: false, bands: [] };
+        }
+        this.eqProfiles[this.currentEqProfile].enabled = eqEnabled ? eqEnabled.checked : false;
+        this.eqProfiles[this.currentEqProfile].bands = bands;
+    },
+    
+    // Switch to editing a different EQ profile
+    switchEqProfile(profileName) {
+        if (profileName === this.currentEqProfile) return;
+        
+        // Save current profile's form data first
+        this.saveCurrentEqProfileFromForm();
+        
+        // Switch profile
+        this.currentEqProfile = profileName;
+        
+        // Update UI tabs
+        this.updateEqProfileTabs();
+        
+        // Load new profile's bands
+        const profile = this.eqProfiles[profileName] || { enabled: false, bands: [] };
+        this.renderAudioEQ(profile.bands);
+        
+        // Update enabled checkbox
+        const eqEnabled = document.getElementById('audio-eq-enabled');
+        if (eqEnabled) eqEnabled.checked = profile.enabled;
+    },
+    
+    // Update the visual state of EQ profile tabs
+    updateEqProfileTabs() {
+        document.querySelectorAll('.eq-profile-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.profile === this.currentEqProfile);
         });
     },
     
