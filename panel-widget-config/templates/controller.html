@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smartpanel Controller v{{ version }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/controller.css') }}">
+    <link rel="stylesheet" href="./static/css/controller.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -16,10 +16,10 @@
                 <span class="version">v{{ version }}</span>
             </div>
             <div class="header-right">
-                <a href="{{ url_for('landing') }}" class="btn btn-secondary">
+                <a href="./" class="btn btn-secondary">
                     <i class="fas fa-home"></i> Home
                 </a>
-                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <a href="./configurator" class="btn btn-secondary">
                     <i class="fas fa-cogs"></i> Configurator
                 </a>
             </div>
@@ -178,6 +178,6 @@
     <!-- Toast container -->
     <div id="toast-container"></div>
 
-    <script src="{{ url_for('static', filename='js/controller.js') }}"></script>
+    <script src="./static/js/controller.js"></script>
 </body>
 </html>

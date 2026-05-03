@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.55
+
+### Fixed
+- **Ingress Navigation**: All internal links now use relative paths (`./configurator`, `./controller`, `./`) so they work correctly under Home Assistant's ingress proxy
+- **Static Assets**: CSS and JS references in controller.html now use relative paths
+
 ## 1.7.54
 
 ### Added
