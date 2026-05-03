@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.56
+
+### Changed
+- **Canvas Height**: Frequency response panel increased from 400px to 600px (50% taller)
+- **Auto-Scale Y-Axis**: Graph now dynamically scales to fit the full vertical range of all visible data (reference curve, EQ curve, and net response) with smart padding and nice grid boundaries. No more clipping.
+
 ## 1.7.55
 
 ### Fixed

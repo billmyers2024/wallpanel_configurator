@@ -9,6 +9,8 @@ const controller = {
     bands: [],
     referenceCurve: [],
     sampleRate: 48000,
+    dbMin: -24,
+    dbMax: 24,
 
     // Filter type mapping
     filterTypes: [
@@ -298,6 +300,9 @@ const controller = {
         const refResponse = this.referenceCurve.length > 0 ? this.interpolateReference(freqs) : null;
         const netResponse = refResponse ? eqResponse.map((eq, i) => eq + refResponse[i]) : eqResponse;
 
+        // Auto-scale Y-axis to fit all visible data
+        this.autoScaleRange(eqResponse, refResponse, netResponse);
+
         // Clear
         ctx.fillStyle = '#1a1a2e';
         ctx.fillRect(0, 0, w, h);
@@ -319,14 +324,67 @@ const controller = {
         }
     },
 
+    autoScaleRange(eqResponse, refResponse, netResponse) {
+        // Collect all visible data points
+        let allValues = [...eqResponse];
+        if (refResponse) {
+            allValues = allValues.concat(refResponse);
+            allValues = allValues.concat(netResponse);
+        }
+
+        let dataMin = Math.min(...allValues);
+        let dataMax = Math.max(...allValues);
+
+        // If everything is flat at 0 dB (no EQ, no ref), use a sensible default
+        if (dataMin === 0 && dataMax === 0) {
+            this.dbMin = -6;
+            this.dbMax = 6;
+            return;
+        }
+
+        // Add padding (10% of range or 3 dB, whichever is larger)
+        const range = dataMax - dataMin;
+        const pad = Math.max(range * 0.1, 3);
+        let minVal = dataMin - pad;
+        let maxVal = dataMax + pad;
+
+        // Ensure minimum 12 dB of visible range for readability
+        if (maxVal - minVal < 12) {
+            const centre = (minVal + maxVal) / 2;
+            minVal = centre - 6;
+            maxVal = centre + 6;
+        }
+
+        // Choose a nice step size based on the range
+        const rawRange = maxVal - minVal;
+        let step;
+        if (rawRange <= 12) step = 2;
+        else if (rawRange <= 30) step = 5;
+        else if (rawRange <= 60) step = 10;
+        else step = 20;
+
+        // Round min down and max up to nice step boundaries
+        this.dbMin = Math.floor(minVal / step) * step;
+        this.dbMax = Math.ceil(maxVal / step) * step;
+    },
+
     drawGrid(ctx, w, h, fMin, fMax) {
         ctx.strokeStyle = '#333355';
         ctx.lineWidth = 1;
         ctx.font = '11px monospace';
         ctx.fillStyle = '#8888aa';
 
-        const dbMin = -24;
-        const dbMax = 24;
+        const dbMin = this.dbMin;
+        const dbMax = this.dbMax;
+        const range = dbMax - dbMin;
+
+        // Choose step to get ~8-10 horizontal grid lines
+        let step;
+        if (range <= 12) step = 2;
+        else if (range <= 20) step = 3;
+        else if (range <= 40) step = 5;
+        else if (range <= 80) step = 10;
+        else step = 20;
 
         // Vertical freq lines
         const freqTicks = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
@@ -340,7 +398,8 @@ const controller = {
         });
 
         // Horizontal dB lines
-        for (let db = dbMin; db <= dbMax; db += 6) {
+        const startDb = Math.ceil(dbMin / step) * step;
+        for (let db = startDb; db <= dbMax; db += step) {
             const y = this.dbToY(db, h, dbMin, dbMax);
             ctx.beginPath();
             ctx.moveTo(50, y);
@@ -351,8 +410,8 @@ const controller = {
     },
 
     drawCurve(ctx, w, h, freqs, response, color, width, dash) {
-        const dbMin = -24;
-        const dbMax = 24;
+        const dbMin = this.dbMin;
+        const dbMax = this.dbMax;
 
         ctx.strokeStyle = color;
         ctx.lineWidth = width;
@@ -363,7 +422,7 @@ const controller = {
         let started = false;
         freqs.forEach((f, i) => {
             const x = this.freqToX(f, w, 20, 20000);
-            const y = this.dbToY(response[i], 400, dbMin, dbMax);
+            const y = this.dbToY(response[i], h, dbMin, dbMax);
             if (!started) {
                 ctx.moveTo(x, y);
                 started = true;
