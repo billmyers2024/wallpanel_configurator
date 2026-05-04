@@ -1520,14 +1520,17 @@ def send_eq_to_device(device_id):
     ]
     bands_json = json.dumps(bands_clean)
 
+    service_data = {
+        'profile': profile,
+        'eq_enabled': eq_enabled,
+        'bands_json': bands_json
+    }
+    
+    logger.info(f"EQ service call: {service_name} for {device_id} with profile={profile}, enabled={eq_enabled}")
     success, err = call_ha_service(
         'esphome',
         service_name,
-        {
-            'profile': profile,
-            'enabled': eq_enabled,
-            'bands_json': bands_json
-        }
+        service_data
     )
 
     if not success:
