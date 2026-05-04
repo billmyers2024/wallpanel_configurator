@@ -1387,7 +1387,7 @@ def get_devices():
                         "id": d.get('id', ''),
                         "ip": d.get('ip', ''),
                         "room": d.get('room', ''),
-                        "esphome_name": d.get('esphome_name', '')
+                        "mac": d.get('mac', '')
                     }
                     for d in devices
                 ]
@@ -1476,19 +1476,29 @@ def send_eq_to_device(device_id):
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid payload"}), 400
 
-    # Look up device in config to get esphome_name if set
-    esphome_name = device_id
+    # Derive ESPHome entity base from MAC address
+    # MAC → last 6 hex chars (3 bytes) → smartpanel_{suffix}
+    def derive_entity_base(mac):
+        if not mac:
+            return device_to_entity_base(device_id)
+        clean = mac.lower().replace(':', '').replace('-', '')
+        suffix = clean[-6:] if len(clean) >= 6 else clean
+        if len(suffix) == 6 and all(c in '0123456789abcdef' for c in suffix):
+            return f"smartpanel_{suffix}"
+        return device_to_entity_base(device_id)
+
+    entity_base = derive_entity_base('')
     try:
         config = load_config()
         for d in config.get('devices', []):
-            if d.get('id', '') == device_id and d.get('esphome_name', '').strip():
-                esphome_name = d['esphome_name'].strip()
+            if d.get('id', '') == device_id:
+                entity_base = derive_entity_base(d.get('mac', ''))
                 break
     except Exception:
         pass
 
-    # ESPHome service name: dots replaced with underscores, then append _set_eq_profile
-    service_name = esphome_name.replace('.', '_').replace('-', '_') + '_set_eq_profile'
+    # ESPHome service name: entity_base + _set_eq_profile
+    service_name = entity_base + '_set_eq_profile'
 
     profile = data.get('profile', 'music')
     eq_enabled = data.get('eq_enabled', False)

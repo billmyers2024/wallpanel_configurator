@@ -37,6 +37,17 @@ const controller = {
         this.drawCanvas();
     },
 
+    // Derive ESPHome entity base from MAC (matches firmware name_add_mac_suffix)
+    deriveEntityBase(mac) {
+        if (!mac) return '';
+        const clean = mac.toLowerCase().replace(/[:\-]/g, '');
+        const suffix = clean.slice(-6);
+        if (suffix.length === 6 && /^[0-9a-f]+$/.test(suffix)) {
+            return `smartpanel_${suffix}`;
+        }
+        return '';
+    },
+
     async loadProfiles() {
         try {
             const response = await fetch('./api/eq_profiles');
@@ -179,8 +190,8 @@ const controller = {
     async loadDeviceHaState() {
         if (!this.selectedDevice) return;
         const deviceId = this.selectedDevice.id;
-        const esphomeName = this.selectedDevice.esphome_name;
-        const base = (esphomeName || deviceId).toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+        const mac = this.selectedDevice.mac;
+        const base = this.deriveEntityBase(mac) || deviceId.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
 
         try {
             // Read active profile

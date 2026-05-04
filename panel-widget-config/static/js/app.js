@@ -469,6 +469,109 @@ const app = {
         }
     },
     
+    // =========================================================================
+    // DEVICE PROVISIONING - Onboard new panel or replace failed unit
+    // =========================================================================
+    
+    showProvisionModal() {
+        document.getElementById('provision-modal').classList.add('active');
+        this.populateReplaceRoomDropdown();
+        this.toggleProvisionMode();
+    },
+    
+    closeProvisionModal() {
+        document.getElementById('provision-modal').classList.remove('active');
+        // Clear form
+        document.getElementById('provision-room-name').value = '';
+        document.getElementById('provision-device-id').value = '';
+        document.getElementById('provision-ip').value = '';
+        document.getElementById('provision-mac').value = '';
+        document.getElementById('provision-entity-base').value = '';
+        document.getElementById('provision-replace-select').value = '';
+    },
+    
+    populateReplaceRoomDropdown() {
+        const select = document.getElementById('provision-replace-select');
+        if (!select || !this.config?.devices) return;
+        select.innerHTML = '<option value="">Select a room...</option>' +
+            this.config.devices.map((d, i) => `<option value="${i}">${d.name} (${d.ip || 'no IP'})</option>`).join('');
+    },
+    
+    toggleProvisionMode() {
+        const mode = document.getElementById('provision-mode').value;
+        const newRoomSection = document.getElementById('provision-new-room');
+        const replaceSection = document.getElementById('provision-replace-room');
+        if (newRoomSection) newRoomSection.style.display = mode === 'new' ? 'block' : 'none';
+        if (replaceSection) replaceSection.style.display = mode === 'replace' ? 'block' : 'none';
+    },
+    
+    updateProvisionIdPreview() {
+        const nameInput = document.getElementById('provision-room-name');
+        const idInput = document.getElementById('provision-device-id');
+        if (!nameInput || !idInput) return;
+        const id = nameInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+        idInput.value = id;
+    },
+    
+    updateProvisionEntityPreview() {
+        const macInput = document.getElementById('provision-mac');
+        const baseInput = document.getElementById('provision-entity-base');
+        if (!macInput || !baseInput) return;
+        baseInput.value = this.deriveEntityBase(macInput.value.trim()) || '(enter valid MAC)';
+    },
+    
+    doProvisionDevice() {
+        const mode = document.getElementById('provision-mode').value;
+        const ip = document.getElementById('provision-ip').value.trim();
+        const mac = document.getElementById('provision-mac').value.trim();
+        
+        if (!this.validateIP(ip)) {
+            this.showToast('Invalid IP address', 'error');
+            return;
+        }
+        if (!this.deriveEntityBase(mac)) {
+            this.showToast('Invalid MAC address', 'error');
+            return;
+        }
+        
+        if (mode === 'new') {
+            const name = document.getElementById('provision-room-name').value.trim();
+            const id = document.getElementById('provision-device-id').value.trim();
+            if (!name || !id) {
+                this.showToast('Room name and device ID are required', 'error');
+                return;
+            }
+            
+            const device = {
+                name: name,
+                id: id,
+                ip: ip,
+                mac: mac,
+                widgets: {
+                    lights: [], covers: [], climate: [], climate2: [], tests: [], art: null
+                }
+            };
+            this.config.devices.push(device);
+            this.renderDeviceList();
+            this.selectDevice(this.config.devices.length - 1);
+            this.showToast(`Provisioned new room: ${name}`, 'success');
+        } else {
+            const replaceIndex = parseInt(document.getElementById('provision-replace-select').value);
+            if (isNaN(replaceIndex) || replaceIndex < 0 || replaceIndex >= this.config.devices.length) {
+                this.showToast('Select a room to replace', 'error');
+                return;
+            }
+            const oldDevice = this.config.devices[replaceIndex];
+            oldDevice.ip = ip;
+            oldDevice.mac = mac;
+            this.renderDeviceList();
+            this.selectDevice(replaceIndex);
+            this.showToast(`Replaced device in ${oldDevice.name}`, 'success');
+        }
+        
+        this.closeProvisionModal();
+    },
+    
     // Select device for editing
     selectDevice(index) {
         this.updateDeviceFromForm(); // Save current before switching
@@ -482,6 +585,23 @@ const app = {
     validateIP(ip) {
         const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         return ipRegex.test(ip);
+    },
+    
+    // Derive entity base from MAC address for ESPHome name_add_mac_suffix naming
+    deriveEntityBase(mac) {
+        if (!mac) return '';
+        const clean = mac.toLowerCase().replace(/[:\-]/g, '');
+        const suffix = clean.slice(-6);
+        if (suffix.length !== 6 || !/^[0-9a-f]+$/.test(suffix)) return '';
+        return `smartpanel_${suffix}`;
+    },
+    
+    updateEntityBasePreview() {
+        const macInput = document.getElementById('device-mac');
+        const preview = document.getElementById('entity-base-preview');
+        if (!macInput || !preview) return;
+        const base = this.deriveEntityBase(macInput.value.trim());
+        preview.value = base || '(enter valid MAC)';
     },
     
     // Update device from form data
@@ -504,8 +624,8 @@ const app = {
                 this.currentDevice.ip = ip;
             }
         }
-        const esphomeName = document.getElementById('esphome-name');
-        if (esphomeName) this.currentDevice.esphome_name = esphomeName.value.trim();
+        const deviceMac = document.getElementById('device-mac');
+        if (deviceMac) this.currentDevice.mac = deviceMac.value.trim();
         
         // Update new room config fields
         const presenceEntity = document.getElementById('presence-entity');
@@ -1865,8 +1985,9 @@ const app = {
         document.getElementById('device-name').value = this.currentDevice.name;
         document.getElementById('device-id').value = this.currentDevice.id;
         document.getElementById('device-ip').value = this.currentDevice.ip || '';
-        const esphomeName = document.getElementById('esphome-name');
-        if (esphomeName) esphomeName.value = this.currentDevice.esphome_name || '';
+        const deviceMac = document.getElementById('device-mac');
+        if (deviceMac) deviceMac.value = this.currentDevice.mac || '';
+        this.updateEntityBasePreview();
         
         // Set new room config fields
         const presenceEntity = document.getElementById('presence-entity');
