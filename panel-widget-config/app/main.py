@@ -1320,6 +1320,10 @@ def call_ha_service(service_domain, service_name, service_data):
         if response.status_code in (200, 201):
             return True, None
         else:
+            logger.error(f"HA service call failed: POST {HA_API}/services/{service_domain}/{service_name}")
+            logger.error(f"  Headers: {get_headers()}")
+            logger.error(f"  Payload: {json.dumps(service_data)}")
+            logger.error(f"  Response {response.status_code}: {response.text}")
             return False, f"HA returned {response.status_code}: {response.text}"
     except requests.exceptions.RequestException as e:
         return False, str(e)
@@ -1522,11 +1526,15 @@ def send_eq_to_device(device_id):
 
     service_data = {
         'profile': profile,
-        'eq_enabled': eq_enabled,
+        'enabled': eq_enabled,
         'bands_json': bands_json
     }
     
     logger.info(f"EQ service call: {service_name} for {device_id} with profile={profile}, enabled={eq_enabled}")
+    # Debug: log exact service call details
+    logger.info(f"EQ service call: domain=esphome, service={service_name}")
+    logger.info(f"EQ service data: {json.dumps(service_data)}")
+    
     success, err = call_ha_service(
         'esphome',
         service_name,
@@ -1595,6 +1603,115 @@ def save_eq_to_config():
     except Exception as e:
         logger.error(f"Failed to save EQ config: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# =============================================================================
+# DIAGNOSTIC ENDPOINTS
+# =============================================================================
+
+@app.route('/api/debug/esphome-services', methods=['GET'])
+def debug_esphome_services():
+    """List all ESPHome services registered in HA"""
+    if not RUNNING_IN_HA or not HA_TOKEN:
+        return jsonify({"error": "Not running in HA mode"}), 503
+    try:
+        response = requests.get(
+            f'{HA_API}/services',
+            headers=get_headers(),
+            timeout=10
+        )
+        if response.status_code != 200:
+            return jsonify({"error": f"HA returned {response.status_code}", "text": response.text}), 502
+        services = response.json()
+        esphome_services = [s for s in services if s.get('domain') == 'esphome']
+        return jsonify({
+            "esphome_services": [
+                {
+                    "domain": s.get('domain'),
+                    "service": s.get('service'),
+                    "fields": list(s.get('fields', {}).keys())
+                }
+                for s in esphome_services
+            ]
+        })
+    except Exception as e:
+        logger.error(f"debug_esphome_services failed: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/debug/test-eq/<device_id>', methods=['POST'])
+def debug_test_eq(device_id):
+    """Test EQ service call and return full request/response details"""
+    data = request.get_json(silent=True) or {}
+    
+    def derive_entity_base(mac):
+        if not mac:
+            return device_to_entity_base(device_id)
+        clean = mac.lower().replace(':', '').replace('-', '')
+        suffix = clean[-6:] if len(clean) >= 6 else clean
+        if len(suffix) == 6 and all(c in '0123456789abcdef' for c in suffix):
+            return f"smartpanel_{suffix}"
+        return device_to_entity_base(device_id)
+    
+    entity_base = derive_entity_base('')
+    try:
+        config = load_config()
+        for d in config.get('devices', []):
+            if d.get('id', '') == device_id:
+                entity_base = derive_entity_base(d.get('mac', ''))
+                break
+    except Exception:
+        pass
+    
+    service_name = entity_base + '_set_eq_profile'
+    profile = data.get('profile', 'music')
+    eq_enabled = data.get('eq_enabled', False)
+    bands = data.get('bands', [])
+    
+    bands_clean = [
+        {
+            'enabled': b.get('enabled', False),
+            'type': b.get('type', 'PEAK'),
+            'freq': b.get('freq', 1000),
+            'q': b.get('q', 1.0),
+            'gain_db': b.get('gain_db', 0.0)
+        }
+        for b in bands
+    ]
+    bands_json = json.dumps(bands_clean)
+    
+    service_data = {
+        'profile': profile,
+        'enabled': eq_enabled,
+        'bands_json': bands_json
+    }
+    
+    url = f'{HA_API}/services/esphome/{service_name}'
+    headers = get_headers()
+    
+    result = {
+        "device_id": device_id,
+        "entity_base": entity_base,
+        "service_name": service_name,
+        "url": url,
+        "request_headers": {k: v if k.lower() != 'authorization' else 'Bearer ***' for k, v in headers.items()},
+        "request_payload": service_data,
+        "request_payload_raw": json.dumps(service_data),
+    }
+    
+    if not RUNNING_IN_HA or not HA_TOKEN:
+        result["note"] = "Would call HA if running in HA mode"
+        return jsonify(result)
+    
+    try:
+        ha_response = requests.post(url, headers=headers, json=service_data, timeout=10)
+        result["ha_status_code"] = ha_response.status_code
+        result["ha_response_text"] = ha_response.text
+        result["ha_response_headers"] = dict(ha_response.headers)
+    except Exception as e:
+        result["ha_error"] = str(e)
+    
+    return jsonify(result)
 
 
 # =============================================================================

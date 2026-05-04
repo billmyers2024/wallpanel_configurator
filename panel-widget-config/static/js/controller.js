@@ -218,13 +218,15 @@ const controller = {
                 try {
                     const bands = JSON.parse(bandsState);
                     if (Array.isArray(bands) && bands.length > 0) {
+                        // Support both compact (e/t/f/q/g) and legacy full field names
+                        const typeMap = { LS: 'LOW_SHELF', HS: 'HIGH_SHELF', PK: 'PEAK', LP: 'LOW_PASS', HP: 'HIGH_PASS' };
                         this.profiles[this.activeProfile].bands = bands.map((b, i) => ({
                             band: i,
-                            type: b.type || 'PEAK',
-                            freq: b.freq || 1000,
-                            q: b.q || 1.0,
-                            gain_db: b.gain_db || 0.0,
-                            enabled: b.enabled !== false
+                            type: typeMap[b.t] || b.type || 'PEAK',
+                            freq: b.f !== undefined ? b.f : (b.freq || 1000),
+                            q: b.q !== undefined ? b.q : (b.q || 1.0),
+                            gain_db: b.g !== undefined ? b.g : (b.gain_db || 0.0),
+                            enabled: b.e !== undefined ? !!b.e : (b.enabled !== false)
                         }));
                     }
                 } catch (e) {
