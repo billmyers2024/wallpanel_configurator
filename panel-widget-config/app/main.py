@@ -1468,31 +1468,33 @@ def get_eq_profiles():
 
 @app.route('/api/device/<device_id>/eq', methods=['POST'])
 def send_eq_to_device(device_id):
-    """Send EQ settings to a panel by writing HA sensors.
+    """Send EQ settings to a panel by calling the ESPHome custom service.
     Payload: {profile: str, eq_enabled: bool, bands: [{enabled, type, freq, q, gain_db}]}
-    Writes to sensor.{device_id}_eq_bands, binary_sensor.{device_id}_eq_enabled,
-    and sensor.{device_id}_eq_active_profile.
+    Calls esphome.{device_name}_set_eq_profile service on the device.
     """
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({"error": "Invalid payload"}), 400
 
     # Look up device in config to get esphome_name if set
-    entity_base = device_to_entity_base(device_id)
+    esphome_name = device_id
     try:
         config = load_config()
         for d in config.get('devices', []):
             if d.get('id', '') == device_id and d.get('esphome_name', '').strip():
-                entity_base = device_to_entity_base(d['esphome_name'].strip())
+                esphome_name = d['esphome_name'].strip()
                 break
     except Exception:
         pass
+
+    # ESPHome service name: dots replaced with underscores, then append _set_eq_profile
+    service_name = esphome_name.replace('.', '_').replace('-', '_') + '_set_eq_profile'
 
     profile = data.get('profile', 'music')
     eq_enabled = data.get('eq_enabled', False)
     bands = data.get('bands', [])
 
-    # Strip band index for sensor state
+    # Strip band index for service call
     bands_clean = [
         {
             'enabled': b.get('enabled', False),
@@ -1503,42 +1505,23 @@ def send_eq_to_device(device_id):
         }
         for b in bands
     ]
-
-    # Write to HA sensors
-    # Note: bands JSON is stored as a sensor attribute (unlimited size),
-    # not as the state value (255 char limit)
-    errors = []
-
-    success, err = call_ha_state_write(
-        f"sensor.{entity_base}_eq_active_profile",
-        profile
-    )
-    if not success:
-        errors.append(f"active_profile: {err}")
-        logger.warning(f"EQ write failed for {device_id} active_profile: {err}")
-
-    success, err = call_ha_state_write(
-        f"binary_sensor.{entity_base}_eq_enabled",
-        "on" if eq_enabled else "off"
-    )
-    if not success:
-        errors.append(f"enabled: {err}")
-        logger.warning(f"EQ write failed for {device_id} enabled: {err}")
-
     bands_json = json.dumps(bands_clean)
-    success, err = call_ha_state_write(
-        f"sensor.{entity_base}_eq_bands",
-        profile,  # state = profile name (short)
-        {"bands": bands_json}  # attribute = full JSON (unlimited)
+
+    success, err = call_ha_service(
+        'esphome',
+        service_name,
+        {
+            'profile': profile,
+            'enabled': eq_enabled,
+            'bands_json': bands_json
+        }
     )
+
     if not success:
-        errors.append(f"bands: {err}")
-        logger.warning(f"EQ write failed for {device_id} bands: {err}")
+        logger.warning(f"EQ service call failed for {device_id} ({service_name}): {err}")
+        return jsonify({"error": f"Service call failed: {err}"}), 503
 
-    if errors:
-        return jsonify({"error": "; ".join(errors)}), 503
-
-    logger.info(f"EQ sent to {device_id} — profile={profile}, enabled={eq_enabled}, bands={len(bands)}")
+    logger.info(f"EQ sent to {device_id} via {service_name} — profile={profile}, enabled={eq_enabled}, bands={len(bands)}")
     return jsonify({
         "success": True,
         "message": f"EQ sent to {device_id} — profile: {profile}, enabled: {eq_enabled}, {len(bands)} bands"

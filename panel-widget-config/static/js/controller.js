@@ -199,13 +199,13 @@ const controller = {
                 document.getElementById('eq-master-enable').checked = this.eqEnabled;
             }
 
-            // Read bands for the active profile (from 'bands' attribute)
+            // Read bands for the active profile (from native ESPHome text_sensor state)
             const bandsResp = await fetch(`./api/ha_state/sensor.${base}_eq_bands`);
             const bandsData = await bandsResp.json();
-            const bandsAttr = bandsData.attributes?.bands;
-            if (bandsData.success && bandsAttr) {
+            const bandsState = bandsData.state;
+            if (bandsData.success && bandsState && bandsState !== 'unknown' && bandsState !== 'unavailable') {
                 try {
-                    const bands = JSON.parse(bandsAttr);
+                    const bands = JSON.parse(bandsState);
                     if (Array.isArray(bands) && bands.length > 0) {
                         this.profiles[this.activeProfile].bands = bands.map((b, i) => ({
                             band: i,
@@ -217,7 +217,7 @@ const controller = {
                         }));
                     }
                 } catch (e) {
-                    console.warn('Failed to parse HA bands attribute:', e);
+                    console.warn('Failed to parse HA bands state:', e);
                 }
             }
 
