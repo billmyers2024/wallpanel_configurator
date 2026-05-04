@@ -96,11 +96,55 @@ const app = {
             this.updateDeviceFromForm();
         }
         
-        // Validate all devices have IP addresses and check for duplicates
+        // Validate all devices have critical fields
         if (this.config && this.config.devices) {
             const ipMap = new Map();
+            const idMap = new Map();
             
             for (const device of this.config.devices) {
+                // Check for missing name
+                if (!device.name || device.name.trim() === '') {
+                    this.showToast(`Device is missing a name`, 'error');
+                    const idx = this.config.devices.indexOf(device);
+                    if (idx >= 0) this.selectDevice(idx);
+                    return;
+                }
+                
+                // Check for missing device ID
+                if (!device.id || device.id.trim() === '') {
+                    this.showToast(`Device "${device.name}" is missing Device ID`, 'error');
+                    const idx = this.config.devices.indexOf(device);
+                    if (idx >= 0) this.selectDevice(idx);
+                    return;
+                }
+                
+                // Check for duplicate device ID
+                const devId = device.id.trim();
+                if (idMap.has(devId)) {
+                    const otherDevice = idMap.get(devId);
+                    this.showToast(`Duplicate Device ID: "${device.name}" and "${otherDevice}" both use ${devId}`, 'error');
+                    const idx = this.config.devices.indexOf(device);
+                    if (idx >= 0) this.selectDevice(idx);
+                    return;
+                }
+                idMap.set(devId, device.name);
+                
+                // Check for missing MAC
+                if (!device.mac || device.mac.trim() === '') {
+                    this.showToast(`Device "${device.name}" is missing MAC address`, 'error');
+                    const idx = this.config.devices.indexOf(device);
+                    if (idx >= 0) this.selectDevice(idx);
+                    return;
+                }
+                
+                // Validate MAC format
+                if (!this.validateMAC(device.mac)) {
+                    this.showToast(`Device "${device.name}" has invalid MAC: ${device.mac}`, 'error');
+                    const idx = this.config.devices.indexOf(device);
+                    if (idx >= 0) this.selectDevice(idx);
+                    return;
+                }
+                
                 // Check for missing IP
                 if (!device.ip || device.ip.trim() === '') {
                     this.showToast(`Device "${device.name}" is missing IP address`, 'error');
@@ -588,6 +632,13 @@ const app = {
         return ipRegex.test(ip);
     },
     
+    validateMAC(mac) {
+        if (!mac || mac.trim() === '') return false;
+        const clean = mac.toLowerCase().replace(/[:\-]/g, '');
+        const suffix = clean.slice(-6);
+        return suffix.length === 6 && /^[0-9a-f]+$/.test(suffix);
+    },
+    
     // Derive entity base from MAC address for ESPHome name_add_mac_suffix naming
     deriveEntityBase(mac) {
         if (!mac) return '';
@@ -626,7 +677,16 @@ const app = {
             }
         }
         const deviceMac = document.getElementById('device-mac');
-        if (deviceMac) this.currentDevice.mac = deviceMac.value.trim();
+        if (deviceMac) {
+            const mac = deviceMac.value.trim();
+            if (mac && !this.validateMAC(mac)) {
+                this.showToast(`Invalid MAC address: ${mac}`, 'error');
+                deviceMac.style.borderColor = 'var(--danger)';
+            } else {
+                deviceMac.style.borderColor = '';
+                this.currentDevice.mac = mac;
+            }
+        }
         
         // Update new room config fields
         const presenceEntity = document.getElementById('presence-entity');
