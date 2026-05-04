@@ -1496,13 +1496,15 @@ def send_eq_to_device(device_id):
 
     entity_base = derive_entity_base('')
     try:
-        config = load_config()
-        for d in config.get('devices', []):
-            if d.get('id', '') == device_id:
-                entity_base = derive_entity_base(d.get('mac', ''))
-                break
-    except Exception:
-        pass
+        if LIVE_CONFIG.exists():
+            with open(LIVE_CONFIG, 'r') as f:
+                config = json.load(f)
+            for d in config.get('devices', []):
+                if d.get('id', '') == device_id:
+                    entity_base = derive_entity_base(d.get('mac', ''))
+                    break
+    except Exception as e:
+        logger.warning(f"Could not load config for MAC lookup: {e}")
 
     # ESPHome service name: entity_base + _set_eq_profile
     service_name = entity_base + '_set_eq_profile'
@@ -1655,13 +1657,15 @@ def debug_test_eq(device_id):
     
     entity_base = derive_entity_base('')
     try:
-        config = load_config()
-        for d in config.get('devices', []):
-            if d.get('id', '') == device_id:
-                entity_base = derive_entity_base(d.get('mac', ''))
-                break
-    except Exception:
-        pass
+        if LIVE_CONFIG.exists():
+            with open(LIVE_CONFIG, 'r') as f:
+                config = json.load(f)
+            for d in config.get('devices', []):
+                if d.get('id', '') == device_id:
+                    entity_base = derive_entity_base(d.get('mac', ''))
+                    break
+    except Exception as e:
+        logger.warning(f"Could not load config for MAC lookup: {e}")
     
     service_name = entity_base + '_set_eq_profile'
     profile = data.get('profile', 'music')
