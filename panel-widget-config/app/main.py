@@ -1472,8 +1472,11 @@ def send_eq_to_device(device_id):
     Payload: {profile: str, eq_enabled: bool, bands: [{enabled, type, freq, q, gain_db}]}
     Calls esphome.{device_name}_set_eq_profile service on the device.
     """
-    data = request.get_json()
+    raw_body = request.get_data(as_text=True)
+    logger.debug(f"send_eq_to_device: device_id={device_id}, content-type={request.content_type}, body={raw_body[:500]}")
+    data = request.get_json(silent=True)
     if not isinstance(data, dict):
+        logger.warning(f"send_eq_to_device: Invalid payload from device_id={device_id}, data={data}, raw_body={raw_body[:500]}")
         return jsonify({"error": "Invalid payload"}), 400
 
     # Derive ESPHome entity base from MAC address

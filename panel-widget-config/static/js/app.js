@@ -439,6 +439,7 @@ const app = {
             name: `Room ${this.config.devices.length + 1}`,
             id: `room_${this.config.devices.length + 1}`,
             ip: "",
+            mac: "",
             widgets: {
                 lights: [],
                 covers: [],
