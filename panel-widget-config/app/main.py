@@ -1608,6 +1608,32 @@ def save_eq_to_config():
 
 
 # =============================================================================
+# GENERIC HA SERVICE PROXY
+# =============================================================================
+
+@app.route('/api/ha_service', methods=['POST'])
+def ha_service_proxy():
+    """Generic proxy for calling any Home Assistant service"""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid payload"}), 400
+    
+    domain = data.get('domain')
+    service = data.get('service')
+    service_data = data.get('data', {})
+    
+    if not domain or not service:
+        return jsonify({"error": "Missing domain or service"}), 400
+    
+    success, err = call_ha_service(domain, service, service_data)
+    if success:
+        return jsonify({"success": True})
+    else:
+        logger.warning(f"HA service proxy failed: {domain}.{service}: {err}")
+        return jsonify({"error": err}), 503
+
+
+# =============================================================================
 # DIAGNOSTIC ENDPOINTS
 # =============================================================================
 

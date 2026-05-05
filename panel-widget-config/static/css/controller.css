@@ -679,3 +679,111 @@ body {
         align-items: stretch;
     }
 }
+
+
+/* EQ Profile Label */
+.eq-profile-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-right: 6px;
+}
+
+/* Gain Control Section */
+.gain-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.gain-header {
+    margin-bottom: 20px;
+}
+
+.gain-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gain-control {
+    margin-bottom: 24px;
+}
+
+.gain-slider-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gain-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    min-width: 80px;
+}
+
+.gain-slider-container input[type="range"] {
+    flex: 1;
+    min-width: 200px;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    outline: none;
+}
+
+.gain-slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    cursor: pointer;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.gain-slider-container input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    cursor: pointer;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.gain-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent-blue);
+    min-width: 80px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.gain-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gain-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gain-toggle-row .toggle-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}

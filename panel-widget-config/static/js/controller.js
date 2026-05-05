@@ -134,6 +134,12 @@ const controller = {
         if (facilityId === 'eq') {
             this.drawCanvas();
         }
+        // Start/stop real-time polling for gain panel
+        if (facilityId === 'gain') {
+            this.startGainPolling();
+        } else {
+            this.stopGainPolling();
+        }
     },
 
     async loadDevices() {
@@ -183,6 +189,17 @@ const controller = {
             document.getElementById('ref-file-input').click();
         });
         document.getElementById('ref-file-input').addEventListener('change', (e) => this.loadReferenceCurve(e));
+
+        document.getElementById('btn-save-eq-file').addEventListener('click', () => this.saveEqToFile());
+        document.getElementById('btn-load-eq-file').addEventListener('click', () => {
+            document.getElementById('eq-file-input').click();
+        });
+        document.getElementById('eq-file-input').addEventListener('change', (e) => this.loadEqFromFile(e));
+
+        // Real-time gain control
+        document.getElementById('gain-slider').addEventListener('input', (e) => this.onGainSliderChange(e));
+        document.getElementById('rt-eq-enable').addEventListener('change', (e) => this.setRealtimeEq(e.target.checked));
+        document.getElementById('rt-drc-enable').addEventListener('change', (e) => this.setRealtimeDrc(e.target.checked));
 
         this.setupCanvasTooltip();
     },
@@ -881,6 +898,221 @@ const controller = {
             const btn = document.getElementById('btn-save-eq');
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-save"></i> Save to Config';
+        }
+    },
+
+    // ========================================================================
+    // Save / Load EQ to File
+    // ========================================================================
+
+    saveEqToFile() {
+        const filename = prompt('Enter filename for EQ settings:', 'eq_settings.json');
+        if (!filename) return;
+        this.updateBandFromUI();
+        const payload = {
+            profile: this.activeProfile,
+            eq_enabled: this.eqEnabled,
+            bands: this.bands.map(b => ({
+                band: b.band,
+                enabled: b.enabled,
+                type: b.type,
+                freq: b.freq,
+                q: b.q,
+                gain_db: b.gain_db
+            }))
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename.endsWith('.json') ? filename : filename + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.showToast(`EQ saved to ${a.download}`, 'success');
+    },
+
+    loadEqFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.bands && Array.isArray(data.bands)) {
+                    this.bands = data.bands.map((b, i) => ({
+                        band: i,
+                        type: b.type || 'PEAK',
+                        freq: b.freq || 1000,
+                        q: b.q || 1.0,
+                        gain_db: b.gain_db || 0.0,
+                        enabled: b.enabled !== false
+                    }));
+                    if (data.profile && this.profiles[data.profile]) {
+                        this.profiles[data.profile].bands = JSON.parse(JSON.stringify(this.bands));
+                        this.activeProfile = data.profile;
+                        document.getElementById('eq-profile-select').value = data.profile;
+                    }
+                    if (typeof data.eq_enabled === 'boolean') {
+                        this.eqEnabled = data.eq_enabled;
+                        document.getElementById('eq-master-enable').checked = data.eq_enabled;
+                    }
+                    this.renderBands();
+                    this.drawCanvas();
+                    this.showToast(`EQ loaded from ${file.name}`, 'success');
+                } else {
+                    this.showToast('Invalid EQ file format', 'error');
+                }
+            } catch (err) {
+                this.showToast('Failed to parse EQ file: ' + err.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // reset for re-selection
+    },
+
+    // ========================================================================
+    // Real Time Gain Control
+    // ========================================================================
+
+    gainPollInterval: null,
+
+    startGainPolling() {
+        if (this.gainPollInterval) return;
+        this.loadGainControlState();
+        this.gainPollInterval = setInterval(() => this.loadGainControlState(), 2000);
+    },
+
+    stopGainPolling() {
+        if (this.gainPollInterval) {
+            clearInterval(this.gainPollInterval);
+            this.gainPollInterval = null;
+        }
+    },
+
+    async loadGainControlState() {
+        if (!this.selectedDevice) return;
+        const mac = this.selectedDevice.mac;
+        const base = this.deriveEntityBase(mac) || this.selectedDevice.id.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+
+        try {
+            // Read codec gain
+            const gainResp = await fetch(`./api/ha_state/number.${base}_codec_gain`);
+            const gainData = await gainResp.json();
+            if (gainData.success && gainData.state !== 'unknown' && gainData.state !== 'unavailable') {
+                const db = parseFloat(gainData.state);
+                if (!isNaN(db)) {
+                    const slider = document.getElementById('gain-slider');
+                    const valueLabel = document.getElementById('gain-value');
+                    // Only update slider if user is not currently dragging it
+                    if (document.activeElement !== slider) {
+                        slider.value = Math.max(-40, Math.min(20, db));
+                    }
+                    valueLabel.textContent = `${db.toFixed(1)} dB`;
+                }
+            }
+
+            // Read EQ switch
+            const eqResp = await fetch(`./api/ha_state/switch.${base}_eq_enable`);
+            const eqData = await eqResp.json();
+            if (eqData.success) {
+                document.getElementById('rt-eq-enable').checked = eqData.state === 'on';
+            }
+
+            // Read DRC switch
+            const drcResp = await fetch(`./api/ha_state/switch.${base}_drc_enable`);
+            const drcData = await drcResp.json();
+            if (drcData.success) {
+                document.getElementById('rt-drc-enable').checked = drcData.state === 'on';
+            }
+        } catch (error) {
+            // Silently fail on poll errors
+        }
+    },
+
+    async onGainSliderChange(event) {
+        const db = parseFloat(event.target.value);
+        document.getElementById('gain-value').textContent = `${db.toFixed(1)} dB`;
+        await this.setCodecGain(db);
+    },
+
+    async setCodecGain(db) {
+        if (!this.selectedDevice) return;
+        const mac = this.selectedDevice.mac;
+        const base = this.deriveEntityBase(mac) || this.selectedDevice.id.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+
+        try {
+            const response = await fetch('./api/ha_service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    domain: 'number',
+                    service: 'set_value',
+                    data: {
+                        entity_id: `number.${base}_codec_gain`,
+                        value: db
+                    }
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                console.warn('Failed to set codec gain:', data.error);
+            }
+        } catch (error) {
+            console.warn('Network error setting codec gain:', error);
+        }
+    },
+
+    async setRealtimeEq(enabled) {
+        if (!this.selectedDevice) return;
+        const mac = this.selectedDevice.mac;
+        const base = this.deriveEntityBase(mac) || this.selectedDevice.id.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+
+        try {
+            const response = await fetch('./api/ha_service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    domain: 'switch',
+                    service: enabled ? 'turn_on' : 'turn_off',
+                    data: {
+                        entity_id: `switch.${base}_eq_enable`
+                    }
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                console.warn('Failed to set EQ:', data.error);
+            }
+        } catch (error) {
+            console.warn('Network error setting EQ:', error);
+        }
+    },
+
+    async setRealtimeDrc(enabled) {
+        if (!this.selectedDevice) return;
+        const mac = this.selectedDevice.mac;
+        const base = this.deriveEntityBase(mac) || this.selectedDevice.id.toLowerCase().replace(/ /g, '_').replace(/-/g, '_');
+
+        try {
+            const response = await fetch('./api/ha_service', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    domain: 'switch',
+                    service: enabled ? 'turn_on' : 'turn_off',
+                    data: {
+                        entity_id: `switch.${base}_drc_enable`
+                    }
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                console.warn('Failed to set DRC:', data.error);
+            }
+        } catch (error) {
+            console.warn('Network error setting DRC:', error);
         }
     },
 
