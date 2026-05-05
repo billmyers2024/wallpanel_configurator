@@ -880,6 +880,25 @@ body {
     background: var(--accent-blue);
 }
 
+/* Minor ticks (5 dB intervals) */
+.gain-tick-minor {
+    position: absolute;
+    top: 2px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gain-tick-minor::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 4px;
+    background: var(--border-color);
+    opacity: 0.6;
+}
+
 /* Track fill indicator (updated by JS) */
 .gain-track-fill {
     position: absolute;

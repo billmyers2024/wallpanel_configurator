@@ -169,14 +169,21 @@
                                 <div class="gain-slider-track-wrap">
                                     <input type="range" id="gain-slider" min="-40" max="20" step="0.5" value="0">
                                     <div class="gain-ticks">
+                                        <!-- Major labeled ticks every 10 dB -->
                                         <span class="gain-tick" style="left:0%"><small>-40</small></span>
-                                        <span class="gain-tick" style="left:12.5%"><small>-30</small></span>
-                                        <span class="gain-tick" style="left:25%"><small>-20</small></span>
-                                        <span class="gain-tick" style="left:37.5%"><small>-10</small></span>
-                                        <span class="gain-tick gain-tick-center" style="left:50%"><small>0</small></span>
-                                        <span class="gain-tick" style="left:62.5%"><small>+10</small></span>
-                                        <span class="gain-tick" style="left:75%"><small>+20</small></span>
+                                        <span class="gain-tick" style="left:16.67%"><small>-30</small></span>
+                                        <span class="gain-tick" style="left:33.33%"><small>-20</small></span>
+                                        <span class="gain-tick" style="left:50%"><small>-10</small></span>
+                                        <span class="gain-tick gain-tick-center" style="left:66.67%"><small>0</small></span>
+                                        <span class="gain-tick" style="left:83.33%"><small>+10</small></span>
                                         <span class="gain-tick" style="left:100%"><small>+20</small></span>
+                                        <!-- Minor unlabeled ticks every 5 dB -->
+                                        <span class="gain-tick-minor" style="left:8.33%"></span>
+                                        <span class="gain-tick-minor" style="left:25%"></span>
+                                        <span class="gain-tick-minor" style="left:41.67%"></span>
+                                        <span class="gain-tick-minor" style="left:58.33%"></span>
+                                        <span class="gain-tick-minor" style="left:75%"></span>
+                                        <span class="gain-tick-minor" style="left:91.67%"></span>
                                     </div>
                                 </div>
                             </div>
@@ -259,6 +266,6 @@
     <!-- Toast container -->
     <div id="toast-container"></div>
 
-    <script src="./static/js/controller.js?v=1.7.70"></script>
+    <script src="./static/js/controller.js?v=1.7.71"></script>
 </body>
 </html>
