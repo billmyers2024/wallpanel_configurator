@@ -39,7 +39,7 @@
                     </div>
                     <div class="facility-item" data-facility="gain">
                         <i class="fas fa-volume-up"></i>
-                        <span>Real Time Gain</span>
+                        <span>Gain Control</span>
                     </div>
                     <div class="facility-item disabled" data-facility="music">
                         <i class="fas fa-music"></i>
@@ -142,25 +142,43 @@
                     </section>
                 </div>
 
-                <!-- Real Time Gain Control Facility -->
+                <!-- Gain Control Facility -->
                 <div class="facility-panel" data-facility="gain">
                     <section class="device-section">
                         <label for="gain-device-select"><i class="fas fa-microchip"></i> Panel</label>
-                        <select id="gain-device-select" disabled>
-                            <option value="">Same as EQ panel</option>
+                        <select id="gain-device-select">
+                            <option value="">Select a panel...</option>
                         </select>
+                        <span id="gain-device-status" class="status-indicator offline">Offline</span>
                     </section>
 
                     <section class="gain-section">
                         <div class="gain-header">
-                            <h2><i class="fas fa-volume-up"></i> Real Time Gain Control</h2>
+                            <h2><i class="fas fa-volume-up"></i> Gain Control</h2>
                         </div>
 
                         <div class="gain-control">
-                            <div class="gain-slider-container">
-                                <label class="gain-label">Codec Gain</label>
-                                <input type="range" id="gain-slider" min="-40" max="20" step="1" value="0">
-                                <span class="gain-value" id="gain-value">0.0 dB</span>
+                            <div class="gain-slider-wrap">
+                                <div class="gain-slider-top">
+                                    <label class="gain-label">Codec Gain</label>
+                                    <button class="btn btn-icon" id="btn-mute" title="Mute">
+                                        <i class="fas fa-volume-up" id="mute-icon"></i>
+                                    </button>
+                                    <span class="gain-value" id="gain-value">0.0 dB</span>
+                                </div>
+                                <div class="gain-slider-track-wrap">
+                                    <input type="range" id="gain-slider" min="-40" max="20" step="0.5" value="0">
+                                    <div class="gain-ticks">
+                                        <span class="gain-tick" style="left:0%"><small>-40</small></span>
+                                        <span class="gain-tick" style="left:12.5%"><small>-30</small></span>
+                                        <span class="gain-tick" style="left:25%"><small>-20</small></span>
+                                        <span class="gain-tick" style="left:37.5%"><small>-10</small></span>
+                                        <span class="gain-tick gain-tick-center" style="left:50%"><small>0</small></span>
+                                        <span class="gain-tick" style="left:62.5%"><small>+10</small></span>
+                                        <span class="gain-tick" style="left:75%"><small>+20</small></span>
+                                        <span class="gain-tick" style="left:100%"><small>+20</small></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -241,6 +259,6 @@
     <!-- Toast container -->
     <div id="toast-container"></div>
 
-    <script src="./static/js/controller.js?v=1.7.69"></script>
+    <script src="./static/js/controller.js?v=1.7.70"></script>
 </body>
 </html>

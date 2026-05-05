@@ -715,10 +715,16 @@ body {
     margin-bottom: 24px;
 }
 
-.gain-slider-container {
+.gain-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gain-slider-top {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -729,46 +735,162 @@ body {
     min-width: 80px;
 }
 
-.gain-slider-container input[type="range"] {
-    flex: 1;
-    min-width: 200px;
-    height: 8px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: var(--bg-tertiary);
-    border-radius: 4px;
-    outline: none;
-}
-
-.gain-slider-container input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--accent-blue);
-    cursor: pointer;
-    border: 2px solid var(--bg-primary);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-
-.gain-slider-container input[type="range"]::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--accent-blue);
-    cursor: pointer;
-    border: 2px solid var(--bg-primary);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-
 .gain-value {
-    font-size: 18px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 700;
     color: var(--accent-blue);
-    min-width: 80px;
+    min-width: 90px;
     text-align: right;
     font-variant-numeric: tabular-nums;
+}
+
+.gain-value.muted {
+    color: var(--danger);
+}
+
+.btn-icon {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-icon.muted {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+
+/* Slider with track and tick marks */
+.gain-slider-track-wrap {
+    position: relative;
+    padding: 10px 0 24px 0;
+}
+
+.gain-slider-track-wrap input[type="range"] {
+    width: 100%;
+    height: 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    outline: none;
+    position: relative;
+    z-index: 2;
+}
+
+.gain-slider-track-wrap input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(to right,
+        var(--bg-tertiary) 0%,
+        var(--bg-tertiary) 100%);
+    border-radius: 5px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.gain-slider-track-wrap input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 10px;
+    background: var(--bg-tertiary);
+    border-radius: 5px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.gain-slider-track-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 36px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #e0e0e0 0%, #b0b0b0 100%);
+    cursor: pointer;
+    border: 1px solid #888;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    margin-top: -13px;
+    position: relative;
+}
+
+.gain-slider-track-wrap input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 36px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #e0e0e0 0%, #b0b0b0 100%);
+    cursor: pointer;
+    border: 1px solid #888;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.gain-slider-track-wrap input[type="range"]:disabled::-webkit-slider-thumb {
+    background: #555;
+    cursor: not-allowed;
+}
+
+.gain-slider-track-wrap input[type="range"]:disabled::-moz-range-thumb {
+    background: #555;
+    cursor: not-allowed;
+}
+
+/* Tick marks */
+.gain-ticks {
+    position: relative;
+    height: 18px;
+    margin-top: 4px;
+}
+
+.gain-tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.gain-tick::before {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 6px;
+    background: var(--border-color);
+    margin-bottom: 2px;
+}
+
+.gain-tick-center {
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
+.gain-tick-center::before {
+    width: 2px;
+    height: 10px;
+    background: var(--accent-blue);
+}
+
+/* Track fill indicator (updated by JS) */
+.gain-track-fill {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    height: 10px;
+    background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+    border-radius: 5px 0 0 5px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
 }
 
 .gain-toggles {

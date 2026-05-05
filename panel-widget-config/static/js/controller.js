@@ -156,21 +156,32 @@ const controller = {
 
     renderDeviceSelector() {
         const select = document.getElementById('device-select');
-        select.innerHTML = '<option value="">Select a panel...</option>';
-        this.devices.forEach(dev => {
-            const opt = document.createElement('option');
-            opt.value = dev.ip;
-            opt.textContent = `${dev.name} (${dev.ip})`;
-            select.appendChild(opt);
-        });
+        const gainSelect = document.getElementById('gain-device-select');
+        const html = '<option value="">Select a panel...</option>' +
+            this.devices.map(dev => `<option value="${dev.ip}">${dev.name} (${dev.ip})</option>`).join('');
+        select.innerHTML = html;
+        gainSelect.innerHTML = html;
     },
 
     setupEventListeners() {
         document.getElementById('device-select').addEventListener('change', async (e) => {
             this.selectedDevice = this.devices.find(d => d.ip === e.target.value) || null;
+            document.getElementById('gain-device-select').value = e.target.value;
             this.updateDeviceStatus();
+            this.updateGainDeviceStatus();
             if (this.selectedDevice) {
                 await this.loadDeviceHaState();
+            }
+        });
+
+        document.getElementById('gain-device-select').addEventListener('change', async (e) => {
+            this.selectedDevice = this.devices.find(d => d.ip === e.target.value) || null;
+            document.getElementById('device-select').value = e.target.value;
+            this.updateDeviceStatus();
+            this.updateGainDeviceStatus();
+            if (this.selectedDevice) {
+                await this.loadDeviceHaState();
+                await this.loadGainControlState();
             }
         });
 
@@ -198,6 +209,7 @@ const controller = {
 
         // Real-time gain control
         document.getElementById('gain-slider').addEventListener('input', (e) => this.onGainSliderChange(e));
+        document.getElementById('btn-mute').addEventListener('click', () => this.toggleMute());
         document.getElementById('rt-eq-enable').addEventListener('change', (e) => this.setRealtimeEq(e.target.checked));
         document.getElementById('rt-drc-enable').addEventListener('change', (e) => this.setRealtimeDrc(e.target.checked));
 
@@ -973,10 +985,23 @@ const controller = {
     },
 
     // ========================================================================
-    // Real Time Gain Control
+    // Gain Control
     // ========================================================================
 
     gainPollInterval: null,
+    preMuteGain: null,
+    isMuted: false,
+
+    updateGainDeviceStatus() {
+        const status = document.getElementById('gain-device-status');
+        if (!this.selectedDevice) {
+            status.textContent = 'Offline';
+            status.className = 'status-indicator offline';
+            return;
+        }
+        status.textContent = 'Online';
+        status.className = 'status-indicator online';
+    },
 
     startGainPolling() {
         if (this.gainPollInterval) return;
@@ -989,6 +1014,23 @@ const controller = {
             clearInterval(this.gainPollInterval);
             this.gainPollInterval = null;
         }
+    },
+
+    updateGainSliderVisuals(db) {
+        const slider = document.getElementById('gain-slider');
+        const valueLabel = document.getElementById('gain-value');
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        const percent = ((db - min) / (max - min)) * 100;
+        valueLabel.textContent = `${db.toFixed(1)} dB`;
+        // Update track fill if it exists
+        let fill = document.querySelector('.gain-track-fill');
+        if (!fill) {
+            fill = document.createElement('div');
+            fill.className = 'gain-track-fill';
+            slider.parentElement.insertBefore(fill, slider);
+        }
+        fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
     },
 
     async loadGainControlState() {
@@ -1004,12 +1046,19 @@ const controller = {
                 const db = parseFloat(gainData.state);
                 if (!isNaN(db)) {
                     const slider = document.getElementById('gain-slider');
-                    const valueLabel = document.getElementById('gain-value');
                     // Only update slider if user is not currently dragging it
                     if (document.activeElement !== slider) {
                         slider.value = Math.max(-40, Math.min(20, db));
+                        this.updateGainSliderVisuals(db);
+                        // Auto-detect mute from very low gain
+                        if (db <= -90 && !this.isMuted) {
+                            this.isMuted = true;
+                            this.updateMuteButton();
+                        } else if (db > -90 && this.isMuted) {
+                            this.isMuted = false;
+                            this.updateMuteButton();
+                        }
                     }
-                    valueLabel.textContent = `${db.toFixed(1)} dB`;
                 }
             }
 
@@ -1033,8 +1082,50 @@ const controller = {
 
     async onGainSliderChange(event) {
         const db = parseFloat(event.target.value);
-        document.getElementById('gain-value').textContent = `${db.toFixed(1)} dB`;
+        this.updateGainSliderVisuals(db);
+        // If dragging while muted, unmute
+        if (this.isMuted && db > -90) {
+            this.isMuted = false;
+            this.updateMuteButton();
+        }
         await this.setCodecGain(db);
+    },
+
+    async toggleMute() {
+        const slider = document.getElementById('gain-slider');
+        const valueLabel = document.getElementById('gain-value');
+        if (this.isMuted) {
+            // Unmute: restore previous gain or default to 0
+            const restoreDb = (this.preMuteGain !== null) ? this.preMuteGain : 0;
+            slider.value = restoreDb;
+            this.updateGainSliderVisuals(restoreDb);
+            this.isMuted = false;
+            await this.setCodecGain(restoreDb);
+        } else {
+            // Mute: store current gain and set to -95
+            this.preMuteGain = parseFloat(slider.value);
+            slider.value = -95;
+            this.updateGainSliderVisuals(-95);
+            valueLabel.classList.add('muted');
+            this.isMuted = true;
+            await this.setCodecGain(-95);
+        }
+        this.updateMuteButton();
+    },
+
+    updateMuteButton() {
+        const btn = document.getElementById('btn-mute');
+        const icon = document.getElementById('mute-icon');
+        const valueLabel = document.getElementById('gain-value');
+        if (this.isMuted) {
+            btn.classList.add('muted');
+            icon.className = 'fas fa-volume-mute';
+            valueLabel.classList.add('muted');
+        } else {
+            btn.classList.remove('muted');
+            icon.className = 'fas fa-volume-up';
+            valueLabel.classList.remove('muted');
+        }
     },
 
     async setCodecGain(db) {
